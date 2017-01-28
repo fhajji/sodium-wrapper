@@ -1,15 +1,24 @@
 // main.cpp -- test libsodium library
 //
-// c++ -std=c++11 -Wall -I/usr/local/include -L/usr/local/lib -o sodiumtester main.cpp -lsodium
+// c++ -std=c++11 -Wall -I/usr/local/include -L/usr/local/lib -o sodiumtester main.cpp sodiumtester.cpp -lsodium
 
-#include "sodium.h"
+#include "sodiumtester.h"
 
 #include <cstdlib>
+#include <exception>
+#include <iostream>
 
 int main()
 {
-  if (sodium_init() == -1)
+  try {
+    SodiumTester st {};
+  }
+  catch (std::runtime_error e) {
+    std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
+  }
+  
+  std::cout << "libsodium library successfully initialized" << std::endl;
   
   return EXIT_SUCCESS;
 }
