@@ -55,7 +55,7 @@ SodiumCrypter::encrypt (const std::string &plaintext,
 
   // copy output bytes into string
   std::string cyphertext {cypherbuf.get(),
-      cypherbuf.get() + cyphertext_size /* + 1 */};
+      cypherbuf.get() + cyphertext_size};
 
   return cyphertext;
 }
@@ -107,7 +107,7 @@ SodiumCrypter::decrypt (const std::string &cyphertext,
   // copy result into string and return
 
   std::string plaintext { decryptbuf.get(),
-      decryptbuf.get() + plaintext_size /* + 1 */};
+      decryptbuf.get() + plaintext_size};
 
   return plaintext;
 }
@@ -131,6 +131,6 @@ SodiumCrypter::tohex (const std::string &cyphertext)
     throw std::runtime_error {"SodiumCrypter::tohex() overflowed"};
 
   // return hex output as a string:
-  std::string outhex {hexbuf.get(), hexbuf.get() + hex_size /* + 1 */};
+  std::string outhex {hexbuf.get(), hexbuf.get() + hex_size};
   return outhex;
 }

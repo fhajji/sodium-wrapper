@@ -5,16 +5,8 @@
 
 #include <stdexcept>
 #include <string>
-#include <algorithm>
-#include <memory>
 
 #include <sodium.h>
-
-// DEBUG
-#include <iostream>
-
-template <typename T>
-using uniquePtr = std::unique_ptr<T,void(*)(T*)>; // alias template
 
 SodiumTester::SodiumTester()
 {
@@ -40,27 +32,13 @@ SodiumTester::test0(const std::string &plaintext)
 
   std::string keystring {key, key + key_size}; // beg, end
   std::string noncestring {nonce, nonce + nonce_size}; // beg, end
-
-  // DEBUG
-  std::string keystring_as_hex = sc.tohex(keystring);
-  std::string noncestring_as_hex = sc.tohex(noncestring);
-  std::cerr << "DEBUG: key   is: " << keystring_as_hex << std::endl;
-  std::cerr << "DEBUG: nonce is: " << noncestring_as_hex << std::endl;
-  std::cerr << "DEBUG: key_size is: " << keystring.size() << std::endl;
-  std::cerr << "DEBUG: key_size should be: " << key_size  << std::endl;
   
   std::string encrypted = sc.encrypt(plaintext, keystring, noncestring);
-
-  // DEBUG
-  std::string encrypted_as_hex2 = sc.tohex(encrypted);
-  std::cout << "DEBUG: encrypted=" << encrypted_as_hex2 << std::endl;
-  
   std::string decrypted = sc.decrypt(encrypted, keystring, noncestring);
   
   if (plaintext != decrypted)
     throw std::runtime_error {"test0() message forged (own test)"};
 
   std::string encrypted_as_hex = sc.tohex(encrypted);
-
   return encrypted_as_hex;
 }

@@ -1,6 +1,10 @@
 // main.cpp -- test libsodium library
 //
 // c++ -std=c++11 -Wall -I/usr/local/include -L/usr/local/lib -o sodiumtester main.cpp sodiumtester.cpp -lsodium
+//
+// or, better yet, use CMake w/ CMakeLists.txt like this:
+//   $ cmake .
+//   $ make
 
 #include "sodiumtester.h"
 
@@ -27,8 +31,6 @@ int main()
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   }
-  
-  std::cout << "libsodium library successfully initialized" << std::endl;
   
   return EXIT_SUCCESS;
 }
