@@ -5,8 +5,12 @@
 #include <stdexcept>
 #include <string>
 #include <algorithm>
+#include <memory>
 
 #include <sodium.h>
+
+template <typename T>
+using uniquePtr = std::unique_ptr<T,void(*)(T*)>; // alias template
 
 SodiumTester::SodiumTester()
 {
@@ -23,8 +27,9 @@ SodiumTester::test0(const std::string &plaintext)
   std::size_t nonce_size      = crypto_secretbox_NONCEBYTES;
   
   // copy the bytes of the plaintext into a buffer of unsigned char bytes
-  unsigned char *plainbuf = new unsigned char[plaintext_size];
-  std::copy (plaintext.cbegin(), plaintext.cend(), plainbuf);
+  uniquePtr<unsigned char> plainbuf(new unsigned char[plaintext_size],
+				    [](unsigned char *p) { delete[] p; });
+  std::copy (plaintext.cbegin(), plaintext.cend(), plainbuf.get());
     
   // get a random key and a random nonce
   unsigned char key[key_size];
@@ -33,30 +38,30 @@ SodiumTester::test0(const std::string &plaintext)
   randombytes_buf(nonce, sizeof nonce);
 
   // make space for MAC and encrypted message
-  unsigned char *cypherbuf = new unsigned char[cyphertext_size];
+  uniquePtr<unsigned char> cypherbuf(new unsigned char[cyphertext_size],
+				     [](unsigned char *p) { delete[] p; });
 
   // let's encrypt now!
-  crypto_secretbox_easy (cypherbuf,
-			 plainbuf, plaintext_size,
+  crypto_secretbox_easy (cypherbuf.get(),
+			 plainbuf.get(), plaintext_size,
 			 nonce,
 			 key);
 
   // put [cypherbuf, cypherbuf+plaintext.size()] into cyphertext
-  std::string cyphertext {cypherbuf, cypherbuf + cyphertext_size + 1 };
+  std::string cyphertext {cypherbuf.get(),
+      cypherbuf.get() + cyphertext_size + 1 };
 
   // proof of correctness: let's try to decrypt!
-  unsigned char *decryptbuf = new unsigned char[plaintext_size];
-  if (crypto_secretbox_open_easy (decryptbuf, cypherbuf, cyphertext_size,
+  uniquePtr<unsigned char> decryptbuf(new unsigned char[plaintext_size],
+				      [](unsigned char *p) { delete[] p; });
+  if (crypto_secretbox_open_easy (decryptbuf.get(),
+				  cypherbuf.get(), cyphertext_size,
 				  nonce, key) != 0)
     throw std::runtime_error {"test0() message forged (sodium test)"};
 
-  if (! std::equal (plainbuf, plainbuf + plaintext_size + 1,
-		    decryptbuf))
+  if (! std::equal (plainbuf.get(), plainbuf.get() + plaintext_size + 1,
+		    decryptbuf.get()))
     throw std::runtime_error {"test0() message forged (own test)"};
-  
-  delete[] plainbuf;
-  delete[] cypherbuf;
-  delete[] decryptbuf;
   
   return cyphertext;
 }
