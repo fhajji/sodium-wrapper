@@ -5,7 +5,7 @@
 #include "sodiumtester.h"
 
 #include <cstdlib>
-#include <exception>
+#include <stdexcept>
 #include <iostream>
 
 int main()

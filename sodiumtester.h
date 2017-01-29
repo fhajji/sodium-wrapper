@@ -3,8 +3,6 @@
 #ifndef _SODIUMTESTER_H_
 #define _SODIUMTESTER_H_
 
-#include <stdexcept>
-
 class SodiumTester
 {  
  public:
