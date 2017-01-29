@@ -6,12 +6,22 @@
 
 #include <cstdlib>
 #include <stdexcept>
+#include <string>
 #include <iostream>
 
 int main()
 {
   try {
     SodiumTester st {};
+
+    std::string plaintext;
+    std::string cyphertext;
+    
+    std::cout << "Enter plaintext: ";
+    std::getline(std::cin, plaintext);
+    
+    cyphertext = st.test0(plaintext);
+    std::cout << "crypto_secretbox_easy(): " << cyphertext << std::endl;
   }
   catch (std::runtime_error e) {
     std::cerr << e.what() << std::endl;
