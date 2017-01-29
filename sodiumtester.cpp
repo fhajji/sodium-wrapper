@@ -47,10 +47,6 @@ SodiumTester::test0(const std::string &plaintext)
 			 nonce,
 			 key);
 
-  // put [cypherbuf, cypherbuf+plaintext.size()] into cyphertext
-  std::string cyphertext {cypherbuf.get(),
-      cypherbuf.get() + cyphertext_size + 1 };
-
   // proof of correctness: let's try to decrypt!
   uniquePtr<unsigned char> decryptbuf(new unsigned char[plaintext_size],
 				      [](unsigned char *p) { delete[] p; });
@@ -62,6 +58,20 @@ SodiumTester::test0(const std::string &plaintext)
   if (! std::equal (plainbuf.get(), plainbuf.get() + plaintext_size + 1,
 		    decryptbuf.get()))
     throw std::runtime_error {"test0() message forged (own test)"};
-  
+
+  // convert [cypherbuf, cypherbuf+cyphertext_size] into hex:
+  std::size_t hex_size = cyphertext_size * 2 + 1;
+  uniquePtr<char> hexbuf(new char[hex_size],
+			 [](char *p) { delete[] p; });
+  if (! sodium_bin2hex(hexbuf.get(), hex_size,
+		       cypherbuf.get(), cyphertext_size))
+    throw std::runtime_error {"test0() sodium_bin2hex() overflowed"};
+
+  // return hex output as a string:
+  std::string cyphertext {hexbuf.get(), hexbuf.get() + hex_size + 1};
   return cyphertext;
+
+  // all buffers allocated with new[] will be automatically delete[]ed
+  // upon return or when this function throws because we've used
+  // unique_ptr<> and used deleters.
 }
