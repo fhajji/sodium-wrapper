@@ -17,38 +17,40 @@ SodiumTester::SodiumTester()
 std::string
 SodiumTester::test0(const std::string &plaintext)
 {
+  std::size_t plaintext_size  = plaintext.size();
+  std::size_t cyphertext_size = crypto_secretbox_MACBYTES + plaintext_size;
+  std::size_t key_size        = crypto_secretbox_KEYBYTES;
+  std::size_t nonce_size      = crypto_secretbox_NONCEBYTES;
+  
   // copy the bytes of the plaintext into a buffer of unsigned char bytes
-  unsigned char *plainbuf = new unsigned char[plaintext.size()];
+  unsigned char *plainbuf = new unsigned char[plaintext_size];
   std::copy (plaintext.cbegin(), plaintext.cend(), plainbuf);
     
-  // get a random nonce and a random key
-  unsigned char nonce[crypto_secretbox_NONCEBYTES];
-  randombytes_buf(nonce, sizeof nonce);
-  unsigned char key[crypto_secretbox_KEYBYTES];
+  // get a random key and a random nonce
+  unsigned char key[key_size];
   randombytes_buf(key, sizeof key);
+  unsigned char nonce[nonce_size];
+  randombytes_buf(nonce, sizeof nonce);
 
   // make space for MAC and encrypted message
-  unsigned char *cypherbuf = new unsigned char[crypto_secretbox_MACBYTES +
-					       plaintext.size()];
+  unsigned char *cypherbuf = new unsigned char[cyphertext_size];
 
   // let's encrypt now!
   crypto_secretbox_easy (cypherbuf,
-			 plainbuf, plaintext.size(),
+			 plainbuf, plaintext_size,
 			 nonce,
 			 key);
 
   // put [cypherbuf, cypherbuf+plaintext.size()] into cyphertext
-  std::string cyphertext {cypherbuf,
-      cypherbuf + crypto_secretbox_MACBYTES + plaintext.size()+1};
+  std::string cyphertext {cypherbuf, cypherbuf + cyphertext_size + 1 };
 
   // proof of correctness: let's try to decrypt!
-  unsigned char *decryptbuf = new unsigned char[plaintext.size()];
-  if (crypto_secretbox_open_easy (decryptbuf, cypherbuf,
-				  crypto_secretbox_MACBYTES + plaintext.size(),
+  unsigned char *decryptbuf = new unsigned char[plaintext_size];
+  if (crypto_secretbox_open_easy (decryptbuf, cypherbuf, cyphertext_size,
 				  nonce, key) != 0)
     throw std::runtime_error {"test0() message forged (sodium test)"};
 
-  if (! std::equal (plainbuf, plainbuf+plaintext.size()+1,
+  if (! std::equal (plainbuf, plainbuf + plaintext_size + 1,
 		    decryptbuf))
     throw std::runtime_error {"test0() message forged (own test)"};
   
