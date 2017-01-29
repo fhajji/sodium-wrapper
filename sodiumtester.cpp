@@ -1,6 +1,7 @@
 // sodiumtester.cpp -- implementation of class SodiumTester
 
 #include "sodiumtester.h"
+#include "sodiumcrypter.h"
 
 #include <stdexcept>
 #include <string>
@@ -8,6 +9,9 @@
 #include <memory>
 
 #include <sodium.h>
+
+// DEBUG
+#include <iostream>
 
 template <typename T>
 using uniquePtr = std::unique_ptr<T,void(*)(T*)>; // alias template
@@ -21,57 +25,42 @@ SodiumTester::SodiumTester()
 std::string
 SodiumTester::test0(const std::string &plaintext)
 {
+  SodiumCrypter sc {};
+
   std::size_t plaintext_size  = plaintext.size();
   std::size_t cyphertext_size = crypto_secretbox_MACBYTES + plaintext_size;
   std::size_t key_size        = crypto_secretbox_KEYBYTES;
   std::size_t nonce_size      = crypto_secretbox_NONCEBYTES;
-  
-  // copy the bytes of the plaintext into a buffer of unsigned char bytes
-  uniquePtr<unsigned char> plainbuf(new unsigned char[plaintext_size],
-				    [](unsigned char *p) { delete[] p; });
-  std::copy (plaintext.cbegin(), plaintext.cend(), plainbuf.get());
-    
+      
   // get a random key and a random nonce
   unsigned char key[key_size];
   randombytes_buf(key, sizeof key);
   unsigned char nonce[nonce_size];
   randombytes_buf(nonce, sizeof nonce);
 
-  // make space for MAC and encrypted message
-  uniquePtr<unsigned char> cypherbuf(new unsigned char[cyphertext_size],
-				     [](unsigned char *p) { delete[] p; });
+  std::string keystring {key, key + key_size}; // beg, end
+  std::string noncestring {nonce, nonce + nonce_size}; // beg, end
 
-  // let's encrypt now!
-  crypto_secretbox_easy (cypherbuf.get(),
-			 plainbuf.get(), plaintext_size,
-			 nonce,
-			 key);
+  // DEBUG
+  std::string keystring_as_hex = sc.tohex(keystring);
+  std::string noncestring_as_hex = sc.tohex(noncestring);
+  std::cerr << "DEBUG: key   is: " << keystring_as_hex << std::endl;
+  std::cerr << "DEBUG: nonce is: " << noncestring_as_hex << std::endl;
+  std::cerr << "DEBUG: key_size is: " << keystring.size() << std::endl;
+  std::cerr << "DEBUG: key_size should be: " << key_size  << std::endl;
+  
+  std::string encrypted = sc.encrypt(plaintext, keystring, noncestring);
 
-  // proof of correctness: let's try to decrypt!
-  uniquePtr<unsigned char> decryptbuf(new unsigned char[plaintext_size],
-				      [](unsigned char *p) { delete[] p; });
-  if (crypto_secretbox_open_easy (decryptbuf.get(),
-				  cypherbuf.get(), cyphertext_size,
-				  nonce, key) != 0)
-    throw std::runtime_error {"test0() message forged (sodium test)"};
-
-  if (! std::equal (plainbuf.get(), plainbuf.get() + plaintext_size + 1,
-		    decryptbuf.get()))
+  // DEBUG
+  std::string encrypted_as_hex2 = sc.tohex(encrypted);
+  std::cout << "DEBUG: encrypted=" << encrypted_as_hex2 << std::endl;
+  
+  std::string decrypted = sc.decrypt(encrypted, keystring, noncestring);
+  
+  if (plaintext != decrypted)
     throw std::runtime_error {"test0() message forged (own test)"};
 
-  // convert [cypherbuf, cypherbuf+cyphertext_size] into hex:
-  std::size_t hex_size = cyphertext_size * 2 + 1;
-  uniquePtr<char> hexbuf(new char[hex_size],
-			 [](char *p) { delete[] p; });
-  if (! sodium_bin2hex(hexbuf.get(), hex_size,
-		       cypherbuf.get(), cyphertext_size))
-    throw std::runtime_error {"test0() sodium_bin2hex() overflowed"};
+  std::string encrypted_as_hex = sc.tohex(encrypted);
 
-  // return hex output as a string:
-  std::string cyphertext {hexbuf.get(), hexbuf.get() + hex_size + 1};
-  return cyphertext;
-
-  // all buffers allocated with new[] will be automatically delete[]ed
-  // upon return or when this function throws because we've used
-  // unique_ptr<> and used deleters.
+  return encrypted_as_hex;
 }
