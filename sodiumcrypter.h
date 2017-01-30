@@ -3,20 +3,23 @@
 #ifndef _SODIUMCRYPTER_H_
 #define _SODIUMCRYPTER_H_
 
+#include <vector>
 #include <string>
 
 class SodiumCrypter
 {
  public:
-  std::string encrypt(const std::string &plaintext,
-		      const std::string &key,
-		      const std::string &nonce);
+  using data_t = std::vector<unsigned char>;
 
-  std::string decrypt(const std::string &cyphertext,
-		      const std::string &key,
-		      const std::string &nonce);
+  data_t encrypt(const data_t &plaintext,
+		 const data_t &key,
+		 const data_t &nonce);
 
-  std::string tohex(const std::string &cyphertext);
+  data_t decrypt(const data_t &cyphertext,
+		 const data_t &key,
+		 const data_t &nonce);
+
+  std::string tohex(const data_t &cyphertext);
 };
 
 #endif // _SODIUMCRYPTER_H_

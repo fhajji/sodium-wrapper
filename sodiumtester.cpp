@@ -5,6 +5,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <algorithm>
 
 #include <sodium.h>
 
@@ -17,26 +18,29 @@ SodiumTester::SodiumTester()
 std::string
 SodiumTester::test0(const std::string &plaintext)
 {
-  SodiumCrypter sc {};
+  using binary_blob_t = SodiumCrypter::data_t;
 
+  SodiumCrypter sc {};
+  
   std::size_t plaintext_size  = plaintext.size();
   std::size_t cyphertext_size = crypto_secretbox_MACBYTES + plaintext_size;
   std::size_t key_size        = crypto_secretbox_KEYBYTES;
   std::size_t nonce_size      = crypto_secretbox_NONCEBYTES;
-      
-  // get a random key and a random nonce
-  unsigned char key[key_size];
-  randombytes_buf(key, sizeof key);
-  unsigned char nonce[nonce_size];
-  randombytes_buf(nonce, sizeof nonce);
 
-  std::string keystring {key, key + key_size}; // beg, end
-  std::string noncestring {nonce, nonce + nonce_size}; // beg, end
+  // transfer plaintext into a binary blob
+  binary_blob_t plainblob {plaintext.cbegin(), plaintext.cend()};
   
-  std::string encrypted = sc.encrypt(plaintext, keystring, noncestring);
-  std::string decrypted = sc.decrypt(encrypted, keystring, noncestring);
+  // get a random key and a random nonce
+  binary_blob_t key(key_size);
+  randombytes_buf(key.data(), key_size);
+
+  binary_blob_t nonce(nonce_size);
+  randombytes_buf(nonce.data(), nonce_size);
+
+  binary_blob_t encrypted = sc.encrypt(plainblob, key, nonce);
+  binary_blob_t decrypted = sc.decrypt(encrypted, key, nonce);
   
-  if (plaintext != decrypted)
+  if (plainblob != decrypted)
     throw std::runtime_error {"test0() message forged (own test)"};
 
   std::string encrypted_as_hex = sc.tohex(encrypted);
