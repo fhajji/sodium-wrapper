@@ -7,11 +7,13 @@
 #include <string>
 #include <algorithm>
 
-#include <sodium.h>
-
+namespace sodium {
+  #include <sodium.h>
+}
+  
 SodiumTester::SodiumTester()
 {
-  if (sodium_init() == -1)
+  if (sodium::sodium_init() == -1)
     throw std::runtime_error {"sodium_init() failed"};
 }
 
@@ -33,10 +35,10 @@ SodiumTester::test0(const std::string &plaintext)
   
   // get a random key and a random nonce
   key_t key(key_size);
-  randombytes_buf(key.data(), key_size);
+  sodium::randombytes_buf(key.data(), key_size);
 
   data_t nonce(nonce_size);
-  randombytes_buf(nonce.data(), nonce_size);
+  sodium::randombytes_buf(nonce.data(), nonce_size);
 
   data_t encrypted = sc.encrypt(plainblob, key, nonce);
   data_t decrypted = sc.decrypt(encrypted, key, nonce);
