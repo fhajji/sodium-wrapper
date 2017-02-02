@@ -6,16 +6,12 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-// #include <memory>
 
 #include <sodium.h>
 
-// template <typename T>
-// using uniquePtr = std::unique_ptr<T,void(*)(T*)>;
-
 SodiumCrypter::data_t
 SodiumCrypter::encrypt (const data_t &plaintext,
-		        const data_t &key,
+		        const key_t  &key,
 		        const data_t &nonce)
 {
   std::size_t plaintext_size  = plaintext.size();
@@ -44,7 +40,7 @@ SodiumCrypter::encrypt (const data_t &plaintext,
 
 SodiumCrypter::data_t
 SodiumCrypter::decrypt (const data_t &cyphertext,
-		        const data_t &key,
+		        const key_t  &key,
 		        const data_t &nonce)
 {
   std::size_t cyphertext_size = cyphertext.size();
