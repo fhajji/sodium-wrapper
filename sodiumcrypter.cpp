@@ -7,10 +7,6 @@
 #include <vector>
 #include <algorithm>
 
-namespace sodium {
-  #include <sodium.h>
-}
-
 SodiumCrypter::data_t
 SodiumCrypter::encrypt (const data_t &plaintext,
 		        const key_t  &key,
@@ -31,10 +27,10 @@ SodiumCrypter::encrypt (const data_t &plaintext,
   data_t cyphertext(cyphertext_size);
   
   // let's encrypt now!
-  sodium::crypto_secretbox_easy (cyphertext.data(),
-				 plaintext.data(), plaintext.size(),
-				 nonce.data(),
-				 key.data());
+  crypto_secretbox_easy (cyphertext.data(),
+			 plaintext.data(), plaintext.size(),
+			 nonce.data(),
+			 key.data());
 
   // return the encrypted bytes
   return cyphertext;
@@ -62,10 +58,10 @@ SodiumCrypter::decrypt (const data_t &cyphertext,
   data_t decryptedtext(plaintext_size);
 
   // and now decrypt!
-  if (sodium::crypto_secretbox_open_easy (decryptedtext.data(),
-					  cyphertext.data(), cyphertext_size,
-					  nonce.data(),
-					  key.data()) != 0)
+  if (crypto_secretbox_open_easy (decryptedtext.data(),
+				  cyphertext.data(), cyphertext_size,
+				  nonce.data(),
+				  key.data()) != 0)
     throw std::runtime_error {"SodiumCrypter::decrypt() message forged (sodium test)"};
 
   return decryptedtext;
@@ -80,8 +76,8 @@ SodiumCrypter::tohex (const data_t &cyphertext)
   std::vector<char> hexbuf(hex_size);
   
   // convert [cypherbuf, cypherbuf + cyphertext_size] into hex:
-  if (! sodium::sodium_bin2hex(hexbuf.data(), hex_size,
-			       cyphertext.data(), cyphertext_size))
+  if (! sodium_bin2hex(hexbuf.data(), hex_size,
+		       cyphertext.data(), cyphertext_size))
     throw std::runtime_error {"SodiumCrypter::tohex() overflowed"};
 
   // XXX: is copying hexbuf into a string really necessary here?

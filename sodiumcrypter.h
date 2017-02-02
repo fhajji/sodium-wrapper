@@ -3,6 +3,8 @@
 #ifndef _SODIUMCRYPTER_H_
 #define _SODIUMCRYPTER_H_
 
+#include "sodiumalloc.h"
+
 #include <vector>
 #include <string>
 
@@ -10,7 +12,7 @@ class SodiumCrypter
 {
  public:
   using data_t = std::vector<unsigned char>;
-  using key_t  = std::vector<unsigned char>;
+  using key_t  = std::vector<unsigned char, SodiumAlloc<unsigned char>>;
   
   data_t encrypt(const data_t &plaintext,
 		 const key_t  &key,
