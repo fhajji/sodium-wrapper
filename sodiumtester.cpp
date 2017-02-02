@@ -34,12 +34,15 @@ SodiumTester::test0(const std::string &plaintext)
   // get a random key and a random nonce
   key_t key(key_size);
   randombytes_buf(key.data(), key_size);
-
+  key.get_allocator().readonly(key.data()); // try to make key read-only
+  
   data_t nonce(nonce_size);
   randombytes_buf(nonce.data(), nonce_size);
 
   data_t encrypted = sc.encrypt(plainblob, key, nonce);
   data_t decrypted = sc.decrypt(encrypted, key, nonce);
+
+  key.get_allocator().noaccess(key.data()); // try make key unread/unwriteable
   
   if (plainblob != decrypted)
     throw std::runtime_error {"test0() message forged (own test)"};
