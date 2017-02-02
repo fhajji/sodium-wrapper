@@ -1,5 +1,7 @@
 # CMakeLists.txt -- Make CMake file for project SodiumTester.
 #
+# Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
+#
 # Usage: $ cmake .
 #        $ make
 

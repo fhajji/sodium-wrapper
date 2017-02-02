@@ -1,23 +1,50 @@
-// sodiumcrypter.cpp -- implements SodiumCrypter class
+// sodiumcrypter.cpp -- Symmetric encryption / decryption with MAC
+//
+// Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 
 #include "sodiumcrypter.h"
 
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include <algorithm>
+
+/**
+ * Encrypt plaintext using key and nonce, returning cyphertext.
+ *
+ * Prior to encryption, a MAC of the plaintext is computed with key/nonce
+ * and combined with the cyphertext.  This helps detect tampering of
+ * the cyphertext and will also prevent decryption.
+ *
+ * This function will throw a std::runtime_error if the sizes of
+ * the key and nonce don't make sense.
+ *
+ * To safely use this function, it is recommended that
+ *   - key_t be protected memory (as declared in SodiumCrypter header)
+ *   - NO value of nonce is EVER reused again.
+ * 
+ * Nonces don't need to be kept secret from Eve/Oscar, and therefore
+ * don't need to be stored in key_t memory. However, care MUST be
+ * taken not to reuse a previously used nonce. When using a big
+ * noncespace (24 bits here), generating them randomly e.g. with
+ * libsodium's randombytes_buf() may be good enough... but be careful
+ * nonetheless.
+ *
+ * The cyphertext is meant to be sent over the unsecure channel,
+ * and it too won't be stored in protected key_t memory.
+ **/
 
 SodiumCrypter::data_t
 SodiumCrypter::encrypt (const data_t &plaintext,
 		        const key_t  &key,
 		        const data_t &nonce)
 {
+  // get the sizes
   std::size_t plaintext_size  = plaintext.size();
   std::size_t cyphertext_size = crypto_secretbox_MACBYTES + plaintext_size;
   std::size_t key_size        = crypto_secretbox_KEYBYTES;
   std::size_t nonce_size      = crypto_secretbox_NONCEBYTES;
 
-  // some sanity checks
+  // some sanity checks before we get started
   if (key.size() != key_size)
     throw std::runtime_error {"SodiumCrypter::encrypt() key has wrong size"};
   if (nonce.size() != nonce_size)
@@ -36,17 +63,31 @@ SodiumCrypter::encrypt (const data_t &plaintext,
   return cyphertext;
 }
 
+/**
+ * Decrypt cyphertext using key and nonce, returing decrypted plaintext.
+ * 
+ * If the cyphertext has been tampered with, decryption will fail and
+ * this function with throw a std::runtime_error.
+ *
+ * This function will also throw a std::runtime_error if the sizes of
+ * the key, nonce and cyphertext don't make sense.
+ *
+ * To use this function safely, it is recommended that
+ *   - key_t be protected memory (as declared in SodiumCrypter header)
+ **/
+
 SodiumCrypter::data_t
 SodiumCrypter::decrypt (const data_t &cyphertext,
 		        const key_t  &key,
 		        const data_t &nonce)
 {
+  // get the sizes
   std::size_t cyphertext_size = cyphertext.size();
   std::size_t key_size        = key.size();
   std::size_t nonce_size      = nonce.size();
   std::size_t plaintext_size  = cyphertext_size - crypto_secretbox_MACBYTES;
   
-  // some sanity checks
+  // some sanity checks before we get started
   if (key_size != crypto_secretbox_KEYBYTES)
     throw std::runtime_error {"SodiumCrypter::decrypt() key has wrong size"};
   if (nonce_size != crypto_secretbox_NONCEBYTES)
@@ -66,6 +107,11 @@ SodiumCrypter::decrypt (const data_t &cyphertext,
 
   return decryptedtext;
 }
+
+/**
+ * Convert the bytes of a cyphertext into a hex string,
+ * and return that string.
+ **/
 
 std::string
 SodiumCrypter::tohex (const data_t &cyphertext)

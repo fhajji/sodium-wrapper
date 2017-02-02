@@ -1,8 +1,8 @@
-// main.cpp -- test libsodium library
+// main.cpp -- Test libsodium library with custom C++ wrappers
 //
-// c++ -std=c++11 -Wall -I/usr/local/include -L/usr/local/lib -o sodiumtester main.cpp sodiumtester.cpp -lsodium
+// Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 //
-// or, better yet, use CMake w/ CMakeLists.txt like this:
+// Use CMake w/ CMakeLists.txt like this:
 //   $ cmake .
 //   $ make
 
