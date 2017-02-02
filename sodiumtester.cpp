@@ -66,10 +66,10 @@ SodiumTester::test0(const std::string &plaintext)
   randombytes_buf(nonce.data(), nonce_size); // generate random bytes
 
   // encrypt the plaintext (binary blob) using key/nonce:
-  data_t encrypted = sc.encrypt(plainblob, key, nonce);
+  data_t cyphertext = sc.encrypt(plainblob,  key, nonce);
 
   // (test-) decrypt the cyphertext using same key/nonce:
-  data_t decrypted = sc.decrypt(encrypted, key, nonce);
+  data_t decrypted  = sc.decrypt(cyphertext, key, nonce);
 
   // we're done with the key for now, disable memory access to it!
   key.get_allocator().noaccess(key.data()); // try make key unread/unwriteable
@@ -82,7 +82,7 @@ SodiumTester::test0(const std::string &plaintext)
   // as the variable 'key' goes out of scope or test0() throws:
   // see SodiumAlloc::deallocate().
 
-  // test of correctness (sanity check): the cyphertest must be
+  // test of correctness (sanity check): the cyphertext must be
   // equal to the plaintext.
   // 
   // Note that SodiumCrypter::decrypt() will also have performed
@@ -99,6 +99,6 @@ SodiumTester::test0(const std::string &plaintext)
   // finally, convert the bytes of the cyphertext into a hexadecimal
   // string that can be printed, and return that string.
 
-  std::string encrypted_as_hex = sc.tohex(encrypted);
+  std::string encrypted_as_hex = sc.tohex(cyphertext);
   return encrypted_as_hex;
 }

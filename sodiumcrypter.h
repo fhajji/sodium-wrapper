@@ -19,8 +19,8 @@ class SodiumCrypter
   // key_t is protected memory for bytes of key material
   //   * key_t memory will self-destruct/zero when out-of-scope / throws
   //   * key_t memory can be made readonly or temporarily non-accessible
-  //   * key_t memory is stored in virtual pages protected by canary
-  //     and access to those pages is granted with mprotect().
+  //   * key_t memory is stored in virtual pages protected by canary,
+  //     guard pages, and access to those pages is granted with mprotect().
   using key_t  = std::vector<unsigned char, SodiumAlloc<unsigned char>>;
 
   // Encrypt plaintext with MAC using key and nonce, returning cyphertext.

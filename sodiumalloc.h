@@ -18,7 +18,7 @@
  * and let C++11's STL allocator magic work behind the scenes to grab
  * and safely release memory in mprotect()ed vitual pages of memory.
  *
- * We this implement a custom allocator template and override:
+ * We implement a custom allocator template and override:
  *
  *   - the constructor, to initialize sodium_init()... once more,
  *     just to be safe.
