@@ -29,7 +29,7 @@
  *
  * Furthermore, we provide 3 additional functions not part of the
  * usual allocator interface, to manipulate the access rights of
- * the virutal page where the ptr resides into:
+ * the virtual page where the ptr points into:
  * 
  *   - noaccess() disables read/write access completely, but
  *     retains the memory (useful if we still need the key later)
@@ -74,13 +74,13 @@ class SodiumAlloc
    * places a canary that will be checked on deallocation, and so on.
    *
    * If sodium_allocarray() fails, we throw a std::bad_alloc, else
-   * we cast the pointer retured by it to a T* and return that, then
+   * we cast the pointer returned by it to a T* and return that, then
    * we're done.
    **/
   
   T* allocate (std::size_t num) {
-    // XXX: should we round up to at least 64 bytes?
-    // XXX: for now, we use this for 32 bytes keys, which is not enough...
+    // XXX slowly increase num until we reach at least 64 bytes
+    while (num * sizeof(T) <= 64) ++num;
     
     void *ptr = sodium_allocarray(num, sizeof(T));
     if (ptr == NULL)
@@ -101,7 +101,7 @@ class SodiumAlloc
    *
    **/
   
-  void deallocate (T* ptr, std::size_t num) {
+  void deallocate (T* ptr, std::size_t /* num */) {
     sodium_free(ptr);
   }
 
