@@ -115,8 +115,8 @@ SodiumTester::test0(const std::string &plaintext)
 bool
 SodiumTester::test1(const std::string &plaintext)
 {
-  using data_t = SodiumCrypter::data_t; // unprotected memory
-  using key_t  = SodiumCrypter::key_t;  // mprotect()ed memory for keys
+  using data_t = SodiumAuth::data_t; // unprotected memory
+  using key_t  = SodiumAuth::key_t;  // mprotect()ed memory for keys
 
   SodiumAuth sa {};
 
