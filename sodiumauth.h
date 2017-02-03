@@ -5,7 +5,7 @@
 #ifndef _SODIUMAUTH_H_
 #define _SODIUMAUTH_H_
 
-#include "key.h"
+#include "sodiumkey.h"
 #include <vector>
 
 class SodiumAuth

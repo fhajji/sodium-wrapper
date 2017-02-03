@@ -4,7 +4,7 @@
 
 #include "sodiumtester.h"
 
-#include "key.h"
+#include "sodiumkey.h"
 #include "sodiumcrypter.h"
 #include "sodiumauth.h"
 

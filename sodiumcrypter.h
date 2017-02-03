@@ -5,7 +5,7 @@
 #ifndef _SODIUMCRYPTER_H_
 #define _SODIUMCRYPTER_H_
 
-#include "key.h"
+#include "sodiumkey.h"
 
 #include <vector>
 #include <string>

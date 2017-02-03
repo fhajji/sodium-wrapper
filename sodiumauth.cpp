@@ -3,7 +3,7 @@
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 
 #include "sodiumauth.h"
-#include "key.h"
+#include "sodiumkey.h"
 
 #include <stdexcept>
 #include <vector>

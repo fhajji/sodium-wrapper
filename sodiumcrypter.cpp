@@ -3,6 +3,7 @@
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 
 #include "sodiumcrypter.h"
+#include "sodiumkey.h"
 
 #include <stdexcept>
 #include <string>
