@@ -19,13 +19,13 @@ int main()
     SodiumTester st {};
 
     std::string plaintext;
-    std::string cyphertext;
+    std::string ciphertext;
     
     std::cout << "Enter plaintext: ";
     std::getline(std::cin, plaintext);
     
-    cyphertext = st.test0(plaintext);
-    std::cout << "crypto_secretbox_easy(): " << cyphertext << std::endl;
+    ciphertext = st.test0(plaintext);
+    std::cout << "crypto_secretbox_easy(): " << ciphertext << std::endl;
 
     bool res1 = st.test1(plaintext);
     std::cout << "crypto_auth()/crypto_auth_verify(): " << res1 << std::endl;

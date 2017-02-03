@@ -33,11 +33,11 @@ SodiumTester::SodiumTester()
  *
  * - We use Sodium::Key wrapper to create and store a random key in mprotect()
  * - We use libsodium's randombytes_buf() to generate random nonce
- * - We store the plaintext/cyphertext in a data_t, which is unprotected
+ * - We store the plaintext/ciphertext in a data_t, which is unprotected
  * - We use our wrapper SodiumCrypter to do the encryption
  * - We use our wrapper SodiumCrypter to test-decrypt the result
  *   and verify that the decrypted text is the same as the plaintext.
- * - We use our wrapper SodiumCrypter to convert the cyphertext into
+ * - We use our wrapper SodiumCrypter to convert the ciphertext into
  *   hexadecimal string, which we return.
  **/
 
@@ -51,7 +51,7 @@ SodiumTester::test0(const std::string &plaintext)
   
   // let's get the sizes in bytes
   std::size_t plaintext_size  = plaintext.size();
-  std::size_t cyphertext_size = crypto_secretbox_MACBYTES + plaintext_size;
+  std::size_t ciphertext_size = crypto_secretbox_MACBYTES + plaintext_size;
   std::size_t key_size        = key.size();
   std::size_t nonce_size      = crypto_secretbox_NONCEBYTES;
 
@@ -63,20 +63,20 @@ SodiumTester::test0(const std::string &plaintext)
   randombytes_buf(nonce.data(), nonce_size); // generate random bytes
 
   // encrypt the plaintext (binary blob) using key/nonce:
-  data_t cyphertext = sc.encrypt(plainblob,  key, nonce);
+  data_t ciphertext = sc.encrypt(plainblob,  key, nonce);
 
-  // (test-) decrypt the cyphertext using same key/nonce:
-  data_t decrypted  = sc.decrypt(cyphertext, key, nonce);
+  // (test-) decrypt the ciphertext using same key/nonce:
+  data_t decrypted  = sc.decrypt(ciphertext, key, nonce);
 
   // we're done with the key for now, disable memory access to it!
   key.noaccess();
   
-  // test of correctness (sanity check): the cyphertext must be
+  // test of correctness (sanity check): the ciphertext must be
   // equal to the plaintext.
   // 
   // Note that SodiumCrypter::decrypt() will also have performed
   // a check and thrown a std::runtime_error, should the decryption
-  // fail. It can detect corruption of the cyphertext, because
+  // fail. It can detect corruption of the ciphertext, because
   // SodiumCrypter::encrypt() encrypts both the plaintext and a MAC
   // that was generated out of the plaintext and of the key/nonce before.
   //
@@ -85,10 +85,10 @@ SodiumTester::test0(const std::string &plaintext)
   if (plainblob != decrypted)
     throw std::runtime_error {"test0() message forged (own test)"};
 
-  // finally, convert the bytes of the cyphertext into a hexadecimal
+  // finally, convert the bytes of the ciphertext into a hexadecimal
   // string that can be printed, and return that string.
 
-  std::string encrypted_as_hex = sc.tohex(cyphertext);
+  std::string encrypted_as_hex = sc.tohex(ciphertext);
   return encrypted_as_hex;
 }
 

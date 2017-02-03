@@ -9,11 +9,11 @@
 #include <vector>
 
 /**
- * Encrypt plaintext using key and nonce, returning cyphertext.
+ * Encrypt plaintext using key and nonce, returning ciphertext.
  *
  * Prior to encryption, a MAC of the plaintext is computed with key/nonce
- * and combined with the cyphertext.  This helps detect tampering of
- * the cyphertext and will also prevent decryption.
+ * and combined with the ciphertext.  This helps detect tampering of
+ * the ciphertext and will also prevent decryption.
  *
  * This function will throw a std::runtime_error if the sizes of
  * the key and nonce don't make sense.
@@ -28,7 +28,7 @@
  * libsodium's randombytes_buf() may be good enough... but be careful
  * nonetheless.
  *
- * The cyphertext is meant to be sent over the unsecure channel,
+ * The ciphertext is meant to be sent over the unsecure channel,
  * and it too won't be stored in protected key_t memory.
  **/
 
@@ -39,7 +39,7 @@ SodiumCrypter::encrypt (const data_t      &plaintext,
 {
   // get the sizes
   std::size_t plaintext_size  = plaintext.size();
-  std::size_t cyphertext_size = crypto_secretbox_MACBYTES + plaintext_size;
+  std::size_t ciphertext_size = crypto_secretbox_MACBYTES + plaintext_size;
   std::size_t key_size        = Sodium::Key::KEYSIZE_SECRETBOX;
   std::size_t nonce_size      = crypto_secretbox_NONCEBYTES;
 
@@ -50,38 +50,38 @@ SodiumCrypter::encrypt (const data_t      &plaintext,
     throw std::runtime_error {"SodiumCrypter::encrypt() nonce has wrong size"};
 
   // make space for MAC and encrypted message
-  data_t cyphertext(cyphertext_size);
+  data_t ciphertext(ciphertext_size);
   
   // let's encrypt now!
-  crypto_secretbox_easy (cyphertext.data(),
+  crypto_secretbox_easy (ciphertext.data(),
 			 plaintext.data(), plaintext.size(),
 			 nonce.data(),
 			 key.data());
 
   // return the encrypted bytes
-  return cyphertext;
+  return ciphertext;
 }
 
 /**
- * Decrypt cyphertext using key and nonce, returing decrypted plaintext.
+ * Decrypt ciphertext using key and nonce, returing decrypted plaintext.
  * 
- * If the cyphertext has been tampered with, decryption will fail and
+ * If the ciphertext has been tampered with, decryption will fail and
  * this function with throw a std::runtime_error.
  *
  * This function will also throw a std::runtime_error if the sizes of
- * the key, nonce and cyphertext don't make sense.
+ * the key, nonce and ciphertext don't make sense.
  **/
 
 SodiumCrypter::data_t
-SodiumCrypter::decrypt (const data_t      &cyphertext,
+SodiumCrypter::decrypt (const data_t      &ciphertext,
 		        const Sodium::Key &key,
 		        const data_t      &nonce)
 {
   // get the sizes
-  std::size_t cyphertext_size = cyphertext.size();
+  std::size_t ciphertext_size = ciphertext.size();
   std::size_t key_size        = key.size();
   std::size_t nonce_size      = nonce.size();
-  std::size_t plaintext_size  = cyphertext_size - crypto_secretbox_MACBYTES;
+  std::size_t plaintext_size  = ciphertext_size - crypto_secretbox_MACBYTES;
   
   // some sanity checks before we get started
   if (key_size != Sodium::Key::KEYSIZE_SECRETBOX)
@@ -96,7 +96,7 @@ SodiumCrypter::decrypt (const data_t      &cyphertext,
 
   // and now decrypt!
   if (crypto_secretbox_open_easy (decryptedtext.data(),
-				  cyphertext.data(), cyphertext_size,
+				  ciphertext.data(), ciphertext_size,
 				  nonce.data(),
 				  key.data()) != 0)
     throw std::runtime_error {"SodiumCrypter::decrypt() message forged (sodium test)"};
@@ -105,21 +105,21 @@ SodiumCrypter::decrypt (const data_t      &cyphertext,
 }
 
 /**
- * Convert the bytes of a cyphertext into a hex string,
+ * Convert the bytes of a ciphertext into a hex string,
  * and return that string.
  **/
 
 std::string
-SodiumCrypter::tohex (const data_t &cyphertext)
+SodiumCrypter::tohex (const data_t &ciphertext)
 {
-  std::size_t cyphertext_size = cyphertext.size();
-  std::size_t hex_size        = cyphertext_size * 2 + 1;
+  std::size_t ciphertext_size = ciphertext.size();
+  std::size_t hex_size        = ciphertext_size * 2 + 1;
 
   std::vector<char> hexbuf(hex_size);
   
-  // convert [cypherbuf, cypherbuf + cyphertext_size] into hex:
+  // convert [ciphertext, ciphertext + ciphertext_size] into hex:
   if (! sodium_bin2hex(hexbuf.data(), hex_size,
-		       cyphertext.data(), cyphertext_size))
+		       ciphertext.data(), ciphertext_size))
     throw std::runtime_error {"SodiumCrypter::tohex() overflowed"};
 
   // XXX: is copying hexbuf into a string really necessary here?

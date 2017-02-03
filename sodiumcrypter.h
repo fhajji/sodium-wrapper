@@ -13,22 +13,22 @@
 class SodiumCrypter
 {
  public:
-  // data_t is unprotected memory for bytes of plaintext, cyphertext and nonces
+  // data_t is unprotected memory for bytes of plaintext, ciphertext and nonces
   using data_t = std::vector<unsigned char>;
 
-  // Encrypt plaintext with MAC using key and nonce, returning cyphertext.
+  // Encrypt plaintext with MAC using key and nonce, returning ciphertext.
   data_t encrypt(const data_t      &plaintext,
 		 const Sodium::Key &key,
 		 const data_t      &nonce);
 
-  // Decrypt cyphertext using key and nonce, returning decrypted text
-  // or throwing std::runtime_error if cyphertext was corrupted.
-  data_t decrypt(const data_t      &cyphertext,
+  // Decrypt ciphertext using key and nonce, returning decrypted text
+  // or throwing std::runtime_error if ciphertext was corrupted.
+  data_t decrypt(const data_t      &ciphertext,
 		 const Sodium::Key &key,
 		 const data_t      &nonce);
 
-  // Convert cyphertext bytes into a string of hexadecimal symbols.
-  std::string tohex(const data_t &cyphertext);
+  // Convert ciphertext bytes into a string of hexadecimal symbols.
+  std::string tohex(const data_t &ciphertext);
 };
 
 #endif // _SODIUMCRYPTER_H_
