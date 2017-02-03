@@ -3,6 +3,7 @@
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 
 #include "sodiumauth.h"
+#include "key.h"
 
 #include <stdexcept>
 #include <vector>
@@ -13,18 +14,15 @@
  *
  * This function will throw a std::runtime_error if the length of
  * the key doesn't make sense.
- *
- * To safely use this function, it is recommended that
- *   - key_t be protected memory (as declared in SodiumAuth header)
  **/
 
 SodiumAuth::data_t
-SodiumAuth::auth (const data_t &plaintext,
-		  const key_t  &key)
+SodiumAuth::auth (const data_t      &plaintext,
+		  const Sodium::Key &key)
 {
   // get the sizes
   std::size_t plaintext_size  = plaintext.size();
-  std::size_t key_size        = crypto_auth_KEYBYTES;
+  std::size_t key_size        = Sodium::Key::KEYSIZE_AUTH;
   std::size_t mac_size        = crypto_auth_BYTES;
   
   // some sanity checks before we get started
@@ -49,15 +47,12 @@ SodiumAuth::auth (const data_t &plaintext,
  *
  * This function will throw a std::runtime_error if the sizes of
  * the key or the mac don't make sense.
- *
- * To safely use this fnction, it is recommended that
- *  - key_t be protected memory (as declared in SodiumAuth header)
  **/
 
 bool
-SodiumAuth::verify (const data_t &plaintext,
-		    const data_t &mac,
-		    const key_t  &key)
+SodiumAuth::verify (const data_t      &plaintext,
+		    const data_t      &mac,
+		    const Sodium::Key &key)
 {
   // get the sizes
   std::size_t plaintext_size  = plaintext.size();
@@ -67,11 +62,11 @@ SodiumAuth::verify (const data_t &plaintext,
   // some sanity checks before we get started
   if (mac_size != crypto_auth_BYTES)
     throw std::runtime_error {"SodiumAuth::verify() mac has wrong size"};
-  if (key_size != crypto_auth_KEYBYTES)
+  if (key_size != Sodium::Key::KEYSIZE_AUTH)
     throw std::runtime_error {"SodiumAuth::verify() key has wrong size"};
 
   // and now verify!
   return crypto_auth_verify (mac.data(),
-			      plaintext.data(), plaintext_size,
+			     plaintext.data(), plaintext_size,
 			     key.data()) == 0;
 }

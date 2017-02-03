@@ -19,8 +19,7 @@
  * the key and nonce don't make sense.
  *
  * To safely use this function, it is recommended that
- *   - key_t be protected memory (as declared in SodiumCrypter header)
- *   - NO value of nonce is EVER reused again.
+ *   - NO value of nonce is EVER reused again with the same key
  * 
  * Nonces don't need to be kept secret from Eve/Oscar, and therefore
  * don't need to be stored in key_t memory. However, care MUST be
@@ -34,14 +33,14 @@
  **/
 
 SodiumCrypter::data_t
-SodiumCrypter::encrypt (const data_t &plaintext,
-		        const key_t  &key,
-		        const data_t &nonce)
+SodiumCrypter::encrypt (const data_t      &plaintext,
+		        const Sodium::Key &key,
+		        const data_t      &nonce)
 {
   // get the sizes
   std::size_t plaintext_size  = plaintext.size();
   std::size_t cyphertext_size = crypto_secretbox_MACBYTES + plaintext_size;
-  std::size_t key_size        = crypto_secretbox_KEYBYTES;
+  std::size_t key_size        = Sodium::Key::KEYSIZE_SECRETBOX;
   std::size_t nonce_size      = crypto_secretbox_NONCEBYTES;
 
   // some sanity checks before we get started
@@ -71,15 +70,12 @@ SodiumCrypter::encrypt (const data_t &plaintext,
  *
  * This function will also throw a std::runtime_error if the sizes of
  * the key, nonce and cyphertext don't make sense.
- *
- * To use this function safely, it is recommended that
- *   - key_t be protected memory (as declared in SodiumCrypter header)
  **/
 
 SodiumCrypter::data_t
-SodiumCrypter::decrypt (const data_t &cyphertext,
-		        const key_t  &key,
-		        const data_t &nonce)
+SodiumCrypter::decrypt (const data_t      &cyphertext,
+		        const Sodium::Key &key,
+		        const data_t      &nonce)
 {
   // get the sizes
   std::size_t cyphertext_size = cyphertext.size();
@@ -88,7 +84,7 @@ SodiumCrypter::decrypt (const data_t &cyphertext,
   std::size_t plaintext_size  = cyphertext_size - crypto_secretbox_MACBYTES;
   
   // some sanity checks before we get started
-  if (key_size != crypto_secretbox_KEYBYTES)
+  if (key_size != Sodium::Key::KEYSIZE_SECRETBOX)
     throw std::runtime_error {"SodiumCrypter::decrypt() key has wrong size"};
   if (nonce_size != crypto_secretbox_NONCEBYTES)
     throw std::runtime_error {"SodiumCrypter::decrypt() nonce has wrong size"};

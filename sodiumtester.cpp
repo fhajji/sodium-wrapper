@@ -4,6 +4,7 @@
 
 #include "sodiumtester.h"
 
+#include "key.h"
 #include "sodiumcrypter.h"
 #include "sodiumauth.h"
 
@@ -30,8 +31,8 @@ SodiumTester::SodiumTester()
  * Encrypt a plaintext string with a randomly generated key and nonce
  * and return the result as a string in hexadecimal representation.
  *
- * - We use libsodium's randombytes_buf() to generate random key/nonce
- * - We store the key in a key_t, which is located in protected memory
+ * - We use Sodium::Key wrapper to create and store a random key in mprotect()
+ * - We use libsodium's randombytes_buf() to generate random nonce
  * - We store the plaintext/cyphertext in a data_t, which is unprotected
  * - We use our wrapper SodiumCrypter to do the encryption
  * - We use our wrapper SodiumCrypter to test-decrypt the result
@@ -44,24 +45,19 @@ std::string
 SodiumTester::test0(const std::string &plaintext)
 {  
   using data_t = SodiumCrypter::data_t; // unprotected memory
-  using key_t  = SodiumCrypter::key_t;  // mprotect()ed memory for keys
   
   SodiumCrypter sc {}; // encryptor, decryptor, hexifior.
-
+  Sodium::Key   key(Sodium::Key::KEYSIZE_SECRETBOX);
+  
   // let's get the sizes in bytes
   std::size_t plaintext_size  = plaintext.size();
   std::size_t cyphertext_size = crypto_secretbox_MACBYTES + plaintext_size;
-  std::size_t key_size        = crypto_secretbox_KEYBYTES;
+  std::size_t key_size        = key.size();
   std::size_t nonce_size      = crypto_secretbox_NONCEBYTES;
 
   // transfer plaintext into a binary blob
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
   
-  // create a random key:
-  key_t key(key_size); // store it in protected memory (see SodiumAlloc)
-  randombytes_buf(key.data(), key_size);    // generate random bytes
-  key.get_allocator().readonly(key.data()); // try to make key read-only
-
   // create a random nonce:
   data_t nonce(nonce_size); // store it in unprotected memory
   randombytes_buf(nonce.data(), nonce_size); // generate random bytes
@@ -73,16 +69,8 @@ SodiumTester::test0(const std::string &plaintext)
   data_t decrypted  = sc.decrypt(cyphertext, key, nonce);
 
   // we're done with the key for now, disable memory access to it!
-  key.get_allocator().noaccess(key.data()); // try make key unread/unwriteable
-
-  // should we need the key again here, we could make it readable
-  // again with a call to key.get_allocator().readonly(key.data()),
-  // as it is still in memory.
-  //
-  // the key will self-destruct and zero its storage though as soon
-  // as the variable 'key' goes out of scope or test0() throws:
-  // see SodiumAlloc::deallocate().
-
+  key.noaccess();
+  
   // test of correctness (sanity check): the cyphertext must be
   // equal to the plaintext.
   // 
@@ -116,23 +104,18 @@ bool
 SodiumTester::test1(const std::string &plaintext)
 {
   using data_t = SodiumAuth::data_t; // unprotected memory
-  using key_t  = SodiumAuth::key_t;  // mprotect()ed memory for keys
-
-  SodiumAuth sa {};
-
+  
+  SodiumAuth  sa {};
+  Sodium::Key key(Sodium::Key::KEYSIZE_AUTH);
+  
   // let's get the sizes in bytes
   std::size_t plaintext_size  = plaintext.size();
   std::size_t mac_size        = crypto_auth_BYTES;
-  std::size_t key_size        = crypto_auth_KEYBYTES;
-
+  std::size_t key_size        = key.size();
+  
   // transfer plaintext into a binary blob
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
   
-  // create a random key:
-  key_t key(key_size); // store it in protected memory (see SodiumAlloc)
-  randombytes_buf(key.data(), key_size);    // generate random bytes
-  key.get_allocator().readonly(key.data()); // try to make key read-only
-
   // compute the MAC:
   data_t mac { sa.auth(plainblob, key) };
 
@@ -148,14 +131,14 @@ SodiumTester::test1(const std::string &plaintext)
 
   // 3. restore plaintext, then change key and reverify MAC
   plainblob.assign(plaintext.cbegin(), plaintext.cend());
-  key.get_allocator().readwrite(key.data());
-  key[0] = static_cast<unsigned char>('!');
-  key.get_allocator().readonly(key.data());
+  key.readwrite();
+  key.initialize();
+  key.readonly();
   if (sa.verify(plainblob, mac, key))
     throw std::runtime_error {"SodiumTester::test1() different KEYS verify"};
 
   // not strictly necessary, because we're about to destroy key soon
-  key.get_allocator().noaccess(key.data());
+  key.noaccess();
 
   return true;
 }
