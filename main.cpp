@@ -29,6 +29,15 @@ int main()
 
     bool res1 = st.test1(plaintext);
     std::cout << "crypto_auth()/crypto_auth_verify(): " << res1 << std::endl;
+
+    std::string pwhash_pw1, pwhash_pw2;
+    std::cout << "crypto_pwhash() test -- password #1: ";
+    std::getline(std::cin, pwhash_pw1);
+    std::cout << "crypto_pwhash() test -- password #2: ";
+    std::getline(std::cin, pwhash_pw2);
+        
+    bool res2 = st.test2(plaintext, pwhash_pw1, pwhash_pw2);
+    std::cout << "crypto_pwhash(): " << res2 << std::endl;
   }
   catch (std::runtime_error e) {
     std::cerr << e.what() << std::endl;

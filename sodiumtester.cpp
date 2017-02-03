@@ -142,3 +142,81 @@ SodiumTester::test1(const std::string &plaintext)
 
   return true;
 }
+
+/**
+ * This function tests the key derivation algorithm of libsodium.
+ *
+ * 1/ Derive a key from a user-entered password, and encrypt plaintext
+ * with it.
+ * 2/ Re-ask user for password, derive new key from that, and
+ * decrypt encrypted text with the new key.
+ * 3/ See if we can decrypt the encrypted plaintext this way.
+ **/
+
+bool
+SodiumTester::test2(const std::string &plaintext,
+		    const std::string &pw1,
+		    const std::string &pw2)
+{
+  using data_t = SodiumCrypter::data_t; // unprotected memory
+  using key_t  = Sodium::Key::key_t;    // protected memory
+  
+  SodiumCrypter sc {}; // encryptor, decryptor, hexifior.
+  Sodium::Key   key(Sodium::Key::KEYSIZE_SECRETBOX,
+		    false); // uninitialized, read-write for now
+  key_t         keybuf(Sodium::Key::KEYSIZE_SECRETBOX);
+  
+  data_t salt(crypto_pwhash_SALTBYTES);
+  randombytes_buf(salt.data(), salt.size());
+
+  // let's get the sizes in bytes
+  std::size_t plaintext_size  = plaintext.size();
+  std::size_t ciphertext_size = crypto_secretbox_MACBYTES + plaintext_size;
+  std::size_t key_size        = key.size();
+  std::size_t nonce_size      = crypto_secretbox_NONCEBYTES;
+  std::size_t salt_size       = salt.size();
+
+  // transfer plaintext into a binary blob
+  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+
+  // create a random nonce:
+  data_t nonce(nonce_size); // store it in unprotected memory
+  randombytes_buf(nonce.data(), nonce_size); // generate random bytes
+
+  // transfer user-supplied passwords into binary blobs
+  std::vector<char> pw1blob {pw1.cbegin(), pw1.cend()}; // XXX key_t?
+  std::vector<char> pw2blob {pw2.cbegin(), pw2.cend()}; // XXX key_t?
+  
+  // derive a key from the hash of first passwd into keybuf.data():
+  if (crypto_pwhash (keybuf.data(), keybuf.size(),
+		     pw1blob.data(), pw1blob.size(),
+		     salt.data(),
+		     crypto_pwhash_OPSLIMIT_INTERACTIVE,
+		     crypto_pwhash_MEMLIMIT_INTERACTIVE,
+		     crypto_pwhash_ALG_DEFAULT) != 0)
+    throw std::runtime_error {"SodiumTester::test2() crypto_pwhash() #1"};
+
+  // transfer the keybuf into our key object
+  key.setkey(keybuf.data(), keybuf.size());
+
+  // now encrypt with that key
+  data_t ciphertext = sc.encrypt(plainblob, key, nonce);
+
+  // derive a key from the hash of second passwd into keybuf.data()
+  if (crypto_pwhash (keybuf.data(), keybuf.size(),
+		     pw2blob.data(), pw2blob.size(),
+		     salt.data(),
+		     crypto_pwhash_OPSLIMIT_INTERACTIVE,
+		     crypto_pwhash_MEMLIMIT_INTERACTIVE,
+		     crypto_pwhash_ALG_DEFAULT) != 0)
+    throw std::runtime_error {"SodiumTester::test2() crypto_pwhash() #2"};
+  
+  // transfer the keybuf into our key object
+  key.setkey(keybuf.data(), keybuf.size());
+
+  // now decrypt with that new key.
+  // if the key/password was different, we will throw right here and now
+  data_t decrypted = sc.decrypt(ciphertext, key, nonce);
+
+  return (decrypted == plainblob);
+}

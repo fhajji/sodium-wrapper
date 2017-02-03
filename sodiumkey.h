@@ -1,4 +1,4 @@
-// key.h -- Sodium Key Wrapper
+// sodiumkey.h -- Sodium Key Wrapper
 //
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 
@@ -7,6 +7,7 @@
 
 #include <cstddef>
 #include <vector>
+#include <algorithm>
 #include "sodiumalloc.h"
 
 namespace Sodium {
@@ -26,15 +27,34 @@ class Key
   //     guard pages, and access to those pages is granted with mprotect().
   using key_t = std::vector<unsigned char, SodiumAlloc<unsigned char>>;
   
-  Key(std::size_t key_size) : keydata(key_size) { initialize(); readonly(); }
+  Key(std::size_t key_size, bool init=true) : keydata(key_size) {
+    if (init) {
+      initialize();
+      readonly();
+    }
+    // CAREFUL: read/write uninitialized key
+  }
+
+  Key(const unsigned char *newkey, std::size_t key_size) : keydata(key_size) {
+    setkey (newkey, key_size);
+    readonly();
+  }
   
   Key(const Key &other)             = delete;
   Key& operator= (const Key &other) = delete;
 
   const unsigned char *data() const { return keydata.data(); }
-  const std::size_t size()    const { return keydata.size(); }
+  const std::size_t    size() const { return keydata.size(); }
 
-  void initialize() { randombytes_buf (keydata.data(), keydata.size()); }
+  void setkey (const unsigned char *newkey, std::size_t newsize) {
+    if (newsize != size())
+      throw std::runtime_error {"Sodium::Key::setkey() newsize != oldsize"};
+
+    // CAREFUL: will crash if key is noaccess() or readonly()
+    std::copy (newkey, newkey + size(), keydata.data());
+  }
+  
+  void initialize() { randombytes_buf(keydata.data(), keydata.size()); }
   void destroy()    { sodium_memzero(keydata.data(), keydata.size()); }
   
   void noaccess()  { keydata.get_allocator().noaccess(keydata.data()); }
