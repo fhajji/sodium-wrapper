@@ -19,7 +19,7 @@ set ( MY_LIB_DIR "/usr/local/lib" )
 
 include_directories ( ${MY_INCLUDE_DIR} )
 
-set ( SOURCE_FILES main.cpp sodiumtester.cpp sodiumcrypter.cpp )
+set ( SOURCE_FILES main.cpp sodiumtester.cpp sodiumcrypter.cpp sodiumauth.cpp )
 
 find_library ( SODIUM_LIB sodium ${MY_LIB_DIR} )
 

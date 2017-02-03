@@ -16,6 +16,7 @@ class SodiumTester
 
   // Here go the test functions for the C++ libsodium wrappers:
   std::string test0(const std::string &plaintext);
+  bool        test1(const std::string &plaintext);
 };
 
 #endif // _SODIUMTESTER_H_

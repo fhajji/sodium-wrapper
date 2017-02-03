@@ -26,6 +26,9 @@ int main()
     
     cyphertext = st.test0(plaintext);
     std::cout << "crypto_secretbox_easy(): " << cyphertext << std::endl;
+
+    bool res1 = st.test1(plaintext);
+    std::cout << "crypto_auth()/crypto_auth_verify(): " << res1 << std::endl;
   }
   catch (std::runtime_error e) {
     std::cerr << e.what() << std::endl;
