@@ -164,7 +164,6 @@ SodiumTester::test2(const std::string &plaintext,
   SodiumCrypter sc {}; // encryptor, decryptor, hexifior.
   Sodium::Key   key(Sodium::Key::KEYSIZE_SECRETBOX,
 		    false); // uninitialized, read-write for now
-  key_t         keybuf(Sodium::Key::KEYSIZE_SECRETBOX);
   
   data_t salt(crypto_pwhash_SALTBYTES);
   randombytes_buf(salt.data(), salt.size());
@@ -183,37 +182,15 @@ SodiumTester::test2(const std::string &plaintext,
   data_t nonce(nonce_size); // store it in unprotected memory
   randombytes_buf(nonce.data(), nonce_size); // generate random bytes
 
-  // transfer user-supplied passwords into binary blobs
-  std::vector<char> pw1blob {pw1.cbegin(), pw1.cend()}; // XXX key_t?
-  std::vector<char> pw2blob {pw2.cbegin(), pw2.cend()}; // XXX key_t?
+  // try the first key
+  key.setpass(pw1, salt, Sodium::Key::strength_t::medium);
   
-  // derive a key from the hash of first passwd into keybuf.data():
-  if (crypto_pwhash (keybuf.data(), keybuf.size(),
-		     pw1blob.data(), pw1blob.size(),
-		     salt.data(),
-		     crypto_pwhash_OPSLIMIT_INTERACTIVE,
-		     crypto_pwhash_MEMLIMIT_INTERACTIVE,
-		     crypto_pwhash_ALG_DEFAULT) != 0)
-    throw std::runtime_error {"SodiumTester::test2() crypto_pwhash() #1"};
-
-  // transfer the keybuf into our key object
-  key.setkey(keybuf.data(), keybuf.size());
-
   // now encrypt with that key
   data_t ciphertext = sc.encrypt(plainblob, key, nonce);
 
-  // derive a key from the hash of second passwd into keybuf.data()
-  if (crypto_pwhash (keybuf.data(), keybuf.size(),
-		     pw2blob.data(), pw2blob.size(),
-		     salt.data(),
-		     crypto_pwhash_OPSLIMIT_INTERACTIVE,
-		     crypto_pwhash_MEMLIMIT_INTERACTIVE,
-		     crypto_pwhash_ALG_DEFAULT) != 0)
-    throw std::runtime_error {"SodiumTester::test2() crypto_pwhash() #2"};
+  // try the second key
+  key.setpass(pw2, salt, Sodium::Key::strength_t::medium);
   
-  // transfer the keybuf into our key object
-  key.setkey(keybuf.data(), keybuf.size());
-
   // now decrypt with that new key.
   // if the key/password was different, we will throw right here and now
   data_t decrypted = sc.decrypt(ciphertext, key, nonce);

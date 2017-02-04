@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <vector>
 #include <algorithm>
+#include <string>
 #include "sodiumalloc.h"
 
 namespace Sodium {
@@ -19,7 +20,14 @@ class Key
   // Some common constants for typical key sizes from <sodium.h>
   static constexpr std::size_t KEYSIZE_SECRETBOX = crypto_secretbox_KEYBYTES;
   static constexpr std::size_t KEYSIZE_AUTH      = crypto_auth_KEYBYTES;
+  static constexpr std::size_t KEYSIZE_SALT      = crypto_pwhash_SALTBYTES;
 
+  // The strengh of the key derivation efforts for setpassword()
+  using strength_t = enum class Strength { low, medium, high };
+
+  // data_t is unprotected memory
+  using data_t = std::vector<unsigned char>;
+  
   // key_t is protected memory for bytes of key material
   //   * key_t memory will self-destruct/zero when out-of-scope / throws
   //   * key_t memory can be made readonly or temporarily non-accessible
@@ -35,23 +43,56 @@ class Key
     // CAREFUL: read/write uninitialized key
   }
 
-  Key(const unsigned char *newkey, std::size_t key_size) : keydata(key_size) {
-    setkey (newkey, key_size);
-    readonly();
-  }
-  
   Key(const Key &other)             = delete;
   Key& operator= (const Key &other) = delete;
 
   const unsigned char *data() const { return keydata.data(); }
   const std::size_t    size() const { return keydata.size(); }
 
-  void setkey (const unsigned char *newkey, std::size_t newsize) {
-    if (newsize != size())
-      throw std::runtime_error {"Sodium::Key::setkey() newsize != oldsize"};
+  /**
+   * If the key is readwrite(), derive key material from the string
+   * password, and the salt (which must be KEYSIZE_SALT bytes long)
+   * and store that key material into this key object.
+   *
+   * The strength parameter determines how much effort is to be
+   * put into the derivation of the key. It can be one of
+   *    Sodium::Key::strength_t::{low,medium,high}.
+   **/
+  void setpass (const std::string &password,
+		const data_t &salt,
+		const strength_t strength = strength_t::high) {
 
-    // CAREFUL: will crash if key is noaccess() or readonly()
-    std::copy (newkey, newkey + size(), keydata.data());
+    // check strength and set appropriate parameters
+    unsigned long long strength_mem;
+    unsigned long long strength_cpu;
+    switch (strength) {
+    case strength_t::low:
+      strength_mem = crypto_pwhash_MEMLIMIT_INTERACTIVE;
+      strength_cpu = crypto_pwhash_OPSLIMIT_INTERACTIVE;
+      break;
+    case strength_t::medium:
+      strength_mem = crypto_pwhash_MEMLIMIT_MODERATE;
+      strength_cpu = crypto_pwhash_OPSLIMIT_MODERATE;
+      break;
+    case strength_t::high:
+      strength_mem = crypto_pwhash_MEMLIMIT_SENSITIVE;
+      strength_cpu = crypto_pwhash_OPSLIMIT_SENSITIVE;
+    default:
+      throw std::runtime_error {"Sodium:::Key::setpassword() wrong strength"};
+    }
+
+    // check salt length
+    if (salt.size() != KEYSIZE_SALT)
+      throw std::runtime_error {"Sodium::Key::setpassword() wrong salt size"};
+
+    // derive a key from the hash of the password, and store it!
+    if (crypto_pwhash (keydata.data(), keydata.size(),
+		       password.data(), password.size(),
+		       salt.data(),
+		       strength_cpu,
+		       strength_mem,
+		       crypto_pwhash_ALG_DEFAULT) != 0)
+      throw std::runtime_error {"Sodium::Key::setpassword() crypto_pwhash()"};
   }
   
   void initialize() { randombytes_buf(keydata.data(), keydata.size()); }
