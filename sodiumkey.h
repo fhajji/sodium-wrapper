@@ -104,7 +104,7 @@ class Key
    *    Sodium::Key::strength_t::{low,medium,high}.
    *
    * This function throws a std::runtime_error if the strength parameter
-   * or the salt size don't make sense, or of the underlying libsodium
+   * or the salt size don't make sense, or if the underlying libsodium
    * derivation function crypto_pwhash() runs out of memory.
    **/
 
@@ -166,6 +166,10 @@ class Key
    * Destroy the bytes stored in protected memory of this key by
    * attempting to zeroing them.
    *
+   * A Key that has been destroy()ed still holds size() zero-bytes in
+   * protected memory, and can thus be reused, i.e. reset by calling
+   * e.g. setpass().
+   * 
    * You normally don't need to explicitely zero a Key, because Keys
    * self-destruct (including zeroing their bytes) when they go out
    * of scope. This function is provided in case you need to immediately
