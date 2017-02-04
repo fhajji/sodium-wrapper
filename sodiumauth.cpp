@@ -16,9 +16,9 @@
  * the key doesn't make sense.
  **/
 
-SodiumAuth::data_t
-SodiumAuth::auth (const data_t      &plaintext,
-		  const Sodium::Key &key)
+Sodium::Auth::data_t
+Sodium::Auth::auth (const Sodium::Auth::data_t &plaintext,
+		    const Sodium::Key          &key)
 {
   // get the sizes
   std::size_t plaintext_size  = plaintext.size();
@@ -27,7 +27,7 @@ SodiumAuth::auth (const data_t      &plaintext,
   
   // some sanity checks before we get started
   if (key.size() != key_size)
-    throw std::runtime_error {"SodiumAuth::auth() key has wrong size"};
+    throw std::runtime_error {"Sodium::Auth::auth() key wrong size"};
 
   // make space for MAC
   data_t mac(mac_size);
@@ -50,9 +50,9 @@ SodiumAuth::auth (const data_t      &plaintext,
  **/
 
 bool
-SodiumAuth::verify (const data_t      &plaintext,
-		    const data_t      &mac,
-		    const Sodium::Key &key)
+Sodium::Auth::verify (const Sodium::Auth::data_t &plaintext,
+		      const Sodium::Auth::data_t &mac,
+		      const Sodium::Key          &key)
 {
   // get the sizes
   std::size_t plaintext_size  = plaintext.size();
@@ -61,9 +61,9 @@ SodiumAuth::verify (const data_t      &plaintext,
   
   // some sanity checks before we get started
   if (mac_size != crypto_auth_BYTES)
-    throw std::runtime_error {"SodiumAuth::verify() mac has wrong size"};
+    throw std::runtime_error {"Sodium::Auth::verify() mac wrong size"};
   if (key_size != Sodium::Key::KEYSIZE_AUTH)
-    throw std::runtime_error {"SodiumAuth::verify() key has wrong size"};
+    throw std::runtime_error {"Sodium::Auth::verify() key wrong size"};
 
   // and now verify!
   return crypto_auth_verify (mac.data(),

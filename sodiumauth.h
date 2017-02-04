@@ -8,7 +8,9 @@
 #include "sodiumkey.h"
 #include <vector>
 
-class SodiumAuth
+namespace Sodium {
+
+class Auth
 {
  public:
   // data_t is unprotected memory for bytes of plaintext and MAC
@@ -25,4 +27,6 @@ class SodiumAuth
 	      const Sodium::Key &key);
 };
 
+} // namespace Sodium
+ 
 #endif // _SODIUMAUTH_H_

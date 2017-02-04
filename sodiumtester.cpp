@@ -103,10 +103,10 @@ SodiumTester::test0(const std::string &plaintext)
 bool
 SodiumTester::test1(const std::string &plaintext)
 {
-  using data_t = SodiumAuth::data_t; // unprotected memory
+  using data_t = Sodium::Auth::data_t; // unprotected memory
   
-  SodiumAuth  sa {};
-  Sodium::Key key(Sodium::Key::KEYSIZE_AUTH);
+  Sodium::Auth sa {};
+  Sodium::Key  key(Sodium::Key::KEYSIZE_AUTH);
   
   // let's get the sizes in bytes
   std::size_t plaintext_size  = plaintext.size();
