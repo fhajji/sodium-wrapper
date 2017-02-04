@@ -34,20 +34,20 @@ SodiumTester::SodiumTester()
  * - We use Sodium::Key wrapper to create and store a random key in mprotect()
  * - We use libsodium's randombytes_buf() to generate random nonce
  * - We store the plaintext/ciphertext in a data_t, which is unprotected
- * - We use our wrapper SodiumCrypter to do the encryption
- * - We use our wrapper SodiumCrypter to test-decrypt the result
+ * - We use our wrapper Sodium::Crypter to do the encryption
+ * - We use our wrapper Sodium::Crypter to test-decrypt the result
  *   and verify that the decrypted text is the same as the plaintext.
- * - We use our wrapper SodiumCrypter to convert the ciphertext into
+ * - We use our wrapper Sodium::Crypter to convert the ciphertext into
  *   hexadecimal string, which we return.
  **/
 
 std::string
 SodiumTester::test0(const std::string &plaintext)
 {  
-  using data_t = SodiumCrypter::data_t; // unprotected memory
+  using data_t = Sodium::Crypter::data_t; // unprotected memory
   
-  SodiumCrypter sc {}; // encryptor, decryptor, hexifior.
-  Sodium::Key   key(Sodium::Key::KEYSIZE_SECRETBOX);
+  Sodium::Crypter sc {}; // encryptor, decryptor, hexifior.
+  Sodium::Key     key(Sodium::Key::KEYSIZE_SECRETBOX);
   
   // let's get the sizes in bytes
   std::size_t plaintext_size  = plaintext.size();
@@ -74,10 +74,10 @@ SodiumTester::test0(const std::string &plaintext)
   // test of correctness (sanity check): the ciphertext must be
   // equal to the plaintext.
   // 
-  // Note that SodiumCrypter::decrypt() will also have performed
+  // Note that Sodium::Crypter::decrypt() will also have performed
   // a check and thrown a std::runtime_error, should the decryption
   // fail. It can detect corruption of the ciphertext, because
-  // SodiumCrypter::encrypt() encrypts both the plaintext and a MAC
+  // Sodium::Crypter::encrypt() encrypts both the plaintext and a MAC
   // that was generated out of the plaintext and of the key/nonce before.
   //
   // We're just double-checking here.
@@ -158,14 +158,14 @@ SodiumTester::test2(const std::string &plaintext,
 		    const std::string &pw1,
 		    const std::string &pw2)
 {
-  using data_t = SodiumCrypter::data_t; // unprotected memory
-  using key_t  = Sodium::Key::key_t;    // protected memory
+  using data_t = Sodium::Crypter::data_t; // unprotected memory
+  using key_t  = Sodium::Key::key_t;      // protected memory
   
-  SodiumCrypter sc {}; // encryptor, decryptor, hexifior.
-  Sodium::Key   key(Sodium::Key::KEYSIZE_SECRETBOX,
-		    false); // uninitialized, read-write for now
+  Sodium::Crypter sc {}; // encryptor, decryptor, hexifior.
+  Sodium::Key     key(Sodium::Key::KEYSIZE_SECRETBOX,
+		      false); // uninitialized, read-write for now
   
-  data_t salt(crypto_pwhash_SALTBYTES);
+  data_t salt(Sodium::Key::KEYSIZE_SALT);
   randombytes_buf(salt.data(), salt.size());
 
   // let's get the sizes in bytes

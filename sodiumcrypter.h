@@ -10,7 +10,9 @@
 #include <vector>
 #include <string>
 
-class SodiumCrypter
+namespace Sodium {
+
+class Crypter
 {
  public:
   // data_t is unprotected memory for bytes of plaintext, ciphertext and nonces
@@ -31,4 +33,6 @@ class SodiumCrypter
   std::string tohex(const data_t &ciphertext);
 };
 
+} // namespace Sodium
+ 
 #endif // _SODIUMCRYPTER_H_
