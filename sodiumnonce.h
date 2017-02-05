@@ -12,7 +12,7 @@
 
 namespace Sodium {
 
-// Typical values for number of bytes of Nonces:
+// Typical values for number of bytes of Nonces (from <sodium.h>):
 static constexpr std::size_t NONCESIZE_SECRETBOX = crypto_secretbox_NONCEBYTES;
 
 template <unsigned int N=NONCESIZE_SECRETBOX>
@@ -91,22 +91,40 @@ class Nonce
    * (for a given length).
    **/
  
-  bool is_zero_p() {
+  bool is_zero() {
     return sodium_is_zero(noncedata.data(), noncedata.size()) == 1;
   }
 
- /**
-  * Compute (*this + b) mod (2 ^ (8*N)) in constant time
-  * and store the result back in *this.
-  *
-  * The byte patterns stored in the Nonce(s) is considered to be
-  * in little endian format.
-  **/
- Nonce<N>& operator+= (const Nonce<N> &b) {
-   sodium_add(noncedata.data(), b.noncedata.data(), noncedata.size());
-   return *this;
- }
+  /**
+   * Compute (*this + b) mod (2 ^ (8*N)) in constant time
+   * and store the result back in *this.
+   *
+   * The byte patterns stored in the Nonce(s) is considered to be
+   * in little endian format.
+   **/
+  Nonce<N>& operator+= (const Nonce<N> &b) {
+    sodium_add(noncedata.data(), b.noncedata.data(), noncedata.size());
+    return *this;
+  }
 
+ /**
+  * Return the bytes of the Nonce as hex digits.
+  **/
+
+  std::string tohex() {
+    constexpr std::size_t hexbuf_size = N*2+1;
+    std::vector<char> hexbuf(hexbuf_size);
+    if (! sodium_bin2hex(hexbuf.data(), hexbuf_size,
+			 noncedata.data(), N))
+      throw std::runtime_error {"Sodium::Nonce<N>::tohex() overflowed"};
+    
+    // XXX is copying hexbuf into a string really necessary here?
+
+    // return hex output as a string:
+    std::string outhex {hexbuf.data(), hexbuf.data() + hexbuf_size};
+    return outhex;
+  }
+ 
  private:
   data_t noncedata; // the bytes of the nonce are stored in normal memory
 };
@@ -114,46 +132,46 @@ class Nonce
 /**
  * Compare two Nonces in constant time.
  **/
-template <unsigned int N=NONCESIZE_SECRETBOX>
+template <unsigned int N>
   int compare(const Sodium::Nonce<N> &a, const Sodium::Nonce<N> &b)
 {
   return sodium_compare(a.data(), b.data(), a.size());
 }
 
-template<unsigned int N=NONCESIZE_SECRETBOX>
+template<unsigned int N>
   bool operator==(const Sodium::Nonce<N> &a, const Sodium::Nonce<N> &b)
 {
-  return compare(a.data(), b.data(), a.size()) == 0;
+  return compare<N>(a, b) == 0;
 }
 
-template<unsigned int N=NONCESIZE_SECRETBOX>
+template<unsigned int N>
   bool operator!=(const Sodium::Nonce<N> &a, const Sodium::Nonce<N> &b)
 {
-  return compare(a.data(), b.data(), a.size()) != 0;
+  return compare<N>(a, b) != 0;
 }
 
-template<unsigned int N=NONCESIZE_SECRETBOX>
+template<unsigned int N>
   bool operator<(const Sodium::Nonce<N> &a, const Sodium::Nonce<N> &b)
 {
-  return compare(a.data(), b.data(), a.size()) < 0;
+  return compare<N>(a, b) < 0;
 }
 
-template<unsigned int N=NONCESIZE_SECRETBOX>
+template<unsigned int N>
   bool operator>(const Sodium::Nonce<N> &a, const Sodium::Nonce<N> &b)
 {
-  return compare(a.data(), b.data(), a.size()) > 0;
+  return compare<N>(a, b) > 0;
 }
 
-template<unsigned int N=NONCESIZE_SECRETBOX>
+template<unsigned int N>
   bool operator <=(const Sodium::Nonce<N> &a, const Sodium::Nonce<N> &b)
 {
-  return compare(a.data(), b.data(), a.size()) <= 0;
+  return compare<N>(a, b) <= 0;
 }
 
-template<unsigned int N=NONCESIZE_SECRETBOX>
+template<unsigned int N>
   bool operator >=(const Sodium::Nonce<N> &a, const Sodium::Nonce<N> &b)
 {
-  return compare(a.data(), b.data(), a.size()) >= 0;
+  return compare<N>(a, b) >= 0;
 }
 
 } // namespace Sodium

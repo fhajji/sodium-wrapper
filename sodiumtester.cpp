@@ -11,6 +11,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <sstream>
 
 /**
  * Construct the test harness by calling sodium_init() which initializes
@@ -191,4 +192,52 @@ SodiumTester::test2(const std::string &plaintext,
   data_t decrypted = sc.decrypt(ciphertext, key, nonce);
 
   return (decrypted == plainblob);
+}
+
+/**
+ * This function tests Sodium::Nonce(s).
+ **/
+
+std::string
+SodiumTester::test3()
+{
+  std::ostringstream os; // to collect output
+  os << "starting Nonce test... -------" << std::endl;
+
+  Sodium::Nonce<> a {};
+  
+  // Check that we got the default size of the Nonce:
+  if (a.size() != Sodium::NONCESIZE_SECRETBOX)
+    throw std::runtime_error {"SodiumTester::test3() wrong default nonce size"};
+
+  os << "a+0: " << a.tohex() << std::endl;
+  
+  Sodium::Nonce<> a_copy {a};
+  if (a != a_copy)
+    throw std::runtime_error {"SodiumTester::test3() a != a_copy"};
+  
+  for (int i: {1,2,3,4,5}) {
+    a.increment();
+    os << "a+" << i << ": " << a.tohex() << std::endl;
+  }
+
+  if (a_copy > a)
+    throw std::runtime_error {"SodiumTester::test3() a+5 > a"};
+  
+  Sodium::Nonce<> b(false); // uninitialized, zeroed?
+  os << "b+0: " << b.tohex() << std::endl;
+  if (! b.is_zero())
+    throw std::runtime_error {"SodiumTester::test3() not uninitialized to zero"};
+
+  for (int i: {1,2,3,4,5})
+    b.increment();
+  // b is now 5, display it!
+  os << "b+5: " << b.tohex() << std::endl;
+
+  a_copy += b; // increment original a by 5 (should be new a)
+  if (a_copy != a)
+    throw std::runtime_error {"SodiumTester::test3() a_copy + 5 != a+5"};
+
+  os << "---------------- ending Nonce test..." << std::endl;
+  return os.str();
 }

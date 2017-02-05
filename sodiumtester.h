@@ -19,6 +19,7 @@ class SodiumTester
   bool        test1(const std::string &plaintext);
   bool        test2(const std::string &plaintext,
 		    const std::string &pw1, const std::string &pw2);
+  std::string test3();
 };
 
 #endif // _SODIUMTESTER_H_

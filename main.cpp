@@ -38,6 +38,9 @@ int main()
         
     bool res2 = st.test2(plaintext, pwhash_pw1, pwhash_pw2);
     std::cout << "crypto_pwhash(): " << res2 << std::endl;
+
+    std::string res3 = st.test3();
+    std::cout << "nonce test: " << res3 << std::endl;
   }
   catch (std::runtime_error e) {
     std::cerr << e.what() << std::endl;
