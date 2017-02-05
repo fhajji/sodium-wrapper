@@ -53,10 +53,10 @@ SodiumTester::test0(const std::string &plaintext)
   Sodium::Nonce<> nonce {}; // random nonce;
   
   // let's get the sizes in bytes
-  std::size_t plaintext_size  = plaintext.size();
-  std::size_t ciphertext_size = crypto_secretbox_MACBYTES + plaintext_size;
-  std::size_t key_size        = key.size();
-  std::size_t nonce_size      = nonce.size();
+  const std::size_t plaintext_size  = plaintext.size();
+  const std::size_t ciphertext_size = crypto_secretbox_MACBYTES + plaintext_size;
+  const std::size_t key_size        = key.size();
+  const std::size_t nonce_size      = nonce.size();
 
   // transfer plaintext into a binary blob
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -108,9 +108,9 @@ SodiumTester::test1(const std::string &plaintext)
   Sodium::Key  key(Sodium::Key::KEYSIZE_AUTH);
   
   // let's get the sizes in bytes
-  std::size_t plaintext_size  = plaintext.size();
-  std::size_t mac_size        = crypto_auth_BYTES;
-  std::size_t key_size        = key.size();
+  const std::size_t plaintext_size  = plaintext.size();
+  const std::size_t mac_size        = crypto_auth_BYTES;
+  const std::size_t key_size        = key.size();
   
   // transfer plaintext into a binary blob
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -169,11 +169,11 @@ SodiumTester::test2(const std::string &plaintext,
   randombytes_buf(salt.data(), salt.size());
 
   // let's get the sizes in bytes
-  std::size_t plaintext_size  = plaintext.size();
-  std::size_t ciphertext_size = crypto_secretbox_MACBYTES + plaintext_size;
-  std::size_t key_size        = key.size();
-  std::size_t nonce_size      = nonce.size();
-  std::size_t salt_size       = salt.size();
+  const std::size_t plaintext_size  = plaintext.size();
+  const std::size_t ciphertext_size = crypto_secretbox_MACBYTES + plaintext_size;
+  const std::size_t key_size        = key.size();
+  const std::size_t nonce_size      = nonce.size();
+  const std::size_t salt_size       = salt.size();
 
   // transfer plaintext into a binary blob
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -204,7 +204,7 @@ SodiumTester::test3()
   std::ostringstream os; // to collect output
   os << "starting Nonce test... -------" << std::endl;
 
-  Sodium::Nonce<> a {};
+  Sodium::Nonce<> a {}; // a random nonce
   
   // Check that we got the default size of the Nonce:
   if (a.size() != Sodium::NONCESIZE_SECRETBOX)

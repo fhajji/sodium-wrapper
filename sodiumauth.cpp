@@ -21,9 +21,9 @@ Sodium::Auth::auth (const Sodium::Auth::data_t &plaintext,
 		    const Sodium::Key          &key)
 {
   // get the sizes
-  std::size_t plaintext_size  = plaintext.size();
-  std::size_t key_size        = Sodium::Key::KEYSIZE_AUTH;
-  std::size_t mac_size        = crypto_auth_BYTES;
+  const std::size_t plaintext_size  = plaintext.size();
+  const std::size_t key_size        = Sodium::Key::KEYSIZE_AUTH;
+  const std::size_t mac_size        = crypto_auth_BYTES;
   
   // some sanity checks before we get started
   if (key.size() != key_size)
@@ -55,9 +55,9 @@ Sodium::Auth::verify (const Sodium::Auth::data_t &plaintext,
 		      const Sodium::Key          &key)
 {
   // get the sizes
-  std::size_t plaintext_size  = plaintext.size();
-  std::size_t mac_size        = mac.size();
-  std::size_t key_size        = key.size();
+  const std::size_t plaintext_size  = plaintext.size();
+  const std::size_t mac_size        = mac.size();
+  const std::size_t key_size        = key.size();
   
   // some sanity checks before we get started
   if (mac_size != crypto_auth_BYTES)
