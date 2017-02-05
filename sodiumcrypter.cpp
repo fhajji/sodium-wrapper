@@ -3,6 +3,7 @@
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 
 #include "sodiumcrypter.h"
+#include "sodiumnonce.h"
 #include "sodiumkey.h"
 
 #include <stdexcept>
@@ -34,15 +35,15 @@
  **/
 
 Sodium::Crypter::data_t
-Sodium::Crypter::encrypt (const Sodium::Crypter::data_t &plaintext,
-			  const Sodium::Key             &key,
-			  const Sodium::Crypter::data_t &nonce)
+Sodium::Crypter::encrypt (const Sodium::Crypter::data_t                    &plaintext,
+			  const Sodium::Key                                &key,
+			  const Sodium::Nonce<Sodium::NONCESIZE_SECRETBOX> &nonce)
 {
   // get the sizes
   std::size_t plaintext_size  = plaintext.size();
   std::size_t ciphertext_size = crypto_secretbox_MACBYTES + plaintext_size;
   std::size_t key_size        = Sodium::Key::KEYSIZE_SECRETBOX;
-  std::size_t nonce_size      = crypto_secretbox_NONCEBYTES;
+  std::size_t nonce_size      = Sodium::NONCESIZE_SECRETBOX;
 
   // some sanity checks before we get started
   if (key.size() != key_size)
@@ -74,9 +75,9 @@ Sodium::Crypter::encrypt (const Sodium::Crypter::data_t &plaintext,
  **/
 
 Sodium::Crypter::data_t
-Sodium::Crypter::decrypt (const Sodium::Crypter::data_t &ciphertext,
-			  const Sodium::Key             &key,
-			  const Sodium::Crypter::data_t &nonce)
+Sodium::Crypter::decrypt (const Sodium::Crypter::data_t                    &ciphertext,
+			  const Sodium::Key                                &key,
+			  const Sodium::Nonce<Sodium::NONCESIZE_SECRETBOX> &nonce)
 {
   // get the sizes
   std::size_t ciphertext_size = ciphertext.size();
@@ -87,7 +88,7 @@ Sodium::Crypter::decrypt (const Sodium::Crypter::data_t &ciphertext,
   // some sanity checks before we get started
   if (key_size != Sodium::Key::KEYSIZE_SECRETBOX)
     throw std::runtime_error {"Sodium::Crypter::decrypt() key wrong size"};
-  if (nonce_size != crypto_secretbox_NONCEBYTES)
+  if (nonce_size != Sodium::NONCESIZE_SECRETBOX)
     throw std::runtime_error {"Sodium::Crypter::decrypt() nonce wrong size"};
   if (plaintext_size <= 0)
     throw std::runtime_error {"Sodium::Crypter::decrypt() plaintext negative size"};

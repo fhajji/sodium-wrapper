@@ -4,6 +4,7 @@
 
 #include "sodiumtester.h"
 
+#include "sodiumnonce.h"
 #include "sodiumkey.h"
 #include "sodiumcrypter.h"
 #include "sodiumauth.h"
@@ -48,20 +49,17 @@ SodiumTester::test0(const std::string &plaintext)
   
   Sodium::Crypter sc {}; // encryptor, decryptor, hexifior.
   Sodium::Key     key(Sodium::Key::KEYSIZE_SECRETBOX);
+  Sodium::Nonce<> nonce {}; // random nonce;
   
   // let's get the sizes in bytes
   std::size_t plaintext_size  = plaintext.size();
   std::size_t ciphertext_size = crypto_secretbox_MACBYTES + plaintext_size;
   std::size_t key_size        = key.size();
-  std::size_t nonce_size      = crypto_secretbox_NONCEBYTES;
+  std::size_t nonce_size      = nonce.size();
 
   // transfer plaintext into a binary blob
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
   
-  // create a random nonce:
-  data_t nonce(nonce_size); // store it in unprotected memory
-  randombytes_buf(nonce.data(), nonce_size); // generate random bytes
-
   // encrypt the plaintext (binary blob) using key/nonce:
   data_t ciphertext = sc.encrypt(plainblob,  key, nonce);
 
@@ -164,6 +162,7 @@ SodiumTester::test2(const std::string &plaintext,
   Sodium::Crypter sc {}; // encryptor, decryptor, hexifior.
   Sodium::Key     key(Sodium::Key::KEYSIZE_SECRETBOX,
 		      false); // uninitialized, read-write for now
+  Sodium::Nonce<> nonce {};
   
   data_t salt(Sodium::Key::KEYSIZE_SALT);
   randombytes_buf(salt.data(), salt.size());
@@ -172,15 +171,11 @@ SodiumTester::test2(const std::string &plaintext,
   std::size_t plaintext_size  = plaintext.size();
   std::size_t ciphertext_size = crypto_secretbox_MACBYTES + plaintext_size;
   std::size_t key_size        = key.size();
-  std::size_t nonce_size      = crypto_secretbox_NONCEBYTES;
+  std::size_t nonce_size      = nonce.size();
   std::size_t salt_size       = salt.size();
 
   // transfer plaintext into a binary blob
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
-
-  // create a random nonce:
-  data_t nonce(nonce_size); // store it in unprotected memory
-  randombytes_buf(nonce.data(), nonce_size); // generate random bytes
 
   // try the first key
   key.setpass(pw1, salt, Sodium::Key::strength_t::medium);
