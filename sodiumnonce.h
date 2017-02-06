@@ -122,7 +122,7 @@ class Nonce
     
     // In C++17, we could construct a std::string with hexbuf_size chars,
     // and modify it directly through non-const data(). Unfortunately,
-    // in C++11 and C++11, std::string's data() is const only, so we need
+    // in C++11 and C++14, std::string's data() is const only, so we need
     // to copy the data over from std::vector<char> to std::string for now.
 
     // return hex output as a string:

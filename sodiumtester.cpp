@@ -196,6 +196,40 @@ SodiumTester::test2(const std::string &plaintext,
 
 /**
  * This function tests Sodium::Nonce(s).
+ *
+ *   - We create a Nonce<> 'a' with a random value.
+ *   - We check that 'a' is indeed 24 bytes (Sodium::NONCESIZE_SECRETBOX) long
+ *   - We display a hex representation of 'a'
+ *   - We copy 'a' into 'a_copy' using the compiler-generated copy constructor
+ *   - We test with operator != in constant time if they are different
+ *     and throw if they are. We don't measure times here.
+ *   - We increment 'a' 5 times, i.e. in pseudo-code: a = a+5.
+ *     That is: we call a.increment() 5 times in a row, and we display
+ *     each time the hex value of 'a'.  Notice how the FIRST byte changes,
+ *     showing indeed that the Nonce bytes are interpreted indeed as an
+ *     integer in Little Endian format.
+ *   - We test with operator > if 'a_copy' is greater than 'a' and throw
+ *     if yes. Indeed, a_copy is the original Nonce value, and 'a' has been
+ *     incremented 5 times already. So 'a_copy' shouldn't be greater than 'a'
+ *     The test is in constant time... but we don't measure that here.
+ *   - We create a new Nonce 'b', but uninitialized. When a nonce is
+ *     uninitialized, its backend is default-initialized, i.e. all those
+ *     unsigned char(s) of its std::vector are zeroes.
+ *   - We check this by:
+ *        + displaying a hex representation of 'b'
+ *        + checking in constant time if 'b' is all-zeroes with b.is_zero()
+ *          and throw if not.
+ *   - We increment 'b' by calling b.increment() 5 times in a row. 'b' is
+ *     therefore equivalent to '5'. We display hex representation of 'b'
+ *   - We exercise operator += by adding 'b' to 'a_copy': i.e. by calling
+ *       a_copy += b;
+ *     Unless there was an overflow, we should get 'a_copy' == 'a', since
+ *     'a' was also incremented 5 times in a row previously.  We check this
+ *     with operator != and throw if not equal.
+ *
+ * We generate the output of the tests as a std::string incrementally
+ * by writing the results in a std::ostringstream, and return the string
+ * at the end to be displayed by the caller of this function.
  **/
 
 std::string
