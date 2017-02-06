@@ -35,9 +35,9 @@
  **/
 
 Sodium::Crypter::data_t
-Sodium::Crypter::encrypt (const Sodium::Crypter::data_t                    &plaintext,
-			  const Sodium::Key                                &key,
-			  const Sodium::Nonce<Sodium::NONCESIZE_SECRETBOX> &nonce)
+Sodium::Crypter::encrypt (const Sodium::Crypter::data_t &plaintext,
+			  const Sodium::Key             &key,
+			  const Sodium::Nonce<NSZ>      &nonce)
 {
   // get the sizes
   const std::size_t plaintext_size  = plaintext.size();
@@ -75,9 +75,9 @@ Sodium::Crypter::encrypt (const Sodium::Crypter::data_t                    &plai
  **/
 
 Sodium::Crypter::data_t
-Sodium::Crypter::decrypt (const Sodium::Crypter::data_t                    &ciphertext,
-			  const Sodium::Key                                &key,
-			  const Sodium::Nonce<Sodium::NONCESIZE_SECRETBOX> &nonce)
+Sodium::Crypter::decrypt (const Sodium::Crypter::data_t &ciphertext,
+			  const Sodium::Key             &key,
+			  const Sodium::Nonce<NSZ>      &nonce)
 {
   // get the sizes
   const std::size_t ciphertext_size = ciphertext.size();

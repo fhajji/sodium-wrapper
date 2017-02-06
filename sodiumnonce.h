@@ -65,15 +65,23 @@ class Nonce
   * the wrappers need access to the bytes stored in the nonce.
   *
   * data() gives const access to those bytes of which
-  * size() bytes are stored in the key.
+  * size() bytes (N) are stored in the key.
   *
   * We don't provide mutable access to the btes by design.
   * The only functions that change those bytes are here:
   *   Nonce(true), increment(), operator+=().
+  *
+  * !!!! IMPORTANT INVARIANT -- CHECK MANUALLY !!!!
+  *
+  * Note that we return N instead of noncedata.size() in size()
+  * so that size() can be declared constexpr and used in
+  * static_assert() in callers.  We must make sure that the
+  * invariant N == noncedata.size() always holds when modifying
+  * this class.
   **/
 
-  const unsigned char *data() const { return noncedata.data(); }
-  const std::size_t    size() const { return noncedata.size(); }  
+            const unsigned char *data() const { return noncedata.data(); }
+  constexpr const std::size_t    size() const { return N; }
  
   /**
    * Increment the Nonce by 1 in constant time.

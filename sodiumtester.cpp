@@ -33,9 +33,9 @@ SodiumTester::SodiumTester()
  * Encrypt a plaintext string with a randomly generated key and nonce
  * and return the result as a string in hexadecimal representation.
  *
- * - We use Sodium::Key wrapper to create and store a random key in mprotect()
- * - We use libsodium's randombytes_buf() to generate random nonce
- * - We store the plaintext/ciphertext in a data_t, which is unprotected
+ * - We use Sodium::Key wrapper to create and store a random key
+ * - We use Sodium::Nonce wrapper to create a store a random nonce
+ * - We store the plaintext/ciphertext in a data_t, in unprotected memory
  * - We use our wrapper Sodium::Crypter to do the encryption
  * - We use our wrapper Sodium::Crypter to test-decrypt the result
  *   and verify that the decrypted text is the same as the plaintext.
@@ -49,15 +49,9 @@ SodiumTester::test0(const std::string &plaintext)
   using data_t = Sodium::Crypter::data_t; // unprotected memory
   
   Sodium::Crypter sc {}; // encryptor, decryptor, hexifior.
-  Sodium::Key     key(Sodium::Key::KEYSIZE_SECRETBOX);
-  Sodium::Nonce<> nonce {}; // random nonce;
+  Sodium::Key     key(Sodium::Key::KEYSIZE_SECRETBOX); // create random key
+  Sodium::Nonce<> nonce {};                            // create random nonce;
   
-  // let's get the sizes in bytes
-  const std::size_t plaintext_size  = plaintext.size();
-  const std::size_t ciphertext_size = crypto_secretbox_MACBYTES + plaintext_size;
-  const std::size_t key_size        = key.size();
-  const std::size_t nonce_size      = nonce.size();
-
   // transfer plaintext into a binary blob
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
   
@@ -68,6 +62,7 @@ SodiumTester::test0(const std::string &plaintext)
   data_t decrypted  = sc.decrypt(ciphertext, key, nonce);
 
   // we're done with the key for now, disable memory access to it!
+  // we could re-enable it later with readonly() or readwrite() though...
   key.noaccess();
   
   // test of correctness (sanity check): the ciphertext must be
@@ -89,6 +84,8 @@ SodiumTester::test0(const std::string &plaintext)
 
   std::string encrypted_as_hex = sc.tohex(ciphertext);
   return encrypted_as_hex;
+
+  // the key will self-destruct here when it goes out of scope.
 }
 
 /**
@@ -104,13 +101,8 @@ SodiumTester::test1(const std::string &plaintext)
 {
   using data_t = Sodium::Auth::data_t; // unprotected memory
   
-  Sodium::Auth sa {};
-  Sodium::Key  key(Sodium::Key::KEYSIZE_AUTH);
-  
-  // let's get the sizes in bytes
-  const std::size_t plaintext_size  = plaintext.size();
-  const std::size_t mac_size        = crypto_auth_BYTES;
-  const std::size_t key_size        = key.size();
+  Sodium::Auth sa {}; // Secret Key Authenticator/Verifier
+  Sodium::Key  key(Sodium::Key::KEYSIZE_AUTH); // Create a random key
   
   // transfer plaintext into a binary blob
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -145,11 +137,14 @@ SodiumTester::test1(const std::string &plaintext)
 /**
  * This function tests the key derivation algorithm of libsodium.
  *
- * 1/ Derive a key from a user-entered password, and encrypt plaintext
- * with it.
- * 2/ Re-ask user for password, derive new key from that, and
- * decrypt encrypted text with the new key.
- * 3/ See if we can decrypt the encrypted plaintext this way.
+ *   - derive a key from pw1, and encrypt plaintext with it.
+ *   - derive a new key from pw2, store it in old key location.
+ *   - attempt to decrypt encrypted text with it.
+ *   - if decryption succeeded (didn't throw), check again manually
+ *     that both plaintext and decrypted text are identical.
+ *
+ * In all cases the same random Nonce is (re-)used for encryption
+ * and decryption, of course.
  **/
 
 bool
@@ -164,16 +159,16 @@ SodiumTester::test2(const std::string &plaintext,
   Sodium::Key     key(Sodium::Key::KEYSIZE_SECRETBOX,
 		      false); // uninitialized, read-write for now
   Sodium::Nonce<> nonce {};
-  
+
+  // random salt, needed by the key derivation function.
+  // NOTE: can't move this into Sodium::Key::setpass(),
+  // because we need the salt AND the password to be able
+  // to deterministically recreate a key. If we generated
+  // the salt in setpass() randomly, users would have no
+  // way to recreate the key -- that would be throw-away
+  // use-once keys.
   data_t salt(Sodium::Key::KEYSIZE_SALT);
   randombytes_buf(salt.data(), salt.size());
-
-  // let's get the sizes in bytes
-  const std::size_t plaintext_size  = plaintext.size();
-  const std::size_t ciphertext_size = crypto_secretbox_MACBYTES + plaintext_size;
-  const std::size_t key_size        = key.size();
-  const std::size_t nonce_size      = nonce.size();
-  const std::size_t salt_size       = salt.size();
 
   // transfer plaintext into a binary blob
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -240,9 +235,11 @@ SodiumTester::test3()
 
   Sodium::Nonce<> a {}; // a random nonce
   
-  // Check that we got the default size of the Nonce:
-  if (a.size() != Sodium::NONCESIZE_SECRETBOX)
-    throw std::runtime_error {"SodiumTester::test3() wrong default nonce size"};
+  // Check at compile time that we got the default size of the Nonce:
+  static_assert(a.size() == Sodium::NONCESIZE_SECRETBOX,
+		"SodiumTester::test3() wrong nonce size");
+  // if (a.size() != Sodium::NONCESIZE_SECRETBOX)
+  //   throw std::runtime_error {"SodiumTester::test3() wrong nonce size"};
 
   os << "a+0: " << a.tohex() << std::endl;
   
@@ -261,7 +258,7 @@ SodiumTester::test3()
   Sodium::Nonce<> b(false); // uninitialized, zeroed?
   os << "b+0: " << b.tohex() << std::endl;
   if (! b.is_zero())
-    throw std::runtime_error {"SodiumTester::test3() not uninitialized to zero"};
+    throw std::runtime_error {"SodiumTester::test3() not initialized to zero"};
 
   for (int i: {1,2,3,4,5})
     b.increment();
