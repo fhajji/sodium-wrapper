@@ -107,21 +107,26 @@ class Nonce
     return *this;
   }
 
- /**
-  * Return the bytes of the Nonce as hex digits.
-  **/
+  /**
+   * Return the bytes of the Nonce as hex digits.
+   **/
 
   std::string tohex() {
     constexpr std::size_t hexbuf_size = N*2+1;
     std::vector<char> hexbuf(hexbuf_size);
+
+    // convert [noncedata.begin(), noncedata.end()) to hex:
     if (! sodium_bin2hex(hexbuf.data(), hexbuf_size,
 			 noncedata.data(), N))
       throw std::runtime_error {"Sodium::Nonce<N>::tohex() overflowed"};
     
-    // XXX is copying hexbuf into a string really necessary here?
+    // In C++17, we could construct a std::string with hexbuf_size chars,
+    // and modify it directly through non-const data(). Unfortunately,
+    // in C++11 and C++11, std::string's data() is const only, so we need
+    // to copy the data over from std::vector<char> to std::string for now.
 
     // return hex output as a string:
-    std::string outhex {hexbuf.data(), hexbuf.data() + hexbuf_size};
+    std::string outhex {hexbuf.begin(), hexbuf.end()};
     return outhex;
   }
  

@@ -115,18 +115,21 @@ std::string
 Sodium::Crypter::tohex (const Sodium::Crypter::data_t &ciphertext)
 {
   const std::size_t ciphertext_size = ciphertext.size();
-  const std::size_t hex_size        = ciphertext_size * 2 + 1;
+  const std::size_t hexbuf_size     = ciphertext_size * 2 + 1;
 
-  std::vector<char> hexbuf(hex_size);
+  std::vector<char> hexbuf(hexbuf_size);
   
-  // convert [ciphertext, ciphertext + ciphertext_size] into hex:
-  if (! sodium_bin2hex(hexbuf.data(), hex_size,
+  // convert [ciphertext.begin(), ciphertext.end()) into hex:
+  if (! sodium_bin2hex(hexbuf.data(), hexbuf_size,
 		       ciphertext.data(), ciphertext_size))
     throw std::runtime_error {"SodiumCrypter::tohex() overflowed"};
 
-  // XXX: is copying hexbuf into a string really necessary here?
+  // In C++17, we could construct a std::string with hexbuf_size chars,
+  // and modify it directly through non-const data(). Unfortunately,
+  // in C++11 and C++11, std::string's data() is const only, so we need
+  // to copy the data over from std::vector<char> to std::string for now.
   
   // return hex output as a string:
-  std::string outhex {hexbuf.data(), hexbuf.data() + hex_size};
+  std::string outhex {hexbuf.begin(), hexbuf.end()};
   return outhex;
 }
