@@ -48,7 +48,7 @@ class Nonce
    * randombytes_buf().
    *
    * If bool is false, the nonce remains default-initialized to the
-   * default value of data_t.
+   * default value of data_t, i.e. to zero bytes.
    **/
  
   Nonce<N>(bool init=true) : noncedata(N) {
@@ -123,7 +123,7 @@ class Nonce
     constexpr std::size_t hexbuf_size = N*2+1;
     std::vector<char> hexbuf(hexbuf_size);
 
-    // convert [noncedata.begin(), noncedata.end()) to hex:
+    // convert [noncedata.cbegin(), noncedata.cend()) to hex:
     if (! sodium_bin2hex(hexbuf.data(), hexbuf_size,
 			 noncedata.data(), N))
       throw std::runtime_error {"Sodium::Nonce<N>::tohex() overflowed"};
@@ -134,7 +134,7 @@ class Nonce
     // to copy the data over from std::vector<char> to std::string for now.
 
     // return hex output as a string:
-    std::string outhex {hexbuf.begin(), hexbuf.end()};
+    std::string outhex {hexbuf.cbegin(), hexbuf.cend()};
     return outhex;
   }
  

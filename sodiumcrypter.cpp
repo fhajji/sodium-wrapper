@@ -117,7 +117,7 @@ Sodium::Crypter::tohex (const Sodium::Crypter::data_t &ciphertext)
   const std::size_t hexbuf_size = ciphertext.size() * 2 + 1;
   std::vector<char> hexbuf(hexbuf_size);
   
-  // convert [ciphertext.begin(), ciphertext.end()) into hex:
+  // convert [ciphertext.cbegin(), ciphertext.cend()) into hex:
   if (! sodium_bin2hex(hexbuf.data(), hexbuf_size,
 		       ciphertext.data(), ciphertext.size()))
     throw std::runtime_error {"SodiumCrypter::tohex() overflowed"};
@@ -128,6 +128,6 @@ Sodium::Crypter::tohex (const Sodium::Crypter::data_t &ciphertext)
   // to copy the data over from std::vector<char> to std::string for now.
   
   // return hex output as a string:
-  std::string outhex {hexbuf.begin(), hexbuf.end()};
+  std::string outhex {hexbuf.cbegin(), hexbuf.cend()};
   return outhex;
 }

@@ -40,7 +40,7 @@ class Key
   static constexpr std::size_t KEYSIZE_AUTH      = crypto_auth_KEYBYTES;
   static constexpr std::size_t KEYSIZE_SALT      = crypto_pwhash_SALTBYTES;
 
-  // The strengh of the key derivation efforts for setpassword()
+  // The strengh of the key derivation efforts for setpass()
   using strength_t = enum class Strength { low, medium, high };
 
   // data_t is unprotected memory (just plain bytes)
