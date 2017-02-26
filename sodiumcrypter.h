@@ -17,7 +17,7 @@ class Crypter
 {
  public:
   static constexpr unsigned int NSZ = Sodium::NONCESIZE_SECRETBOX;
-
+  
   // data_t is unprotected memory for bytes of plaintext and ciphertext
   using data_t = std::vector<unsigned char>;
   

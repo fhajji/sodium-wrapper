@@ -8,6 +8,7 @@
 #include "sodiumkey.h"
 #include "sodiumcrypter.h"
 #include "sodiumauth.h"
+#include "sodiumcrypteraead.h"
 
 #include <stdexcept>
 #include <string>
@@ -270,5 +271,147 @@ SodiumTester::test3()
     throw std::runtime_error {"SodiumTester::test3() a_copy + 5 != a+5"};
 
   os << "---------------- ending Nonce test..." << std::endl;
+  return os.str();
+}
+
+std::string
+SodiumTester::test4(const std::string &plaintext,
+		    const std::string &header)
+{
+  Sodium::CrypterAEAD                   sc_aead {};
+  Sodium::Key                           key(Sodium::Key::KEYSIZE_AEAD);
+  Sodium::Nonce<Sodium::NONCESIZE_AEAD> nonce {};
+
+  std::ostringstream os; // to collect output
+  os << "starting AEAD test... ---------" << std::endl;
+
+  // check at compile time that we got the right size of the Nonce
+  static_assert(nonce.size() == Sodium::NONCESIZE_AEAD,
+		"SodiumTester::test4() wrong nonce size");
+
+  // shorthand notation for our data_t
+  using data_t = Sodium::CrypterAEAD::data_t;
+
+  // transfer plaintext and header into binary blobs
+  data_t plainblob  {plaintext.cbegin(), plaintext.cend()};
+  data_t headerblob {header.cbegin(), header.cend()};
+
+  // now encrypt
+  data_t ciphertext_with_mac = sc_aead.encrypt(headerblob,
+					       plainblob,
+					       key,
+					       nonce);
+
+  os << "encrypted: " << sc_aead.tohex(ciphertext_with_mac) << std::endl;
+
+  // and then decrypt (would throw if there was an error
+  data_t decryptedblob = sc_aead.decrypt(headerblob,
+					 ciphertext_with_mac,
+					 key,
+					 nonce);
+
+  os << "decrypted okay." << std::endl;
+
+  // now intentionnally corrupt the header and decrypt again:
+  data_t header_corrupted(headerblob);
+  if (! header_corrupted.empty()) {
+    header_corrupted[0] = '!';
+    try {
+      data_t out = sc_aead.decrypt(header_corrupted,
+				   ciphertext_with_mac,
+				   key,
+				   nonce);
+      os << "ERROR: didn't catch intentional header corruption!" << std::endl;
+    }
+    catch (std::exception &e) {
+      os << "caught header corruption as expected: " << e.what() << std::endl;
+    }
+  }
+  else
+    os << "can't test intentional header corruption: empty header."
+       << std::endl;
+  
+  // now, intentionally corrupt the ciphertext and decrypt again:
+  if (ciphertext_with_mac.size() > Sodium::CrypterAEAD::MACSIZE)
+    ++ciphertext_with_mac[Sodium::CrypterAEAD::MACSIZE];
+  try {
+    data_t out = sc_aead.decrypt(header_corrupted,
+				 ciphertext_with_mac,
+				 key,
+				 nonce);
+    os << "ERROR: didn't catch intentional ciphertext corruption!"
+       << std::endl;
+  }
+  catch (std::exception &e) {
+    os << "caught ciphertext corruption as expected: "
+       << e.what() << std::endl;
+  }
+
+  // encrypt more text. must increment nonce, because we are reusing key.
+  //   we first encrypt without incrementing nonce (DONT'T DO THAT!)
+  //   and then encrypt with incrementing nonce (OKAY)
+  ciphertext_with_mac = sc_aead.encrypt(headerblob,
+					plainblob,
+					key,
+					nonce);
+  os << "encrypted (same nonce): "
+     << sc_aead.tohex(ciphertext_with_mac)
+     << std::endl;
+
+  nonce.increment(); // don't forget that!
+
+  ciphertext_with_mac = sc_aead.encrypt(headerblob,
+					plainblob,
+					key,
+					nonce);
+  os << "encrypted (different nonce): "
+     << sc_aead.tohex(ciphertext_with_mac)
+     << std::endl;
+
+  try {
+    data_t decryptedblob = sc_aead.decrypt(headerblob,
+					   ciphertext_with_mac,
+					   key,
+					   nonce);
+    os << "decrypted okay." << std::endl;
+    if (decryptedblob == plainblob)
+      os << "decrypted == plaintext" << std::endl;
+    else
+      throw std::runtime_error {"SodiumTester::test4() decrypted != plaintext with new nonce"};
+  }
+  catch (std::exception &e) {
+    os << "ERROR: unexpectedly can't decrypt with updated nonce."
+       << std::endl;
+  }
+
+  // Finally, encrypt an empty message
+  std::string empty_plaintext {};
+  std::string empty_header {};
+  nonce.increment();
+  data_t empty_plainblob   {empty_plaintext.cbegin(), empty_plaintext.cend()};
+  data_t empty_headerblob  {empty_header.cbegin(), empty_header.cend()};
+  data_t empty_ciphertext_with_mac = sc_aead.encrypt(empty_headerblob,
+						     empty_plainblob,
+						     key,
+						     nonce);
+  os << "empty encrypted: "
+     << sc_aead.tohex(empty_ciphertext_with_mac)
+     << std::endl;
+  try {
+    data_t empty_decrypted = sc_aead.decrypt(empty_headerblob,
+					     empty_ciphertext_with_mac,
+					     key,
+					     nonce);
+    if (empty_decrypted == empty_plainblob)
+      os << "empty (decrypted) == empty (plainblob)" << std::endl;
+    else
+      throw std::runtime_error {"SodiumTester::test4() empty decrypted != empty plaintext"};
+  }
+  catch (std::exception &e) {
+    os << "ERROR: caught failed decryption of encryption of empty plaintext"
+       << std::endl;
+  }
+						     
+  os << "------------------- ending AEAD test..." << std::endl;
   return os.str();
 }

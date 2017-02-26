@@ -39,7 +39,8 @@ class Key
   static constexpr std::size_t KEYSIZE_SECRETBOX = crypto_secretbox_KEYBYTES;
   static constexpr std::size_t KEYSIZE_AUTH      = crypto_auth_KEYBYTES;
   static constexpr std::size_t KEYSIZE_SALT      = crypto_pwhash_SALTBYTES;
-
+  static constexpr std::size_t KEYSIZE_AEAD      = crypto_aead_chacha20poly1305_KEYBYTES;
+  
   // The strengh of the key derivation efforts for setpass()
   using strength_t = enum class Strength { low, medium, high };
 

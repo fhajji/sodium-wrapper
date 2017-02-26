@@ -41,6 +41,12 @@ int main()
 
     std::string res3 = st.test3();
     std::cout << "nonce test: " << res3 << std::endl;
+
+    std::string header;
+    std::cout << "Enter header: ";
+    std::getline(std::cin, header);
+    std::string res4 = st.test4(plaintext, header);
+    std::cout << "AEAD test: " << res4 << std::endl;
   }
   catch (std::runtime_error e) {
     std::cerr << e.what() << std::endl;
