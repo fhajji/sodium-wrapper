@@ -1,4 +1,4 @@
-// sodiumcrypteraead.cpp -- Symmetric encryption / decryption with MAC and AEAD
+// sodiumcrypteraead.cpp -- Authenticated Encryption with Added Data
 //
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 
@@ -10,6 +10,31 @@
 #include <vector>
 #include <string>
 
+/**
+ * Encrypt plaintext using key and nonce. Compute a MAC from the ciphertext
+ * and the attached plain header. Return a combination MAC+ciphertext.
+ *
+ * Any modification of the returned MAC+ciphertext, OR of the header, will
+ * render decryption impossible. The intended application is to send
+ * encrypted message bodies along with unencrypted message headers, but to
+ * protect both the bodies and headers with the MAC. The nonce is public
+ * and can be sent along the MAC+ciphertext. The key is private and MUST NOT
+ * be sent over the channel.
+ *
+ * This function can be used repeately with the same key, but you MUST
+ * then make sure never to reuse the same nonce. The easiest way to achieve
+ * this is to increment nonce after or prior to each encrypt() invocation.
+ * 
+ * Limits: Up to 2^64 messages with the same key,
+ *         Up to 2^70 bytes per message.
+ *
+ * The key   must be Sodium::Key::KEYSIZE_AEAD bytes long
+ * The nonce must be Sodium::NONCESIZE_AEAD    bytes long
+ *
+ * The MAC+ciphertext size is 
+ *    plaintext.size() + Sodium::CrypterAEAD::MACSIZE.
+ **/
+
 Sodium::CrypterAEAD::data_t
 Sodium::CrypterAEAD::encrypt (const Sodium::CrypterAEAD::data_t &header,
 			      const Sodium::CrypterAEAD::data_t &plaintext,
@@ -18,7 +43,7 @@ Sodium::CrypterAEAD::encrypt (const Sodium::CrypterAEAD::data_t &header,
 {
   // get the sizes
   const std::size_t ciphertext_size =
-    plaintext.size() + crypto_aead_chacha20poly1305_ABYTES;
+    plaintext.size() + Sodium::CrypterAEAD::MACSIZE;
   const std::size_t key_size        = Sodium::Key::KEYSIZE_AEAD;
   const std::size_t nonce_size      = Sodium::NONCESIZE_AEAD;
 
@@ -46,6 +71,24 @@ Sodium::CrypterAEAD::encrypt (const Sodium::CrypterAEAD::data_t &header,
   return ciphertext;
 }
 
+/**
+ * Decrypt ciphertext_with_mac returned by Sodium::CrypterAEAD::encrypt()
+ * along with plain header, using secret key, and public nonce.
+ * 
+ * If decryption succeeds, return plaintext.
+ *
+ * If the ciphertext, embedded MAC, or plain header have been tampered with,
+ * or, in general, if the decryption doesn't succeed, throw a
+ * std::runtime_error.
+ * 
+ * The key   must be Sodium::Key::KEYSIZE_AEAD bytes long
+ * The nonce must be Sodium::NONCESIZE_AEAD    bytes long
+ * 
+ * The nonce can be public, the key must remain private. To successfully
+ * decrypt a message, both the key and nonce must be the same as those
+ * used when encrypting.
+ **/
+
 Sodium::CrypterAEAD::data_t
 Sodium::CrypterAEAD::decrypt (const Sodium::CrypterAEAD::data_t &header,
 			      const Sodium::CrypterAEAD::data_t &ciphertext_with_mac,
@@ -56,7 +99,7 @@ Sodium::CrypterAEAD::decrypt (const Sodium::CrypterAEAD::data_t &header,
   const std::size_t key_size   = key.size();
   const std::size_t nonce_size = nonce.size();
   const std::size_t plaintext_size =
-    ciphertext_with_mac.size() - crypto_aead_chacha20poly1305_ABYTES;
+    ciphertext_with_mac.size() - Sodium::CrypterAEAD::MACSIZE;
 
   // some sanity checks before we get started
   if (key_size != Sodium::Key::KEYSIZE_AEAD)
