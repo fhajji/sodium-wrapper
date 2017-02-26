@@ -1,4 +1,4 @@
-// sodiumcrypter.h -- Authenticated Encryption with Added Data
+// sodiumcrypter.h -- Symmetric encryption / decryption with MAC
 //
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 

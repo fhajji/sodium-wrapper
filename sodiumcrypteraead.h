@@ -1,4 +1,4 @@
-// sodiumcrypteraead.h -- Symmetric encryption / decryption with MAC and AEAD
+// sodiumcrypteraead.h -- Authenticated Encryption with Added Data
 //
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 
