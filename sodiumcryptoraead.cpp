@@ -64,7 +64,7 @@ Sodium::CryptorAEAD::decrypt (const Sodium::CryptorAEAD::data_t &header,
     throw std::runtime_error {"Sodium::CryptorAEAD::decrypt() wrong key size"};
   if (nonce_size != Sodium::NONCESIZE_AEAD)
     throw std::runtime_error {"Sodium::CryptorAEAD::decrypt() wrong nonce size"};
-  if (plaintext_size < 0)
+  if (ciphertext_with_mac.size() < Sodium::CryptorAEAD::MACSIZE)
     throw std::runtime_error {"Sodium::CryptorAEAD::decrypt() ciphertext length too small for a tag"};
 
   // make space for decrypted buffer
