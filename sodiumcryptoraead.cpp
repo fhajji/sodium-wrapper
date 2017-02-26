@@ -1,8 +1,8 @@
-// sodiumcrypteraead.cpp -- Authenticated Encryption with Added Data
+// sodiumcryptoraead.cpp -- Authenticated Encryption with Added Data
 //
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 
-#include "sodiumcrypteraead.h"
+#include "sodiumcryptoraead.h"
 #include "sodiumkey.h"
 #include "sodiumnonce.h"
 
@@ -32,26 +32,26 @@
  * The nonce must be Sodium::NONCESIZE_AEAD    bytes long
  *
  * The MAC+ciphertext size is 
- *    plaintext.size() + Sodium::CrypterAEAD::MACSIZE.
+ *    plaintext.size() + Sodium::CryptorAEAD::MACSIZE.
  **/
 
-Sodium::CrypterAEAD::data_t
-Sodium::CrypterAEAD::encrypt (const Sodium::CrypterAEAD::data_t &header,
-			      const Sodium::CrypterAEAD::data_t &plaintext,
+Sodium::CryptorAEAD::data_t
+Sodium::CryptorAEAD::encrypt (const Sodium::CryptorAEAD::data_t &header,
+			      const Sodium::CryptorAEAD::data_t &plaintext,
 			      const Sodium::Key                 &key,
 			      const Sodium::Nonce<NSZA>         &nonce)
 {
   // get the sizes
   const std::size_t ciphertext_size =
-    plaintext.size() + Sodium::CrypterAEAD::MACSIZE;
+    plaintext.size() + Sodium::CryptorAEAD::MACSIZE;
   const std::size_t key_size        = Sodium::Key::KEYSIZE_AEAD;
   const std::size_t nonce_size      = Sodium::NONCESIZE_AEAD;
 
   // some sanity checks before we get started
   if (key.size() != key_size)
-    throw std::runtime_error {"Sodium::CrypterAEAD::encrypt() wrong key size"};
+    throw std::runtime_error {"Sodium::CryptorAEAD::encrypt() wrong key size"};
   if (nonce.size() != nonce_size)
-    throw std::runtime_error {"Sodium::CrypterAEAD::encrypt() wrong nonce size"};
+    throw std::runtime_error {"Sodium::CryptorAEAD::encrypt() wrong nonce size"};
 
   // make space for MAC and encrypted message
   data_t ciphertext(ciphertext_size);
@@ -72,7 +72,7 @@ Sodium::CrypterAEAD::encrypt (const Sodium::CrypterAEAD::data_t &header,
 }
 
 /**
- * Decrypt ciphertext_with_mac returned by Sodium::CrypterAEAD::encrypt()
+ * Decrypt ciphertext_with_mac returned by Sodium::CryptorAEAD::encrypt()
  * along with plain header, using secret key, and public nonce.
  * 
  * If decryption succeeds, return plaintext.
@@ -89,9 +89,9 @@ Sodium::CrypterAEAD::encrypt (const Sodium::CrypterAEAD::data_t &header,
  * used when encrypting.
  **/
 
-Sodium::CrypterAEAD::data_t
-Sodium::CrypterAEAD::decrypt (const Sodium::CrypterAEAD::data_t &header,
-			      const Sodium::CrypterAEAD::data_t &ciphertext_with_mac,
+Sodium::CryptorAEAD::data_t
+Sodium::CryptorAEAD::decrypt (const Sodium::CryptorAEAD::data_t &header,
+			      const Sodium::CryptorAEAD::data_t &ciphertext_with_mac,
 			      const Sodium::Key                 &key,
 			      const Sodium::Nonce<NSZA>         &nonce)
 {
@@ -99,15 +99,15 @@ Sodium::CrypterAEAD::decrypt (const Sodium::CrypterAEAD::data_t &header,
   const std::size_t key_size   = key.size();
   const std::size_t nonce_size = nonce.size();
   const std::size_t plaintext_size =
-    ciphertext_with_mac.size() - Sodium::CrypterAEAD::MACSIZE;
+    ciphertext_with_mac.size() - Sodium::CryptorAEAD::MACSIZE;
 
   // some sanity checks before we get started
   if (key_size != Sodium::Key::KEYSIZE_AEAD)
-    throw std::runtime_error {"Sodium::CrypterAEAD::decrypt() wrong key size"};
+    throw std::runtime_error {"Sodium::CryptorAEAD::decrypt() wrong key size"};
   if (nonce_size != Sodium::NONCESIZE_AEAD)
-    throw std::runtime_error {"Sodium::CrypterAEAD::decrypt() wrong nonce size"};
+    throw std::runtime_error {"Sodium::CryptorAEAD::decrypt() wrong nonce size"};
   if (plaintext_size < 0)
-    throw std::runtime_error {"Sodium::CrypterAEAD::decrypt() ciphertext length too small for a tag"};
+    throw std::runtime_error {"Sodium::CryptorAEAD::decrypt() ciphertext length too small for a tag"};
 
   // make space for decrypted buffer
   data_t plaintext(plaintext_size);
@@ -122,7 +122,7 @@ Sodium::CrypterAEAD::decrypt (const Sodium::CrypterAEAD::data_t &header,
 					    (header.empty() ? nullptr : header.data()), header.size(),
 					    nonce.data(),
 					    key.data()) == -1)
-    throw std::runtime_error {"Sodium::CrypterAEAD::decrypt() can't decrypt or message/tag corrupt"};
+    throw std::runtime_error {"Sodium::CryptorAEAD::decrypt() can't decrypt or message/tag corrupt"};
   plaintext.resize(mlen);
 
   return plaintext;
@@ -134,7 +134,7 @@ Sodium::CrypterAEAD::decrypt (const Sodium::CrypterAEAD::data_t &header,
  **/
 
 std::string
-Sodium::CrypterAEAD::tohex (const Sodium::CrypterAEAD::data_t &ciphertext)
+Sodium::CryptorAEAD::tohex (const Sodium::CryptorAEAD::data_t &ciphertext)
 {
   const std::size_t hexbuf_size = ciphertext.size() * 2 + 1;
   std::vector<char> hexbuf(hexbuf_size);
@@ -142,7 +142,7 @@ Sodium::CrypterAEAD::tohex (const Sodium::CrypterAEAD::data_t &ciphertext)
   // convert [ciphertext.cbegin(), ciphertext.cend()) into hex:
   if (! sodium_bin2hex(hexbuf.data(), hexbuf_size,
                        ciphertext.data(), ciphertext.size()))
-    throw std::runtime_error {"SodiumCrypter::tohex() overflowed"};
+    throw std::runtime_error {"SodiumCryptor::tohex() overflowed"};
 
   // In C++17, we could construct a std::string with hexbuf_size chars,
   // and modify it directly through non-const data(). Unfortunately,

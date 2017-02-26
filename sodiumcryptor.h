@@ -1,9 +1,9 @@
-// sodiumcrypter.h -- Symmetric encryption / decryption with MAC
+// sodiumcryptor.h -- Symmetric encryption / decryption with MAC
 //
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 
-#ifndef _SODIUMCRYPTER_H_
-#define _SODIUMCRYPTER_H_
+#ifndef _SODIUMCRYPTOR_H_
+#define _SODIUMCRYPTOR_H_
 
 #include "sodiumkey.h"
 #include "sodiumnonce.h"
@@ -13,7 +13,7 @@
 
 namespace Sodium {
 
-class Crypter
+class Cryptor
 {
  public:
   static constexpr unsigned int NSZ = Sodium::NONCESIZE_SECRETBOX;

@@ -1,9 +1,9 @@
-// sodiumcrypteraead.h -- Authenticated Encryption with Added Data
+// sodiumcryptoraead.h -- Authenticated Encryption with Added Data
 //
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 
-#ifndef _SODIUMCRYPTERAEAD_H_
-#define _SODIUMCRYPTERAEAD_H_
+#ifndef _SODIUMCRYPTORAEAD_H_
+#define _SODIUMCRYPTORAEAD_H_
 
 #include "sodiumkey.h"
 #include "sodiumnonce.h"
@@ -13,10 +13,10 @@
 
 namespace Sodium {
 
-class CrypterAEAD
+class CryptorAEAD
 {
  public:
-  static constexpr unsigned int NSZA = Sodium::NONCESIZE_AEAD;
+  static constexpr unsigned int NSZA    = Sodium::NONCESIZE_AEAD;
   static constexpr std::size_t  MACSIZE = crypto_aead_chacha20poly1305_ABYTES;
   
   // data_t is unprotected memory for bytes of plaintext (header and body)
@@ -49,4 +49,4 @@ class CrypterAEAD
 
 } // namespace Sodium
 
-#endif // _SODIUMCRYPTERAEAD_H_
+#endif // _SODIUMCRYPTORAEAD_H_

@@ -6,9 +6,9 @@
 
 #include "sodiumnonce.h"
 #include "sodiumkey.h"
-#include "sodiumcrypter.h"
+#include "sodiumcryptor.h"
 #include "sodiumauth.h"
-#include "sodiumcrypteraead.h"
+#include "sodiumcryptoraead.h"
 
 #include <stdexcept>
 #include <string>
@@ -37,19 +37,19 @@ SodiumTester::SodiumTester()
  * - We use Sodium::Key wrapper to create and store a random key
  * - We use Sodium::Nonce wrapper to create a store a random nonce
  * - We store the plaintext/ciphertext in a data_t, in unprotected memory
- * - We use our wrapper Sodium::Crypter to do the encryption
- * - We use our wrapper Sodium::Crypter to test-decrypt the result
+ * - We use our wrapper Sodium::Cryptor to do the encryption
+ * - We use our wrapper Sodium::Cryptor to test-decrypt the result
  *   and verify that the decrypted text is the same as the plaintext.
- * - We use our wrapper Sodium::Crypter to convert the ciphertext into
+ * - We use our wrapper Sodium::Cryptor to convert the ciphertext into
  *   hexadecimal string, which we return.
  **/
 
 std::string
 SodiumTester::test0(const std::string &plaintext)
 {  
-  using data_t = Sodium::Crypter::data_t; // unprotected memory
+  using data_t = Sodium::Cryptor::data_t; // unprotected memory
   
-  Sodium::Crypter sc {}; // encryptor, decryptor, hexifior.
+  Sodium::Cryptor sc {}; // encryptor, decryptor, hexifior.
   Sodium::Key     key(Sodium::Key::KEYSIZE_SECRETBOX); // create random key
   Sodium::Nonce<> nonce {};                            // create random nonce;
   
@@ -69,10 +69,10 @@ SodiumTester::test0(const std::string &plaintext)
   // test of correctness (sanity check): the ciphertext must be
   // equal to the plaintext.
   // 
-  // Note that Sodium::Crypter::decrypt() will also have performed
+  // Note that Sodium::Cryptor::decrypt() will also have performed
   // a check and thrown a std::runtime_error, should the decryption
   // fail. It can detect corruption of the ciphertext, because
-  // Sodium::Crypter::encrypt() encrypts both the plaintext and a MAC
+  // Sodium::Cryptor::encrypt() encrypts both the plaintext and a MAC
   // that was generated out of the plaintext and of the key/nonce before.
   //
   // We're just double-checking here.
@@ -153,10 +153,10 @@ SodiumTester::test2(const std::string &plaintext,
 		    const std::string &pw1,
 		    const std::string &pw2)
 {
-  using data_t = Sodium::Crypter::data_t; // unprotected memory
+  using data_t = Sodium::Cryptor::data_t; // unprotected memory
   using key_t  = Sodium::Key::key_t;      // protected memory
   
-  Sodium::Crypter sc {}; // encryptor, decryptor, hexifior.
+  Sodium::Cryptor sc {}; // encryptor, decryptor, hexifior.
   Sodium::Key     key(Sodium::Key::KEYSIZE_SECRETBOX,
 		      false); // uninitialized, read-write for now
   Sodium::Nonce<> nonce {};
@@ -274,11 +274,31 @@ SodiumTester::test3()
   return os.str();
 }
 
+/**
+ * This function tests Sodium::CryptorAEAD.
+ *
+ * - We encrypt a plain header and plaintext with a random key and nonce,
+ *   resulting in a MAC+ciphertext, which we display in hex format.
+ * - Then we decrypt the result (and auto-check against the generated MAC)
+ * - We test the MAC by intentionally corrupting the header and decrypting
+ *   again. This should fail.
+ * - We test the MAC by intentionally corrupting the ciphertext and decrypting
+ *   again. This should fail.
+ * - To show that we ought to always use different nonces with the same key,
+ *   we first re-encrypt with the same key/nonce (and show that we got the
+ *   same MAC+ciphertext as before, which is bad), and then we increment
+ *   the nonce and re-encrypt, to get a different MAC+ciphertext.
+ * - We manually check that the decrypted text = plaintext; even though
+ *   if we decrypted successfully, they should be equaly anyway.
+ * - Finally, we encrypt / decrypt an empty plaintext with empty header
+ *   to test a valid boundary condition.
+ **/
+
 std::string
 SodiumTester::test4(const std::string &plaintext,
 		    const std::string &header)
 {
-  Sodium::CrypterAEAD                   sc_aead {};
+  Sodium::CryptorAEAD                   sc_aead {};
   Sodium::Key                           key(Sodium::Key::KEYSIZE_AEAD);
   Sodium::Nonce<Sodium::NONCESIZE_AEAD> nonce {};
 
@@ -290,7 +310,7 @@ SodiumTester::test4(const std::string &plaintext,
 		"SodiumTester::test4() wrong nonce size");
 
   // shorthand notation for our data_t
-  using data_t = Sodium::CrypterAEAD::data_t;
+  using data_t = Sodium::CryptorAEAD::data_t;
 
   // transfer plaintext and header into binary blobs
   data_t plainblob  {plaintext.cbegin(), plaintext.cend()};
@@ -332,8 +352,8 @@ SodiumTester::test4(const std::string &plaintext,
        << std::endl;
   
   // now, intentionally corrupt the ciphertext and decrypt again:
-  if (ciphertext_with_mac.size() > Sodium::CrypterAEAD::MACSIZE)
-    ++ciphertext_with_mac[Sodium::CrypterAEAD::MACSIZE];
+  if (ciphertext_with_mac.size() > Sodium::CryptorAEAD::MACSIZE)
+    ++ciphertext_with_mac[Sodium::CryptorAEAD::MACSIZE];
   try {
     data_t out = sc_aead.decrypt(header_corrupted,
 				 ciphertext_with_mac,

@@ -1,8 +1,8 @@
-// sodiumcrypter.cpp -- Symmetric encryption / decryption with MAC
+// sodiumcryptor.cpp -- Symmetric encryption / decryption with MAC
 //
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 
-#include "sodiumcrypter.h"
+#include "sodiumcryptor.h"
 #include "sodiumnonce.h"
 #include "sodiumkey.h"
 
@@ -34,8 +34,8 @@
  * and it too won't be stored in protected key_t memory.
  **/
 
-Sodium::Crypter::data_t
-Sodium::Crypter::encrypt (const Sodium::Crypter::data_t &plaintext,
+Sodium::Cryptor::data_t
+Sodium::Cryptor::encrypt (const Sodium::Cryptor::data_t &plaintext,
 			  const Sodium::Key             &key,
 			  const Sodium::Nonce<NSZ>      &nonce)
 {
@@ -47,9 +47,9 @@ Sodium::Crypter::encrypt (const Sodium::Crypter::data_t &plaintext,
   
   // some sanity checks before we get started
   if (key.size() != key_size)
-    throw std::runtime_error {"Sodium::Crypter::encrypt() wrong key size"};
+    throw std::runtime_error {"Sodium::Cryptor::encrypt() wrong key size"};
   if (nonce.size() != nonce_size)
-    throw std::runtime_error {"Sodium::Crypter::encrypt() wrong nonce size"};
+    throw std::runtime_error {"Sodium::Cryptor::encrypt() wrong nonce size"};
   
   // make space for MAC and encrypted message
   data_t ciphertext(ciphertext_size);
@@ -74,8 +74,8 @@ Sodium::Crypter::encrypt (const Sodium::Crypter::data_t &plaintext,
  * the key, nonce and ciphertext don't make sense.
  **/
 
-Sodium::Crypter::data_t
-Sodium::Crypter::decrypt (const Sodium::Crypter::data_t &ciphertext,
+Sodium::Cryptor::data_t
+Sodium::Cryptor::decrypt (const Sodium::Cryptor::data_t &ciphertext,
 			  const Sodium::Key             &key,
 			  const Sodium::Nonce<NSZ>      &nonce)
 {
@@ -87,11 +87,11 @@ Sodium::Crypter::decrypt (const Sodium::Crypter::data_t &ciphertext,
   
   // some sanity checks before we get started
   if (key_size != Sodium::Key::KEYSIZE_SECRETBOX)
-    throw std::runtime_error {"Sodium::Crypter::decrypt() wrong key size"};
+    throw std::runtime_error {"Sodium::Cryptor::decrypt() wrong key size"};
   if (nonce_size != Sodium::NONCESIZE_SECRETBOX)
-    throw std::runtime_error {"Sodium::Crypter::decrypt() wrong nonce size"};
+    throw std::runtime_error {"Sodium::Cryptor::decrypt() wrong nonce size"};
   if (plaintext_size <= 0)
-    throw std::runtime_error {"Sodium::Crypter::decrypt() plaintext neg size"};
+    throw std::runtime_error {"Sodium::Cryptor::decrypt() plaintext neg size"};
 
   // make space for decrypted buffer
   data_t decryptedtext(plaintext_size);
@@ -101,7 +101,7 @@ Sodium::Crypter::decrypt (const Sodium::Crypter::data_t &ciphertext,
 				  ciphertext.data(), ciphertext.size(),
 				  nonce.data(),
 				  key.data()) != 0)
-    throw std::runtime_error {"Sodium::Crypter::decrypt() can't decrypt (sodium test)"};
+    throw std::runtime_error {"Sodium::Cryptor::decrypt() can't decrypt (sodium test)"};
 
   return decryptedtext;
 }
@@ -112,7 +112,7 @@ Sodium::Crypter::decrypt (const Sodium::Crypter::data_t &ciphertext,
  **/
 
 std::string
-Sodium::Crypter::tohex (const Sodium::Crypter::data_t &ciphertext)
+Sodium::Cryptor::tohex (const Sodium::Cryptor::data_t &ciphertext)
 {
   const std::size_t hexbuf_size = ciphertext.size() * 2 + 1;
   std::vector<char> hexbuf(hexbuf_size);
@@ -120,7 +120,7 @@ Sodium::Crypter::tohex (const Sodium::Crypter::data_t &ciphertext)
   // convert [ciphertext.cbegin(), ciphertext.cend()) into hex:
   if (! sodium_bin2hex(hexbuf.data(), hexbuf_size,
 		       ciphertext.data(), ciphertext.size()))
-    throw std::runtime_error {"SodiumCrypter::tohex() overflowed"};
+    throw std::runtime_error {"SodiumCryptor::tohex() overflowed"};
 
   // In C++17, we could construct a std::string with hexbuf_size chars,
   // and modify it directly through non-const data(). Unfortunately,
