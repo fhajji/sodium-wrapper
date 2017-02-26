@@ -10,30 +10,6 @@
 #include <vector>
 #include <string>
 
-/**
- * Encrypt plaintext using key and nonce. Compute a MAC from the ciphertext
- * and the attached plain header. Return a combination MAC+ciphertext.
- *
- * Any modification of the returned MAC+ciphertext, OR of the header, will
- * render decryption impossible. The intended application is to send
- * encrypted message bodies along with unencrypted message headers, but to
- * protect both the bodies and headers with the MAC. The nonce is public
- * and can be sent along the MAC+ciphertext. The key is private and MUST NOT
- * be sent over the channel.
- *
- * This function can be used repeately with the same key, but you MUST
- * then make sure never to reuse the same nonce. The easiest way to achieve
- * this is to increment nonce after or prior to each encrypt() invocation.
- * 
- * Limits: Up to 2^64 messages with the same key,
- *         Up to 2^70 bytes per message.
- *
- * The key   must be Sodium::Key::KEYSIZE_AEAD bytes long
- * The nonce must be Sodium::NONCESIZE_AEAD    bytes long
- *
- * The MAC+ciphertext size is 
- *    plaintext.size() + Sodium::CryptorAEAD::MACSIZE.
- **/
 
 Sodium::CryptorAEAD::data_t
 Sodium::CryptorAEAD::encrypt (const Sodium::CryptorAEAD::data_t &header,
@@ -70,24 +46,6 @@ Sodium::CryptorAEAD::encrypt (const Sodium::CryptorAEAD::data_t &header,
 
   return ciphertext;
 }
-
-/**
- * Decrypt ciphertext_with_mac returned by Sodium::CryptorAEAD::encrypt()
- * along with plain header, using secret key, and public nonce.
- * 
- * If decryption succeeds, return plaintext.
- *
- * If the ciphertext, embedded MAC, or plain header have been tampered with,
- * or, in general, if the decryption doesn't succeed, throw a
- * std::runtime_error.
- * 
- * The key   must be Sodium::Key::KEYSIZE_AEAD bytes long
- * The nonce must be Sodium::NONCESIZE_AEAD    bytes long
- * 
- * The nonce can be public, the key must remain private. To successfully
- * decrypt a message, both the key and nonce must be the same as those
- * used when encrypting.
- **/
 
 Sodium::CryptorAEAD::data_t
 Sodium::CryptorAEAD::decrypt (const Sodium::CryptorAEAD::data_t &header,
@@ -127,11 +85,6 @@ Sodium::CryptorAEAD::decrypt (const Sodium::CryptorAEAD::data_t &header,
 
   return plaintext;
 }
-
-/**
- * Convert the bytes of a ciphertext into a hex string,
- * and return that string.
- **/
 
 std::string
 Sodium::CryptorAEAD::tohex (const Sodium::CryptorAEAD::data_t &ciphertext)

@@ -8,14 +8,6 @@
 #include <stdexcept>
 #include <vector>
 
-/**
- * Create and return a Message Authentication Code (MAC) for the supplied
- * plaintext and secret key.
- *
- * This function will throw a std::runtime_error if the length of
- * the key doesn't make sense.
- **/
-
 Sodium::Auth::data_t
 Sodium::Auth::auth (const Sodium::Auth::data_t &plaintext,
 		    const Sodium::Key          &key)
@@ -39,14 +31,6 @@ Sodium::Auth::auth (const Sodium::Auth::data_t &plaintext,
   // return the MAC bytes
   return mac;
 }
-
-/**
- * Verify MAC of plaintext using supplied secret key, returing true
- * or false whether the plaintext was tampered with or not.
- *
- * This function will throw a std::runtime_error if the sizes of
- * the key or the mac don't make sense.
- **/
 
 bool
 Sodium::Auth::verify (const Sodium::Auth::data_t &plaintext,
