@@ -77,8 +77,8 @@ class Key
   }
 
   // Keys can't be copied (for now)
-  Key(const Key &other)             = delete;
-  Key& operator= (const Key &other) = delete;
+  Key(const Key &other)             = default; // XXX: enabled for now
+  Key& operator= (const Key &other) = default;
 
   /**
    * Various libsodium functions used either directly or in

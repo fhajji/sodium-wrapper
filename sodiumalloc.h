@@ -11,6 +11,10 @@
 #include <new>
 #include <stdexcept>
 
+#ifndef NDEBUG
+#include <iostream>
+#endif // ! NDEBUG
+
 /**
  * This custom allocator doles out "secure memory" using libsodium's
  * malloc*() utility functions.  The idea is to store sensitive key
@@ -79,10 +83,19 @@ class SodiumAlloc
    **/
   
   T* allocate (std::size_t num) {
+#ifndef NDEBUG
+    std::cerr << "DEBUG: SodiumAlloc::allocate(" << num << ") -> ";
+#endif // ! NDEBUG
+    
     // XXX slowly increase num until we reach at least 64 bytes
     while (num * sizeof(T) <= 64) ++num;
     
     void *ptr = sodium_allocarray(num, sizeof(T));
+
+#ifndef NDEBUG
+    std::cerr << static_cast<void *>(ptr) << std::endl;
+#endif // ! NDEBUG
+    
     if (ptr == NULL)
       throw std::bad_alloc {};
     else
@@ -101,7 +114,13 @@ class SodiumAlloc
    *
    **/
   
-  void deallocate (T* ptr, std::size_t /* num */) {
+  void deallocate (T* ptr, std::size_t num) {
+#ifndef NDEBUG
+    std::cerr << "DEBUG: SodiumAlloc::deallocate("
+	      << static_cast<void *>(ptr) << ", "
+	      << num << ")" << std::endl;
+#endif // ! NDEBUG
+    
     sodium_free(ptr);
   }
 
@@ -115,6 +134,12 @@ class SodiumAlloc
    * mprotect() call failed.
    **/
   void noaccess  (T* ptr) {
+#ifndef NDEBUG
+    std::cerr << "DEBUG: SodiumAlloc::noaccess("
+	      << static_cast<void *>(ptr)
+	      << ")" << std::endl;
+#endif // ! NDEBUG
+    
     if (sodium_mprotect_noaccess(ptr) == -1)
       throw std::runtime_error {"SodiumAlloc::noaccess() failed"};
   }
@@ -129,6 +154,12 @@ class SodiumAlloc
    * mprotect() call failed.
    **/
   void readonly  (T* ptr) {
+#ifndef NDEBUG
+    std::cerr << "DEBUG: SodiumAlloc::readonly("
+	      << static_cast<void *>(ptr)
+	      << ")" << std::endl;
+#endif // ! NDEBUG
+
     if (sodium_mprotect_readonly(ptr) == -1)
       throw std::runtime_error {"SodiumAlloc::readonly() failed"};
   }
@@ -143,6 +174,12 @@ class SodiumAlloc
    * mprotect() call failed.
    **/
   void readwrite (T* ptr) {
+#ifndef NDEBUG
+    std::cerr << "DEBUG: SodiumAlloc::readwrite("
+	      << static_cast<void *>(ptr)
+	      << ")" << std::endl;
+#endif // ! NDEBUG
+
     if (sodium_mprotect_readwrite(ptr) == -1)
       throw std::runtime_error {"SodiumAlloc::readwrite() failed"};
   }

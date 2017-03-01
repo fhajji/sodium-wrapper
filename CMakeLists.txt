@@ -11,7 +11,7 @@ project ( sodiumtester )
 
 set ( CMAKE_CXX_STANDARD 11 )
 set ( CMAKE_CXX_STANDARD_REQUIRED ON )
-set ( CMAKE_CXX_CFLAGS "${CMAKE_CXX_CFLAGS} -std=c++11 -Wall" )
+set ( CMAKE_CXX_CFLAGS "${CMAKE_CXX_CFLAGS} -std=c++11 -stdlib=libc++ -Wall" )
 
 # We would like pkg-config --{cflags|libs} libsodium without -I or -L...
 set ( MY_INCLUDE_DIR "/usr/local/include" )
@@ -20,7 +20,8 @@ set ( MY_LIB_DIR "/usr/local/lib" )
 include_directories ( ${MY_INCLUDE_DIR} )
 
 set ( SOURCE_FILES main.cpp sodiumtester.cpp sodiumcryptor.cpp
-                   sodiumauth.cpp sodiumcryptoraead.cpp )
+                   sodiumauth.cpp sodiumcryptoraead.cpp
+		   sodiumstreamcryptor.cpp )
 
 find_library ( SODIUM_LIB sodium ${MY_LIB_DIR} )
 

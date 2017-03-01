@@ -18,6 +18,7 @@ int main()
   try {
     SodiumTester st {};
 
+#if 0
     std::string plaintext;
     std::string ciphertext;
     
@@ -47,6 +48,13 @@ int main()
     std::getline(std::cin, header);
     std::string res4 = st.test4(plaintext, header);
     std::cout << "AEAD test: " << res4 << std::endl;
+#endif
+    
+    std::string filename;
+    std::cout << "Enter filename: ";
+    std::cin  >> filename;
+    bool res5 = st.test5(filename);
+    std::cout << "stream cryptor test: " << res5 << std::endl;
   }
   catch (std::runtime_error e) {
     std::cerr << e.what() << std::endl;

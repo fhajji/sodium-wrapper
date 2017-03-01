@@ -22,6 +22,7 @@ class SodiumTester
   std::string test3();
   std::string test4(const std::string &plaintext,
 		    const std::string &header);
+  bool        test5(const std::string &filename);
 };
 
 #endif // _SODIUMTESTER_H_
