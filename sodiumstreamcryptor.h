@@ -13,6 +13,8 @@
 
 #include <stdexcept>
 #include <vector>
+#include <istream>
+#include <ostream>
 
 namespace Sodium {
 
@@ -34,6 +36,9 @@ class StreamCryptor {
     key_.readonly();
   }
 
+  void encrypt(std::istream &istr, std::ostream &ostr);
+  void decrypt(std::istream &istr, std::ostream &ostr);
+  
   /**
    * Encrypt a chunk of plaintext, returning a chunk of mac+ciphertext.
    * If (plaintext.size() != blocksize), throw a std::runtime_exception.
