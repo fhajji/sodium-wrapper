@@ -39,23 +39,6 @@ class StreamCryptor {
   void encrypt(std::istream &istr, std::ostream &ostr);
   void decrypt(std::istream &istr, std::ostream &ostr);
   
-  /**
-   * Encrypt a chunk of plaintext, returning a chunk of mac+ciphertext.
-   * If (plaintext.size() != blocksize), throw a std::runtime_exception.
-   * After encryption, the stored copy of nonce is incremented.
-   **/
-  
-  data_t encrypt(const data_t &plaintext);
-
-  /**
-   * Decrypt a chunk of MAC+ciphertext, using the current value
-   * (state) of nonce. Upon successuful decryption, return the plaintext
-   * and increment the stored nonce, so we're ready to decrypt the next
-   * chunk of MAC+ciphertext.
-   **/
-  
-  data_t decrypt(const data_t &ciphtertext_with_macs);
-  
  private:
   Key                   key_;
   Nonce<NONCESIZE_AEAD> nonce_;
