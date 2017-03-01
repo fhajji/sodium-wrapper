@@ -18,6 +18,8 @@
 #include <fstream>
 #include <utility>
 
+#define NDEBUG
+
 #ifndef NDEBUG
 #include <iostream>
 #endif // ! NDEBUG
@@ -571,7 +573,7 @@ SodiumTester::test5(const std::string &filename)
     if (s2 != buffer2.size())
       buffer2.resize(s2);
 
-    data_t finalbuffer = std::move(strm_crypt.decrypt(buffer2)); // will throw! XXX
+    data_t finalbuffer = std::move(strm_crypt2.decrypt(buffer2)); // will throw! XXX
     ofs2.write(reinterpret_cast<char *>(finalbuffer.data()),
 	      finalbuffer.size());
 
