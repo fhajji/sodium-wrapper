@@ -475,6 +475,13 @@ SodiumTester::test5(const std::string &filename)
     ofs.write(reinterpret_cast<char *>(outbuffer.data()), outbuffer.size());
     
     // XXX: check state of ofs here!
+
+#ifndef NDEBUG
+    if (ofs)
+      std::cerr << "DEBUG: SodiumTester::test5() wrote a whole chunk of "
+		<< outbuffer.size() << " bytes" << std::endl;
+#endif // ! NDEBUG
+    
   }
 
   // Check to see if we've read a final partial chunk
@@ -482,8 +489,8 @@ SodiumTester::test5(const std::string &filename)
   if (s != 0) {
 
 #ifndef NDEBUG
-    std::cerr << "DEBUG: SodiumTester::test5() read a final partial chunk"
-	      << std::endl;
+    std::cerr << "DEBUG: SodiumTester::test5() read a final partial chunk of "
+	      << s << " bytes" << std::endl;
 #endif // ! NDEBUG
     
     if (s != buffer.size())
@@ -493,6 +500,14 @@ SodiumTester::test5(const std::string &filename)
     ofs.write(reinterpret_cast<char *>(finalbuffer.data()),
 	      finalbuffer.size());
     // XXX: check status of ofs
+
+#ifndef NDEBUG
+    if (ofs)
+      std::cerr << "DEBUG: SodiumTester::test5() wrote a final chunk of "
+		<< finalbuffer.size() << " bytes" << std::endl;
+#endif // ! NDEBUG
+
+    
   }
 
   // That's all, folks!
@@ -510,13 +525,32 @@ SodiumTester::test5(const std::string &filename)
   // we reuse 'key' and 'nonce' from above, but we must reinit stream_cryptor
   Sodium::StreamCryptor                 strm_crypt2 (key, nonce, MYBLKSIZE);
   std::size_t MACSIZE = Sodium::StreamCryptor::MACSIZE;
+
+#ifndef NDEBUG
+  std::cerr << "DEBUG: SodiumTester::test5() MACSIZE == " << MACSIZE
+	    << std::endl;
+#endif // ! NDEBUG
+
+  data_t buffer2(MYBLKSIZE + MACSIZE, '\0');
   
-  while (ifs2.read(reinterpret_cast<char *>(buffer.data()), MYBLKSIZE+MACSIZE)) {
+  while (ifs2.read(reinterpret_cast<char *>(buffer2.data()), MYBLKSIZE+MACSIZE)) {
     // We've got a whole MACSIZE+MYBLKSIZE chunk.
 
+#ifndef NDEBUG
+    std::cerr << "SodiumTester::test5() read a whole chunk of "
+	      << buffer2.size() << std::endl;
+#endif // ! NDEBUG
+    
     try {
-      data_t outbuffer = std::move(strm_crypt2.decrypt(buffer));
+      data_t outbuffer = std::move(strm_crypt2.decrypt(buffer2));
       ofs2.write(reinterpret_cast<char *>(outbuffer.data()), outbuffer.size());
+
+#ifndef NDEBUG
+      if (ofs2)
+	std::cerr << "SodiumTester::test5() wrote a whole chunk of "
+		  << outbuffer.size() << " bytes" << std::endl;
+#endif // ! NDEBUG
+      
     }
     catch (std::exception &e) {
       std::cerr << "StreamTester::test5() decryption phase: "
@@ -526,20 +560,28 @@ SodiumTester::test5(const std::string &filename)
   }
     
   // Check to see if we've read a final partial chunk
-  auto s2 = ifs.gcount();
+  auto s2 = ifs2.gcount();
   if (s2 != 0) {
 #ifndef NDEBUG
-    std::cerr << "DEBUG: SodiumTester::test5() read a final partial cipher chunk"
+    std::cerr << "DEBUG: SodiumTester::test5() read a final "
+	      << "partial cipher chunk of " << s2 << " bytes"
 	      << std::endl;
 #endif // ! NDEBUG
     
-    if (s2 != buffer.size())
-      buffer.resize(s2);
+    if (s2 != buffer2.size())
+      buffer2.resize(s2);
 
-    data_t finalbuffer = std::move(strm_crypt.decrypt(buffer)); // will throw! XXX
-    ofs.write(reinterpret_cast<char *>(finalbuffer.data()),
+    data_t finalbuffer = std::move(strm_crypt.decrypt(buffer2)); // will throw! XXX
+    ofs2.write(reinterpret_cast<char *>(finalbuffer.data()),
 	      finalbuffer.size());
-    // XXX: check status of ofs
+
+#ifndef NDEBUG
+    if (ofs2)
+      std::cerr << "SodiumTester::test5() wrote a final partial chunk of "
+		<< finalbuffer.size() << " bytes" << std::endl;
+#endif // ! NDEBUG
+    
+    // XXX: check status of ofs2
   }
 
   // That's all, folks!
