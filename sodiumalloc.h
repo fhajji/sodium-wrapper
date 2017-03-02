@@ -11,6 +11,8 @@
 #include <new>
 #include <stdexcept>
 
+#define NDEBUG
+
 #ifndef NDEBUG
 #include <iostream>
 #endif // ! NDEBUG

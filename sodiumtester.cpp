@@ -446,6 +446,54 @@ SodiumTester::test4(const std::string &plaintext,
   return os.str();
 }
 
+/**
+ * This function tests Sodium::StreamCryptor:
+ *
+ * We will test the stream cryptors Sodium::StreamCryptor::encrypt() and
+ * Sodium::StreamCryptor::decrypt() on std::ifstream and std::ofstream,
+ * i.e. on regular binary files.
+ *
+ * The preparations consist in intantiating a Sodium::StreamCryptor object.
+ *
+ * - we first create a random key with the right number of bytes
+ * - we also create a random nonce with the right number of bytes
+ * - from this, we create a Sodium::StreamCryptor strm_crypt;
+ *   we also specify a granularity of 1024 bytes to be used for
+ *   the chunking.
+ * - since we squirreled away a copy of the key in strm_crypt, we disable
+ *   access to our local key (not needed anymore here).
+ *
+ * We now want to chunkwise encrypt a binary file.
+ * 
+ * - we open a file for reading in binary mode, getting a std::ifstream ifs
+ * - we open a file for writing in binary mode, getting a std::ofstream ofs
+ *   (same name, with .enc appended).
+ * - since ifs is _also_ an std::istream, and ofs is also an std::ostream,
+ *   we can directly chunkwise encrypt the input stream ifs into the
+ *   output stream ofs
+ * - then we close the streams. We're done chunkwise encrypting.
+ *
+ * We finally want to chunkwise decrypt the encrypted file.
+ *
+ * - we open the encrypted file for reading in binary mode: ifs2.
+ * - we open a file for writing in binary mode: ofs2
+ *   (same name, with .dec appended).
+ * - since ifs2 and ofs2 are also std::istream resp. std::ostream, we
+ *   can directly chunkwise decrypt the input stream into the output
+ *   stream.
+ * - we reuse the same Sodium::StreamCryptor object strm_crypt, which
+ *   already contains the good key, the right initial nonce, and
+ *   the correct blocksize (the decryption takes care to adjust the
+ *   block size with MACSIZE, the added MACs for each chunk, automatically).
+ * - if the decryption fails for some reason, we throw an error and exit.
+ * - the decrypt() function writes to the output stream, i.e. to ofs2,
+ *   direcly to the output file.
+ * - then we close the streams. We're done chunkwise decrypting.
+ *
+ * Exercise: compare original file with decrypted file... (NYI).
+ *
+ **/
+
 bool
 SodiumTester::test5(const std::string &filename)
 {
