@@ -7,8 +7,6 @@
 #include "sodiumnonce.h"
 
 #include <stdexcept>
-#include <vector>
-#include <string>
 
 using Sodium::data_t;
 using Sodium::CryptorAEAD;
@@ -88,25 +86,4 @@ CryptorAEAD::decrypt (const data_t      &header,
   plaintext.resize(mlen);
 
   return plaintext;
-}
-
-std::string
-CryptorAEAD::tohex (const data_t &ciphertext)
-{
-  const std::size_t hexbuf_size = ciphertext.size() * 2 + 1;
-  std::vector<char> hexbuf(hexbuf_size);
-  
-  // convert [ciphertext.cbegin(), ciphertext.cend()) into hex:
-  if (! sodium_bin2hex(hexbuf.data(), hexbuf_size,
-                       ciphertext.data(), ciphertext.size()))
-    throw std::runtime_error {"SodiumCryptor::tohex() overflowed"};
-
-  // In C++17, we could construct a std::string with hexbuf_size chars,
-  // and modify it directly through non-const data(). Unfortunately,
-  // in C++11 and C++14, std::string's data() is const only, so we need
-  // to copy the data over from std::vector<char> to std::string for now.
-  
-  // return hex output as a string:
-  std::string outhex {hexbuf.cbegin(), hexbuf.cend()};
-  return outhex;
 }

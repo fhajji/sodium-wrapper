@@ -21,7 +21,8 @@ include_directories ( ${MY_INCLUDE_DIR} )
 
 set ( SOURCE_FILES main.cpp sodiumtester.cpp sodiumcryptor.cpp
                    sodiumauth.cpp sodiumcryptoraead.cpp
-		   sodiumstreamcryptor.cpp )
+		   sodiumstreamcryptor.cpp
+		   sodiumutils.cpp )
 
 find_library ( SODIUM_LIB sodium ${MY_LIB_DIR} )
 

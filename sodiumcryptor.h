@@ -9,9 +9,6 @@
 #include "sodiumkey.h"
 #include "sodiumnonce.h"
 
-#include <vector>
-#include <string>
-
 namespace Sodium {
 
 class Cryptor {
@@ -61,12 +58,6 @@ class Cryptor {
 		 const Key        &key,
 		 const Nonce<NSZ> &nonce);
 
-  /**
-   * Convert the bytes of a ciphertext into a hex string,
-   * and return that string.
-   **/
-
-  std::string tohex(const data_t &ciphertext);
 };
 
 } // namespace Sodium

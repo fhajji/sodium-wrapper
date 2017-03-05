@@ -92,7 +92,7 @@ SodiumTester::test0(const std::string &plaintext)
   // finally, convert the bytes of the ciphertext into a hexadecimal
   // string that can be printed, and return that string.
 
-  std::string encrypted_as_hex = sc.tohex(ciphertext);
+  std::string encrypted_as_hex = Sodium::tohex(ciphertext);
   return encrypted_as_hex;
 
   // the key will self-destruct here when it goes out of scope.
@@ -246,7 +246,7 @@ SodiumTester::test3()
   // if (a.size() != Sodium::NONCESIZE_SECRETBOX)
   //   throw std::runtime_error {"SodiumTester::test3() wrong nonce size"};
 
-  os << "a+0: " << a.tohex() << std::endl;
+  os << "a+0: " << Sodium::tohex(a.data(), a.size()) << std::endl;
   
   Sodium::Nonce<> a_copy {a};
   if (a != a_copy)
@@ -254,21 +254,21 @@ SodiumTester::test3()
   
   for (int i: {1,2,3,4,5}) {
     a.increment();
-    os << "a+" << i << ": " << a.tohex() << std::endl;
+    os << "a+" << i << ": " << Sodium::tohex(a.data(), a.size()) << std::endl;
   }
 
   if (a_copy > a)
     throw std::runtime_error {"SodiumTester::test3() a+5 > a"};
   
   Sodium::Nonce<> b(false); // uninitialized, zeroed?
-  os << "b+0: " << b.tohex() << std::endl;
+  os << "b+0: " << Sodium::tohex(b.data(), b.size()) << std::endl;
   if (! b.is_zero())
     throw std::runtime_error {"SodiumTester::test3() not initialized to zero"};
 
   for (int i: {1,2,3,4,5})
     b.increment();
   // b is now 5, display it!
-  os << "b+5: " << b.tohex() << std::endl;
+  os << "b+5: " << Sodium::tohex(b.data(), b.size()) << std::endl;
 
   a_copy += b; // increment original a by 5 (should be new a)
   if (a_copy != a)
@@ -323,7 +323,9 @@ SodiumTester::test4(const std::string &plaintext,
 					       key,
 					       nonce);
 
-  os << "encrypted: " << sc_aead.tohex(ciphertext_with_mac) << std::endl;
+  os << "encrypted: "
+     << Sodium::tohex(ciphertext_with_mac)
+     << std::endl;
 
   // and then decrypt (would throw if there was an error
   data_t decryptedblob = sc_aead.decrypt(headerblob,
@@ -376,7 +378,7 @@ SodiumTester::test4(const std::string &plaintext,
 					key,
 					nonce);
   os << "encrypted (same nonce): "
-     << sc_aead.tohex(ciphertext_with_mac)
+     << Sodium::tohex(ciphertext_with_mac)
      << std::endl;
 
   nonce.increment(); // don't forget that!
@@ -386,7 +388,7 @@ SodiumTester::test4(const std::string &plaintext,
 					key,
 					nonce);
   os << "encrypted (different nonce): "
-     << sc_aead.tohex(ciphertext_with_mac)
+     << Sodium::tohex(ciphertext_with_mac)
      << std::endl;
 
   try {
@@ -416,7 +418,7 @@ SodiumTester::test4(const std::string &plaintext,
 						     key,
 						     nonce);
   os << "empty encrypted: "
-     << sc_aead.tohex(empty_ciphertext_with_mac)
+     << Sodium::tohex(empty_ciphertext_with_mac)
      << std::endl;
   try {
     data_t empty_decrypted = sc_aead.decrypt(empty_headerblob,

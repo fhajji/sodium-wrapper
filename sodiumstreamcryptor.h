@@ -13,7 +13,6 @@
 #include "sodiumcryptoraead.h"
 
 #include <stdexcept>
-#include <vector>
 #include <istream>
 #include <ostream>
 

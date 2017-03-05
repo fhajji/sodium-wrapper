@@ -81,7 +81,7 @@ class Nonce
 
             const unsigned char *data() const { return noncedata.data(); }
   constexpr const std::size_t    size() const { return N; }
- 
+
   /**
    * Increment the Nonce by 1 in constant time.
    * 
