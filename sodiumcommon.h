@@ -16,7 +16,6 @@ namespace Sodium {
   using data_t = std::vector<unsigned char>;
 
   std::string tohex (const data_t &in); // in: sodiumutils.cpp
-  std::string tohex (const unsigned char *data, const std::size_t &nlen);
 
 } // namespace Sodium
 

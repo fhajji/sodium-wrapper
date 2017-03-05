@@ -83,6 +83,12 @@ class Nonce
   constexpr const std::size_t    size() const { return N; }
 
   /**
+   * Expose noncedata as const data_t for Sodium::tohex().
+   **/
+
+  const data_t as_data_t() const { return noncedata; }
+ 
+  /**
    * Increment the Nonce by 1 in constant time.
    * 
    * The byte pattern stored in Nonce is considered to be
@@ -112,29 +118,6 @@ class Nonce
   Nonce<N>& operator+= (const Nonce<N> &b) {
     sodium_add(noncedata.data(), b.noncedata.data(), noncedata.size());
     return *this;
-  }
-
-  /**
-   * Return the bytes of the Nonce as hex digits.
-   **/
-
-  std::string tohex() {
-    constexpr std::size_t hexbuf_size = N*2+1;
-    std::vector<char> hexbuf(hexbuf_size);
-
-    // convert [noncedata.cbegin(), noncedata.cend()) to hex:
-    if (! sodium_bin2hex(hexbuf.data(), hexbuf_size,
-			 noncedata.data(), N))
-      throw std::runtime_error {"Sodium::Nonce<N>::tohex() overflowed"};
-    
-    // In C++17, we could construct a std::string with hexbuf_size chars,
-    // and modify it directly through non-const data(). Unfortunately,
-    // in C++11 and C++14, std::string's data() is const only, so we need
-    // to copy the data over from std::vector<char> to std::string for now.
-
-    // return hex output as a string:
-    std::string outhex {hexbuf.cbegin(), hexbuf.cend()};
-    return outhex;
   }
  
  private:

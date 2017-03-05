@@ -26,9 +26,3 @@ Sodium::tohex (const Sodium::data_t &in)
   std::string outhex {hexbuf.cbegin(), hexbuf.cend()};
   return outhex;
 }
-
-std::string
-Sodium::tohex (const unsigned char *data, const std::size_t &nlen)
-{
-  return Sodium::tohex (Sodium::data_t {data, data+nlen});
-}

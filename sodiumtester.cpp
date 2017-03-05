@@ -246,7 +246,7 @@ SodiumTester::test3()
   // if (a.size() != Sodium::NONCESIZE_SECRETBOX)
   //   throw std::runtime_error {"SodiumTester::test3() wrong nonce size"};
 
-  os << "a+0: " << Sodium::tohex(a.data(), a.size()) << std::endl;
+  os << "a+0: " << Sodium::tohex(a.as_data_t()) << std::endl;
   
   Sodium::Nonce<> a_copy {a};
   if (a != a_copy)
@@ -254,21 +254,21 @@ SodiumTester::test3()
   
   for (int i: {1,2,3,4,5}) {
     a.increment();
-    os << "a+" << i << ": " << Sodium::tohex(a.data(), a.size()) << std::endl;
+    os << "a+" << i << ": " << Sodium::tohex(a.as_data_t()) << std::endl;
   }
 
   if (a_copy > a)
     throw std::runtime_error {"SodiumTester::test3() a+5 > a"};
   
   Sodium::Nonce<> b(false); // uninitialized, zeroed?
-  os << "b+0: " << Sodium::tohex(b.data(), b.size()) << std::endl;
+  os << "b+0: " << Sodium::tohex(b.as_data_t()) << std::endl;
   if (! b.is_zero())
     throw std::runtime_error {"SodiumTester::test3() not initialized to zero"};
 
   for (int i: {1,2,3,4,5})
     b.increment();
   // b is now 5, display it!
-  os << "b+5: " << Sodium::tohex(b.data(), b.size()) << std::endl;
+  os << "b+5: " << Sodium::tohex(b.as_data_t()) << std::endl;
 
   a_copy += b; // increment original a by 5 (should be new a)
   if (a_copy != a)
