@@ -107,6 +107,7 @@ FileCryptor::decrypt(std::ifstream &ifs, std::ostream &ostr)
     // info the hash at the end of the file. drop what we read
     // in excess
     current_pos = ifs.tellg();
+
     if (current_pos > hash_pos) {
       ciphertext.resize(ciphertext.size() - (current_pos - hash_pos));
       in_mac = true;
@@ -148,16 +149,19 @@ FileCryptor::decrypt(std::ifstream &ifs, std::ostream &ostr)
 	  ciphertext.clear();
       }
 
-      // now, attempt to decrypt (XXX: what if ciphertext.empty() ?)
-      data_t plaintext = sc_aead_.decrypt(header_, ciphertext,
-					  key_, running_nonce);
-      // no need to running_nonce.increment() anymore...
+      // now, attempt to decrypt, if there's still something to decrypt
+      if (! ciphertext.empty()) {
+	data_t plaintext = sc_aead_.decrypt(header_, ciphertext,
+					    key_, running_nonce);
+	// no need to running_nonce.increment() anymore...
 
-      ostr.write(reinterpret_cast<char *>(plaintext.data()), plaintext.size());
-      if (!ostr)
-	throw std::runtime_error {"Sodium::StreamCryptor::decrypt() error writing final chunk to file"};
+	ostr.write(reinterpret_cast<char *>(plaintext.data()),
+		   plaintext.size());
+	if (!ostr)
+	  throw std::runtime_error {"Sodium::StreamCryptor::decrypt() error writing final chunk to file"};
 
-      crypto_generichash_update(&state, ciphertext.data(), ciphertext.size());
+	crypto_generichash_update(&state, ciphertext.data(), ciphertext.size());
+      }
     }
   }
   

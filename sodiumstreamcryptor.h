@@ -121,7 +121,7 @@ class StreamCryptor {
    *   - the input stream wasn't encrypted with encrypt()
    *   - one or more mac+ciphertext chunks have been tampered with
    * In that case, throw a std::runtime_error and stop writing to ostr.
-   * No string guarantee.
+   * No strong guarantee.
    *
    * The saved nonce is unaffected by the incrementing of the running
    * nonce during decryption.
