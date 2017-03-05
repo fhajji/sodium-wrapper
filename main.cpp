@@ -59,6 +59,11 @@ int main()
     std::cin  >> filename;
     bool res5 = st.test5(filename);
     std::cout << "stream cryptor test: " << res5 << std::endl;
+
+    // ----- test #6 -----
+    bool res6 = st.test6(filename);
+    std::cout << "file cryptor test: " << res6 << std::endl;
+    
   }
   catch (std::runtime_error e) {
     std::cerr << e.what() << std::endl;

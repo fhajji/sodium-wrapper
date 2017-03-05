@@ -11,6 +11,7 @@
 #include "sodiumauth.h"
 #include "sodiumcryptoraead.h"
 #include "sodiumstreamcryptor.h"
+#include "sodiumfilecryptor.h"
 
 #include <stdexcept>
 #include <string>
@@ -524,6 +525,54 @@ SodiumTester::test5(const std::string &filename)
   
   // now do the decryption
   strm_crypt.decrypt(ifs2, ofs2);
+  
+  // we're done decrypting, close the (file) streams.
+  ofs2.close();
+  ifs2.close();
+  
+  return true;
+}
+
+bool
+SodiumTester::test6(const std::string &filename)
+{
+  std::size_t                           MYBLKSIZE = 1024;
+  
+  Sodium::Key                           key     (Sodium::Key::KEYSIZE_AEAD);
+  Sodium::Key                           hashkey (Sodium::FileCryptor::HASHKEYSIZE);
+  Sodium::Nonce<Sodium::NONCESIZE_AEAD> nonce {};
+  Sodium::FileCryptor                   file_crypt (key, nonce, MYBLKSIZE,
+						    hashkey, Sodium::FileCryptor::HASHSIZE);
+
+  key.noaccess();
+  hashkey.noaccess();
+  
+  std::ifstream ifs(filename,          std::ios_base::binary);
+  std::ofstream ofs(filename + ".enc2", std::ios_base::binary);
+
+  if (!ifs || !ofs)
+    throw std::runtime_error {"SodiumTester::test6(): Can't open input or output file"};
+
+  // now do the encryption
+  file_crypt.encrypt(ifs, ofs);
+
+  // we're done encrypting, close the (file) streams.
+  ofs.close();
+  ifs.close();
+
+  // -------------------- now test in reverse ----------------------------
+
+  std::ifstream ifs2(filename + ".enc2", std::ios_base::binary);
+  std::ofstream ofs2(filename + ".dec2", std::ios_base::binary);
+
+  if (!ifs2 || !ofs2)
+    throw std::runtime_error {"SodiumTester::test6() can't open second intput or output files"};
+
+  // we reuse file_crypt from above: it has saved inside it
+  // key, (initial) nonce and the blocksize, so we're safe.
+  
+  // now do the decryption
+  file_crypt.decrypt(ifs2, ofs2);
   
   // we're done decrypting, close the (file) streams.
   ofs2.close();
