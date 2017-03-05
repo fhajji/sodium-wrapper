@@ -28,7 +28,7 @@ class StreamCryptor {
    * Note that the total blocksize of the mac+ciphertext will be
    * MACSIZE + plaintext.size() for each block.
    **/
-  constexpr static std::size_t MACSIZE = Sodium::CryptorAEAD::MACSIZE;
+  constexpr static std::size_t MACSIZE = CryptorAEAD::MACSIZE;
 
   /**
    * A StreamCryptor will encrypt/decrypt streams blockwise using a

@@ -10,16 +10,20 @@
 #include <string>
 #include <vector>
 
+using Sodium::data_t;
+using Sodium::Cryptor;
+using Sodium::Key;
+using Sodium::Nonce;
 
-Sodium::data_t
-Sodium::Cryptor::encrypt (const Sodium::data_t     &plaintext,
-			  const Sodium::Key        &key,
-			  const Sodium::Nonce<NSZ> &nonce)
+data_t
+Cryptor::encrypt (const data_t     &plaintext,
+		  const Key        &key,
+		  const Nonce<NSZ> &nonce)
 {
   // get the sizes
   const std::size_t ciphertext_size =
     crypto_secretbox_MACBYTES + plaintext.size();
-  const std::size_t key_size        = Sodium::Key::KEYSIZE_SECRETBOX;
+  const std::size_t key_size        = Key::KEYSIZE_SECRETBOX;
   const std::size_t nonce_size      = Sodium::NONCESIZE_SECRETBOX;
   
   // some sanity checks before we get started
@@ -41,10 +45,10 @@ Sodium::Cryptor::encrypt (const Sodium::data_t     &plaintext,
   return ciphertext;
 }
 
-Sodium::data_t
-Sodium::Cryptor::decrypt (const Sodium::data_t     &ciphertext,
-			  const Sodium::Key        &key,
-			  const Sodium::Nonce<NSZ> &nonce)
+data_t
+Cryptor::decrypt (const data_t     &ciphertext,
+		  const Key        &key,
+		  const Nonce<NSZ> &nonce)
 {
   // get the sizes
   const std::size_t key_size        = key.size();
@@ -53,7 +57,7 @@ Sodium::Cryptor::decrypt (const Sodium::data_t     &ciphertext,
     ciphertext.size() - crypto_secretbox_MACBYTES;
   
   // some sanity checks before we get started
-  if (key_size != Sodium::Key::KEYSIZE_SECRETBOX)
+  if (key_size != Key::KEYSIZE_SECRETBOX)
     throw std::runtime_error {"Sodium::Cryptor::decrypt() wrong key size"};
   if (nonce_size != Sodium::NONCESIZE_SECRETBOX)
     throw std::runtime_error {"Sodium::Cryptor::decrypt() wrong nonce size"};
@@ -74,7 +78,7 @@ Sodium::Cryptor::decrypt (const Sodium::data_t     &ciphertext,
 }
 
 std::string
-Sodium::Cryptor::tohex (const Sodium::data_t &ciphertext)
+Cryptor::tohex (const data_t &ciphertext)
 {
   const std::size_t hexbuf_size = ciphertext.size() * 2 + 1;
   std::vector<char> hexbuf(hexbuf_size);

@@ -45,10 +45,10 @@ class CryptorAEAD
    *    plaintext.size() + Sodium::CryptorAEAD::MACSIZE.
    **/
 
-  data_t encrypt(const data_t              &header,
-		 const data_t              &plaintext,
-		 const Sodium::Key         &key,
-		 const Sodium::Nonce<NSZA> &nonce);
+  data_t encrypt(const data_t      &header,
+		 const data_t      &plaintext,
+		 const Key         &key,
+		 const Nonce<NSZA> &nonce);
 
   /**
    * Decrypt ciphertext_with_mac returned by Sodium::CryptorAEAD::encrypt()
@@ -68,10 +68,10 @@ class CryptorAEAD
    * used when encrypting.
    **/
 
-  data_t decrypt(const data_t              &header,
-		 const data_t              &ciphertext_with_mac,
-		 const Sodium::Key         &key,
-		 const Sodium::Nonce<NSZA> &nonce);
+  data_t decrypt(const data_t      &header,
+		 const data_t      &ciphertext_with_mac,
+		 const Key         &key,
+		 const Nonce<NSZA> &nonce);
 
   /**
    * Convert the bytes of a ciphertext into a hex string,

@@ -4,8 +4,10 @@
 
 #include "sodiumstreamcryptor.h"
 
+using Sodium::StreamCryptor;
+
 void
-Sodium::StreamCryptor::encrypt(std::istream &istr, std::ostream &ostr)
+StreamCryptor::encrypt(std::istream &istr, std::ostream &ostr)
 {
   data_t plaintext(blocksize_, '\0');
   Nonce<NONCESIZE_AEAD> running_nonce {nonce_};
@@ -36,7 +38,7 @@ Sodium::StreamCryptor::encrypt(std::istream &istr, std::ostream &ostr)
 }
 
 void
-Sodium::StreamCryptor::decrypt(std::istream &istr, std::ostream &ostr)
+StreamCryptor::decrypt(std::istream &istr, std::ostream &ostr)
 {
   data_t ciphertext(MACSIZE + blocksize_, '\0');
   Nonce<NONCESIZE_AEAD> running_nonce {nonce_};   // restart with saved nonce_

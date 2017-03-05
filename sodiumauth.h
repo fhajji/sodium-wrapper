@@ -23,8 +23,8 @@ class Auth
    * the key doesn't make sense.
    **/
 
-  data_t auth(const data_t       &plaintext,
-	      const Sodium::Key  &key);
+  data_t auth(const data_t &plaintext,
+	      const Key    &key);
 
   /**
    * Verify MAC of plaintext using supplied secret key, returing true
@@ -34,9 +34,9 @@ class Auth
    * the key or the mac don't make sense.
    **/
 
-  bool verify(const data_t      &plaintext,
-	      const data_t      &mac,
-	      const Sodium::Key &key);
+  bool verify(const data_t &plaintext,
+	      const data_t &mac,
+	      const Key    &key);
 };
 
 } // namespace Sodium

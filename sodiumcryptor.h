@@ -43,9 +43,9 @@ class Cryptor {
    * and it too won't be stored in protected key_t memory.
    **/
 
-  data_t encrypt(const data_t             &plaintext,
-		 const Sodium::Key        &key,
-		 const Sodium::Nonce<NSZ> &nonce);
+  data_t encrypt(const data_t     &plaintext,
+		 const Key        &key,
+		 const Nonce<NSZ> &nonce);
 
   /**
    * Decrypt ciphertext using key and nonce, returing decrypted plaintext.
@@ -57,9 +57,9 @@ class Cryptor {
    * the key, nonce and ciphertext don't make sense.
    **/
 
-  data_t decrypt(const data_t             &ciphertext,
-		 const Sodium::Key        &key,
-		 const Sodium::Nonce<NSZ> &nonce);
+  data_t decrypt(const data_t     &ciphertext,
+		 const Key        &key,
+		 const Nonce<NSZ> &nonce);
 
   /**
    * Convert the bytes of a ciphertext into a hex string,

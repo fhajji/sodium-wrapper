@@ -8,12 +8,16 @@
 #include <stdexcept>
 #include <vector>
 
-Sodium::data_t
-Sodium::Auth::auth (const Sodium::data_t &plaintext,
-		    const Sodium::Key    &key)
+using Sodium::data_t;
+using Sodium::Auth;
+using Sodium::Key;
+
+data_t
+Auth::auth (const data_t &plaintext,
+	    const Key    &key)
 {
   // get the sizes
-  const std::size_t key_size = Sodium::Key::KEYSIZE_AUTH;
+  const std::size_t key_size = Key::KEYSIZE_AUTH;
   const std::size_t mac_size = crypto_auth_BYTES;
   
   // some sanity checks before we get started
@@ -33,9 +37,9 @@ Sodium::Auth::auth (const Sodium::data_t &plaintext,
 }
 
 bool
-Sodium::Auth::verify (const Sodium::data_t &plaintext,
-		      const Sodium::data_t &mac,
-		      const Sodium::Key    &key)
+Auth::verify (const data_t &plaintext,
+	      const data_t &mac,
+	      const Key    &key)
 {
   // get the sizes
   const std::size_t mac_size = mac.size();
@@ -44,7 +48,7 @@ Sodium::Auth::verify (const Sodium::data_t &plaintext,
   // some sanity checks before we get started
   if (mac_size != crypto_auth_BYTES)
     throw std::runtime_error {"Sodium::Auth::verify() mac wrong size"};
-  if (key_size != Sodium::Key::KEYSIZE_AUTH)
+  if (key_size != Key::KEYSIZE_AUTH)
     throw std::runtime_error {"Sodium::Auth::verify() key wrong size"};
 
   // and now verify!
