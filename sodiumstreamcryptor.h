@@ -7,6 +7,7 @@
 
 #include <sodium.h>
 
+#include "sodiumcommon.h"
 #include "sodiumkey.h"
 #include "sodiumnonce.h"
 #include "sodiumcryptoraead.h"
@@ -20,7 +21,6 @@ namespace Sodium {
 
 class StreamCryptor {
  public:
-  using data_t  = CryptorAEAD::data_t;
 
   /**
    * Each block of plaintext will be encrypted to a block of the

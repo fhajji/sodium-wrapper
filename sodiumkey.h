@@ -9,6 +9,7 @@
 #include <vector>
 #include <algorithm>
 #include <string>
+#include "sodiumcommon.h"
 #include "sodiumalloc.h"
 
 namespace Sodium {
@@ -40,22 +41,19 @@ class Key
   static constexpr std::size_t KEYSIZE_AUTH      = crypto_auth_KEYBYTES;
   static constexpr std::size_t KEYSIZE_SALT      = crypto_pwhash_SALTBYTES;
   static constexpr std::size_t KEYSIZE_AEAD      = crypto_aead_chacha20poly1305_KEYBYTES;
-  
-  // The strengh of the key derivation efforts for setpass()
-  using strength_t = enum class Strength { low, medium, high };
-
-  // data_t is unprotected memory (just plain bytes)
-  using data_t = std::vector<unsigned char>;
 
   /**
-   * key_t is protected memory for bytes of key material
+   * key_t is protected memory for bytes of key material (see: sodiumkey.h)
    *   * key_t memory will self-destruct/zero when out-of-scope / throws
    *   * key_t memory can be made readonly or temporarily non-accessible
    *   * key_t memory is stored in virtual pages protected by canary,
    *     guard pages, and access to those pages is granted with mprotect().
    **/
   
-  using key_t = std::vector<unsigned char, SodiumAlloc<unsigned char>>;
+  using key_t  = std::vector<unsigned char, SodiumAlloc<unsigned char>>;
+  
+  // The strengh of the key derivation efforts for setpass()
+  using strength_t = enum class Strength { low, medium, high };
 
   /**
    * Construct a Key of size key_size.

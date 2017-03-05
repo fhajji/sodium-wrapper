@@ -11,10 +11,10 @@
 #include <vector>
 
 
-Sodium::Cryptor::data_t
-Sodium::Cryptor::encrypt (const Sodium::Cryptor::data_t &plaintext,
-			  const Sodium::Key             &key,
-			  const Sodium::Nonce<NSZ>      &nonce)
+Sodium::data_t
+Sodium::Cryptor::encrypt (const Sodium::data_t     &plaintext,
+			  const Sodium::Key        &key,
+			  const Sodium::Nonce<NSZ> &nonce)
 {
   // get the sizes
   const std::size_t ciphertext_size =
@@ -41,10 +41,10 @@ Sodium::Cryptor::encrypt (const Sodium::Cryptor::data_t &plaintext,
   return ciphertext;
 }
 
-Sodium::Cryptor::data_t
-Sodium::Cryptor::decrypt (const Sodium::Cryptor::data_t &ciphertext,
-			  const Sodium::Key             &key,
-			  const Sodium::Nonce<NSZ>      &nonce)
+Sodium::data_t
+Sodium::Cryptor::decrypt (const Sodium::data_t     &ciphertext,
+			  const Sodium::Key        &key,
+			  const Sodium::Nonce<NSZ> &nonce)
 {
   // get the sizes
   const std::size_t key_size        = key.size();
@@ -74,7 +74,7 @@ Sodium::Cryptor::decrypt (const Sodium::Cryptor::data_t &ciphertext,
 }
 
 std::string
-Sodium::Cryptor::tohex (const Sodium::Cryptor::data_t &ciphertext)
+Sodium::Cryptor::tohex (const Sodium::data_t &ciphertext)
 {
   const std::size_t hexbuf_size = ciphertext.size() * 2 + 1;
   std::vector<char> hexbuf(hexbuf_size);

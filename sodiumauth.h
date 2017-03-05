@@ -5,6 +5,7 @@
 #ifndef _SODIUMAUTH_H_
 #define _SODIUMAUTH_H_
 
+#include "sodiumcommon.h"
 #include "sodiumkey.h"
 #include <vector>
 
@@ -13,8 +14,6 @@ namespace Sodium {
 class Auth
 {
  public:
-  // data_t is unprotected memory for bytes of plaintext and MAC
-  using data_t = std::vector<unsigned char>;
 
   /**
    * Create and return a Message Authentication Code (MAC) for the supplied

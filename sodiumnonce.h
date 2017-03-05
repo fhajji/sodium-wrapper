@@ -10,6 +10,8 @@
 
 #include <sodium.h>
 
+#include "sodiumcommon.h"
+
 namespace Sodium {
 
 // Typical values for number of bytes of Nonces (from <sodium.h>):
@@ -36,10 +38,6 @@ class Nonce
    **/
 
  public:
-  // XXX typedef unsigned char value_type;
- 
-  // data_t is unprotected memory (just plain bytes)
-  using data_t = std::vector<unsigned char>;
 
   /**
    * Construct a Nonce of size N bytes.

@@ -5,6 +5,7 @@
 #ifndef _SODIUMCRYPTORAEAD_H_
 #define _SODIUMCRYPTORAEAD_H_
 
+#include "sodiumcommon.h"
 #include "sodiumkey.h"
 #include "sodiumnonce.h"
 
@@ -19,10 +20,6 @@ class CryptorAEAD
   static constexpr unsigned int NSZA    = Sodium::NONCESIZE_AEAD;
   static constexpr std::size_t  MACSIZE = crypto_aead_chacha20poly1305_ABYTES;
   
-  // data_t is unprotected memory for bytes of plaintext (header and body)
-  // and ciphertext.
-  using data_t    = std::vector<unsigned char>;
-
   /**
    * Encrypt plaintext using key and nonce. Compute a MAC from the ciphertext
    * and the attached plain header. Return a combination MAC+ciphertext.

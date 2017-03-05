@@ -6,10 +6,13 @@
 #define _SODIUMTESTER_H_
 
 #include <string>
+#include "sodiumcommon.h"
 
 class SodiumTester
 {  
  public:
+  using data_t = Sodium::data_t; // shorthand notation...
+
   SodiumTester();
   SodiumTester(const SodiumTester &) = delete; // NoCopy
   SodiumTester & operator= (const SodiumTester &) = delete; // NoCopy

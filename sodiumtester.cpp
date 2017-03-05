@@ -4,6 +4,7 @@
 
 #include "sodiumtester.h"
 
+#include "sodiumcommon.h"
 #include "sodiumnonce.h"
 #include "sodiumkey.h"
 #include "sodiumcryptor.h"
@@ -57,8 +58,6 @@ SodiumTester::SodiumTester()
 std::string
 SodiumTester::test0(const std::string &plaintext)
 {  
-  using data_t = Sodium::Cryptor::data_t; // unprotected memory
-  
   Sodium::Cryptor sc {}; // encryptor, decryptor, hexifior.
   Sodium::Key     key(Sodium::Key::KEYSIZE_SECRETBOX); // create random key
   Sodium::Nonce<> nonce {};                            // create random nonce;
@@ -110,8 +109,6 @@ SodiumTester::test0(const std::string &plaintext)
 bool
 SodiumTester::test1(const std::string &plaintext)
 {
-  using data_t = Sodium::Auth::data_t; // unprotected memory
-  
   Sodium::Auth sa {}; // Secret Key Authenticator/Verifier
   Sodium::Key  key(Sodium::Key::KEYSIZE_AUTH); // Create a random key
   
@@ -163,9 +160,6 @@ SodiumTester::test2(const std::string &plaintext,
 		    const std::string &pw1,
 		    const std::string &pw2)
 {
-  using data_t = Sodium::Cryptor::data_t; // unprotected memory
-  using key_t  = Sodium::Key::key_t;      // protected memory
-  
   Sodium::Cryptor sc {}; // encryptor, decryptor, hexifior.
   Sodium::Key     key(Sodium::Key::KEYSIZE_SECRETBOX,
 		      false); // uninitialized, read-write for now
@@ -318,9 +312,6 @@ SodiumTester::test4(const std::string &plaintext,
   // check at compile time that we got the right size of the Nonce
   static_assert(nonce.size() == Sodium::NONCESIZE_AEAD,
 		"SodiumTester::test4() wrong nonce size");
-
-  // shorthand notation for our data_t
-  using data_t = Sodium::CryptorAEAD::data_t;
 
   // transfer plaintext and header into binary blobs
   data_t plainblob  {plaintext.cbegin(), plaintext.cend()};

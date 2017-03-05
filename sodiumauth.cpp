@@ -8,13 +8,13 @@
 #include <stdexcept>
 #include <vector>
 
-Sodium::Auth::data_t
-Sodium::Auth::auth (const Sodium::Auth::data_t &plaintext,
-		    const Sodium::Key          &key)
+Sodium::data_t
+Sodium::Auth::auth (const Sodium::data_t &plaintext,
+		    const Sodium::Key    &key)
 {
   // get the sizes
-  const std::size_t key_size        = Sodium::Key::KEYSIZE_AUTH;
-  const std::size_t mac_size        = crypto_auth_BYTES;
+  const std::size_t key_size = Sodium::Key::KEYSIZE_AUTH;
+  const std::size_t mac_size = crypto_auth_BYTES;
   
   // some sanity checks before we get started
   if (key.size() != key_size)
@@ -33,13 +33,13 @@ Sodium::Auth::auth (const Sodium::Auth::data_t &plaintext,
 }
 
 bool
-Sodium::Auth::verify (const Sodium::Auth::data_t &plaintext,
-		      const Sodium::Auth::data_t &mac,
-		      const Sodium::Key          &key)
+Sodium::Auth::verify (const Sodium::data_t &plaintext,
+		      const Sodium::data_t &mac,
+		      const Sodium::Key    &key)
 {
   // get the sizes
-  const std::size_t mac_size        = mac.size();
-  const std::size_t key_size        = key.size();
+  const std::size_t mac_size = mac.size();
+  const std::size_t key_size = key.size();
   
   // some sanity checks before we get started
   if (mac_size != crypto_auth_BYTES)

@@ -11,11 +11,11 @@
 #include <string>
 
 
-Sodium::CryptorAEAD::data_t
-Sodium::CryptorAEAD::encrypt (const Sodium::CryptorAEAD::data_t &header,
-			      const Sodium::CryptorAEAD::data_t &plaintext,
-			      const Sodium::Key                 &key,
-			      const Sodium::Nonce<NSZA>         &nonce)
+Sodium::data_t
+Sodium::CryptorAEAD::encrypt (const Sodium::data_t      &header,
+			      const Sodium::data_t      &plaintext,
+			      const Sodium::Key         &key,
+			      const Sodium::Nonce<NSZA> &nonce)
 {
   // get the sizes
   const std::size_t ciphertext_size =
@@ -47,11 +47,11 @@ Sodium::CryptorAEAD::encrypt (const Sodium::CryptorAEAD::data_t &header,
   return ciphertext;
 }
 
-Sodium::CryptorAEAD::data_t
-Sodium::CryptorAEAD::decrypt (const Sodium::CryptorAEAD::data_t &header,
-			      const Sodium::CryptorAEAD::data_t &ciphertext_with_mac,
-			      const Sodium::Key                 &key,
-			      const Sodium::Nonce<NSZA>         &nonce)
+Sodium::data_t
+Sodium::CryptorAEAD::decrypt (const Sodium::data_t      &header,
+			      const Sodium::data_t      &ciphertext_with_mac,
+			      const Sodium::Key         &key,
+			      const Sodium::Nonce<NSZA> &nonce)
 {
   // get the sizes
   const std::size_t key_size   = key.size();
@@ -87,7 +87,7 @@ Sodium::CryptorAEAD::decrypt (const Sodium::CryptorAEAD::data_t &header,
 }
 
 std::string
-Sodium::CryptorAEAD::tohex (const Sodium::CryptorAEAD::data_t &ciphertext)
+Sodium::CryptorAEAD::tohex (const Sodium::data_t &ciphertext)
 {
   const std::size_t hexbuf_size = ciphertext.size() * 2 + 1;
   std::vector<char> hexbuf(hexbuf_size);

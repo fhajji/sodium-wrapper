@@ -5,6 +5,7 @@
 #ifndef _SODIUMCRYPTOR_H_
 #define _SODIUMCRYPTOR_H_
 
+#include "sodiumcommon.h"
 #include "sodiumkey.h"
 #include "sodiumnonce.h"
 
@@ -17,9 +18,6 @@ class Cryptor {
 
  public:
   static constexpr unsigned int NSZ = Sodium::NONCESIZE_SECRETBOX;
-  
-  // data_t is unprotected memory for bytes of plaintext and ciphertext
-  using data_t = std::vector<unsigned char>;
   
   /**
    * Encrypt plaintext using key and nonce, returning ciphertext.
