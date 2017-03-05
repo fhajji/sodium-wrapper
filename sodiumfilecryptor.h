@@ -31,9 +31,9 @@ class FileCryptor {
    *   - HASHKEYSIZE_MIN is the minimum number of key bytes
    *   - HASHKEYSIZE_MAX is the maximum number of key bytes
    **/
-  constexpr static std::size_t HASHKEYSIZE     = crypto_generichash_KEYBYTES;
-  constexpr static std::size_t HASHKEYSIZE_MIN = crypto_generichash_KEYBYTES_MIN;
-  constexpr static std::size_t HASHKEYSIZE_MAX = crypto_generichash_KEYBYTES_MAX;
+  constexpr static std::size_t HASHKEYSIZE     = Key::KEYSIZE_HASHKEY;
+  constexpr static std::size_t HASHKEYSIZE_MIN = Key::KEYSIZE_HASHKEY_MIN;
+  constexpr static std::size_t HASHKEYSIZE_MAX = Key::KEYSIZE_HASHKEY_MAX;
 
   /**
    * The hash can be stored in so many bytes:
@@ -88,7 +88,45 @@ class FileCryptor {
 
   }
 
+  /**
+   * Encrypt the input stream ISTR in a blockwise fashion, using the
+   * algorithm described in Sodium::CryptorAEAD, and write the result
+   * in output stream OSTR.
+   * 
+   * At the same time, compute a generic hash over the resulting
+   * ciphertexts and MACs, and when reaching the EOF of ISTR, write
+   * that hash at the end of OSTR. The hash is authenticated with the
+   * key HASHKEY and will have a size HASHSIZE (bytes).
+   **/
+  
   void encrypt(std::istream &istr, std::ostream &ostr);
+
+  /**
+   * Decrypt the input _file_ stream IFS in a blockwise fashion, using
+   * the algorithm described in Sodium::CrytorAEAD, and write the result
+   * in output _stream_ OSTR.
+   *
+   * At the same time, compute a generic authenticated hash of
+   * HASHSIZE (bytes) over the input ciphertexts and MACs, using the
+   * key HASHKEY. Compare that hash with the HASHSIZE bytes stored at
+   * the end of IFS.
+   *
+   * If the the decryption fails for whatever reason:
+   *   - the decryption itself fails
+   *   - one of the MACs doesn't verify
+   *   - the reading or writing fails
+   *   - the verification of the authenticated hash fails
+   * this function throws a std::runtime_error. It doesn't provide
+   * a strong guarantee: some data may already have been written
+   * to OSTR prior to throwing.
+   *
+   * To be able to decrypt a file, a user must provide:
+   *   the key, the initial nonce, the blocksize,
+   *   the authentication key for the hash (with the right number of bytes),
+   *   the hashsize, i.e. the number of bytes of the hash at the end.
+   * Failing to provide all those informations, decryption will fail.
+   **/
+  
   void decrypt(std::ifstream &ifs, std::ostream &ostr);
 
  private:

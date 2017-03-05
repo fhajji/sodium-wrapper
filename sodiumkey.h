@@ -37,11 +37,14 @@ class Key
  public:
 
   // Some common constants for typical key sizes from <sodium.h>
-  static constexpr std::size_t KEYSIZE_SECRETBOX = crypto_secretbox_KEYBYTES;
-  static constexpr std::size_t KEYSIZE_AUTH      = crypto_auth_KEYBYTES;
-  static constexpr std::size_t KEYSIZE_SALT      = crypto_pwhash_SALTBYTES;
-  static constexpr std::size_t KEYSIZE_AEAD      = crypto_aead_chacha20poly1305_KEYBYTES;
-
+  static constexpr std::size_t KEYSIZE_SECRETBOX   = crypto_secretbox_KEYBYTES;
+  static constexpr std::size_t KEYSIZE_AUTH        = crypto_auth_KEYBYTES;
+  static constexpr std::size_t KEYSIZE_SALT        = crypto_pwhash_SALTBYTES;
+  static constexpr std::size_t KEYSIZE_AEAD        = crypto_aead_chacha20poly1305_KEYBYTES;
+  static constexpr std::size_t KEYSIZE_HASHKEY     = crypto_generichash_KEYBYTES;
+  static constexpr std::size_t KEYSIZE_HASHKEY_MIN = crypto_generichash_KEYBYTES_MIN;
+  static constexpr std::size_t KEYSIZE_HASHKEY_MAX = crypto_generichash_KEYBYTES_MAX;
+  
   /**
    * key_t is protected memory for bytes of key material (see: sodiumkey.h)
    *   * key_t memory will self-destruct/zero when out-of-scope / throws
@@ -50,7 +53,7 @@ class Key
    *     guard pages, and access to those pages is granted with mprotect().
    **/
   
-  using key_t  = std::vector<unsigned char, SodiumAlloc<unsigned char>>;
+  using key_t      = std::vector<unsigned char, SodiumAlloc<unsigned char>>;
   
   // The strengh of the key derivation efforts for setpass()
   using strength_t = enum class Strength { low, medium, high };
@@ -74,8 +77,8 @@ class Key
     // CAREFUL: read/write uninitialized key
   }
 
-  // Keys can't be copied (for now)
-  Key(const Key &other)             = default; // XXX: enabled for now
+  // Keys can be copied (for now), but be careful
+  Key(const Key &other)             = default;
   Key& operator= (const Key &other) = default;
 
   /**

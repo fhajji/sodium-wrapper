@@ -161,7 +161,7 @@ FileCryptor::decrypt(std::ifstream &ifs, std::ostream &ostr)
     }
   }
   
-  // finish computing the hash, and write it to the end of the stream
+  // finish computing the hash, and save it into the variable 'hash'
   crypto_generichash_final(&state, hash.data(), hash.size());
 
   // finally, compare both hashes!
