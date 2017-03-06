@@ -3,8 +3,13 @@
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 //
 // Use CMake w/ CMakeLists.txt like this:
-//   $ cmake .
+//   $ mkdir build
+//   $ cd build
+//   $ cmake ..
 //   $ make
+//   $ ./sodiumtester
+//   $ cd ..
+//   $ rm -rf build
 
 #include "sodiumtester.h"
 
