@@ -11,17 +11,15 @@
 //   c++ -Wall -std=c++11 -I /usr/local/include -c ../../../unittest0.cpp
 //   c++ -L /usr/local/lib -o unittest0 unittest0.o sodiumcryptor.cpp.o -lsodium -lboost_unit_test_framework
 
+#define BOOST_TEST_DYN_LINK
+#define BOOST_TEST_MODULE Sodium::Cryptor Test
+#include <boost/test/included/unit_test.hpp>
+
 #include <sodium.h>
 #include "sodiumcryptor.h"
 #include "sodiumkey.h"
 #include "sodiumnonce.h"
 #include <string>
-
-#define BOOST_TEST_MODULE Sodium::Cryptor Test
-#define BOOST_TEST_DYN_LINK
-#include <boost/test/included/unit_test.hpp>
-
-BOOST_AUTO_TEST_SUITE ( sodium_test_suite );
 
 using data_t = Sodium::data_t;
 
@@ -40,6 +38,8 @@ test_of_correctness(std::string &plaintext)
 
   return plainblob == decrypted;
 }
+
+BOOST_AUTO_TEST_SUITE ( sodium_test_suite );
 
 BOOST_AUTO_TEST_CASE( sodium_cryptor_test_full_plaintext )
 {

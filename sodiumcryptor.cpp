@@ -52,16 +52,17 @@ Cryptor::decrypt (const data_t     &ciphertext,
   // get the sizes
   const std::size_t key_size        = key.size();
   const std::size_t nonce_size      = nonce.size();
+  const std::size_t ciphertext_size = ciphertext.size();
   const std::size_t plaintext_size  =
-    ciphertext.size() - crypto_secretbox_MACBYTES;
+    ciphertext_size - crypto_secretbox_MACBYTES;
   
   // some sanity checks before we get started
   if (key_size != Key::KEYSIZE_SECRETBOX)
     throw std::runtime_error {"Sodium::Cryptor::decrypt() wrong key size"};
   if (nonce_size != Sodium::NONCESIZE_SECRETBOX)
     throw std::runtime_error {"Sodium::Cryptor::decrypt() wrong nonce size"};
-  if (plaintext_size <= 0)
-    throw std::runtime_error {"Sodium::Cryptor::decrypt() plaintext neg size"};
+  if (ciphertext_size < crypto_secretbox_MACBYTES)
+    throw std::runtime_error {"Sodium::Cryptor::decrypt() ciphertext too small for mac"};
 
   // make space for decrypted buffer
   data_t decryptedtext(plaintext_size);
