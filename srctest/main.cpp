@@ -8,6 +8,8 @@
 //   $ cmake ..
 //   $ make
 //   $ ./sodiumtester
+//       optionally:
+//       $ tests/test_<YOURTEST>
 //   $ cd ..
 //   $ rm -rf build
 

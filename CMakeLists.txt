@@ -8,9 +8,9 @@
 #   $ cmake ..
 #   $ make
 #   $ ./sodiumtester
-#   $ ../testBin/test_{<YOURTEST>}
+#   $ tests/test_{<YOURTEST>}
 #   $ cd ..
-#   $ rm -rf build testBin
+#   $ rm -rf build
 
 cmake_minimum_required ( VERSION 2.8 )
 
@@ -36,7 +36,7 @@ include_directories ( ${CMAKE_CURRENT_SOURCE_DIR}/include
 # Create shared library
 add_library (wrapsodium SHARED ${SOURCES})
 
-# Install library
+# Install library (XXX: not tested)
 install (TARGETS wrapsodium DESTINATION lib/wrapsodium)
 
 # --------------- Build sodiumtester ------------------------------------
@@ -49,12 +49,14 @@ find_library ( WRAPSODIUM_LIB wrapsodium )
 add_executable (sodiumtester ${SOURCES_TESTER})
 target_link_libraries ( sodiumtester wrapsodium ${SODIUM_LIB} )
 
-# -----------------------------------------------------------------------
+# --------------- Build test suite --------------------------------------
 #
 # This is (modified) from:
 #    http://neyasystems.com/an-engineers-guide-to-unit-testing-cmake-and-boost-unit-tests/
 #
-# XXX: See also http://stackoverflow.com/questions/16857517/cmake-how-to-add-boost-test-cases-with-relative-directories
+# See also http://stackoverflow.com/questions/16857517/cmake-how-to-add-boost-test-cases-with-relative-directories
+#
+# See cmake-variables(7) man page for list of all CMAKE_* variables
 
 # Setup CMake to run tests
 enable_testing()
@@ -63,7 +65,7 @@ enable_testing()
 find_package (Boost COMPONENTS unit_test_framework REQUIRED)
 include_directories (${Boost_INCLUDE_DIRS})
 
-# I like to keep test files in a separate source directory called test
+# I like to keep test files in a separate source directory called tests
 file (GLOB TEST_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tests/*.cpp)
 
 # Run through each source
@@ -79,9 +81,9 @@ foreach (testSrc ${TEST_SRCS})
 			       wrapsodium
 			       ${SODIUM_LIB})
 
-        # I like to move testing binaries into a testBin directory
+        # I like to move testing binaries into a tests/ subdirectory
         set_target_properties (${testName} PROPERTIES 
-            RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_CURRENT_SOURCE_DIR}/testBin)
+            RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/tests)
 
         # Finally add it to test execution - 
         # Notice the WORKING_DIRECTORY and COMMAND
