@@ -1,16 +1,16 @@
-// sodiumstreamcryptor.h -- Symmetric blockwise stream encryption/decryption
+// streamcryptor.h -- Symmetric blockwise stream encryption/decryption
 //
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 
-#ifndef _SODIUMSTREAMCRYPTOR_H_
-#define _SODIUMSTREAMCRYPTOR_H_
+#ifndef _S_STREAMCRYPTOR_H_
+#define _S_STREAMCRYPTOR_H_
 
 #include <sodium.h>
 
-#include "sodiumcommon.h"
-#include "sodiumkey.h"
-#include "sodiumnonce.h"
-#include "sodiumcryptoraead.h"
+#include "common.h"
+#include "key.h"
+#include "nonce.h"
+#include "cryptoraead.h"
 
 #include <stdexcept>
 #include <istream>
@@ -140,4 +140,4 @@ class StreamCryptor {
 
 } // namespace Sodium
 
-#endif // _SODIUMSTREAMCRYPTOR_H_
+#endif // _S_STREAMCRYPTOR_H_

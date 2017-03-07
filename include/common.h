@@ -1,23 +1,23 @@
-// sodiumcommon.h -- Common data types, and function declarations.
+// common.h -- Common data types, and function declarations.
 //
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 
-#ifndef _SODIUMCOMMON_H_
-#define _SODIUMCOMMON_H_
+#ifndef _S_COMMON_H_
+#define _S_COMMON_H_
 
 #include <vector>
 #include <string>
 
-#include "sodiumalloc.h"
+#include "alloc.h"
 
 namespace Sodium {
 
   // data_t is a binary blob of bytes (plaintext, ciphertext, nonces, etc...)
   using data_t = std::vector<unsigned char>;
 
-  std::string tohex (const data_t &in); // in: sodiumutils.cpp
+  std::string tohex (const data_t &in); // in: utils.cpp
 
 } // namespace Sodium
 
 
-#endif // _SODIUMCOMMON_H_
+#endif // _S_COMMON_H_

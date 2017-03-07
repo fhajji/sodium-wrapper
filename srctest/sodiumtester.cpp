@@ -4,14 +4,14 @@
 
 #include "sodiumtester.h"
 
-#include "sodiumcommon.h"
-#include "sodiumnonce.h"
-#include "sodiumkey.h"
-#include "sodiumcryptor.h"
-#include "sodiumauth.h"
-#include "sodiumcryptoraead.h"
-#include "sodiumstreamcryptor.h"
-#include "sodiumfilecryptor.h"
+#include "common.h"
+#include "nonce.h"
+#include "key.h"
+#include "cryptor.h"
+#include "auth.h"
+#include "cryptoraead.h"
+#include "streamcryptor.h"
+#include "filecryptor.h"
 
 #include <stdexcept>
 #include <string>

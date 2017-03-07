@@ -1,10 +1,10 @@
-// sodiumutils.cpp -- Common functions.
+// utils.cpp -- Common functions.
 //
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 
 #include <sodium.h>
 #include <string>
-#include "sodiumcommon.h"
+#include "common.h"
 
 std::string
 Sodium::tohex (const Sodium::data_t &in)

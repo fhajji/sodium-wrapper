@@ -6,7 +6,7 @@
 #define _SODIUMTESTER_H_
 
 #include <string>
-#include "sodiumcommon.h"
+#include "common.h"
 
 class SodiumTester
 {  

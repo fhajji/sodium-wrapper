@@ -1,16 +1,16 @@
-// sodiumnonce.h -- Sodium Nonce Wrapper
+// nonce.h -- Sodium Nonce Wrapper
 //
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 
-#ifndef _SODIUMNONCE_H_
-#define _SODIUMNONCE_H_
+#ifndef _S_NONCE_H_
+#define _S_NONCE_H_
 
 #include <cstddef>
 #include <vector>
 
 #include <sodium.h>
 
-#include "sodiumcommon.h"
+#include "common.h"
 
 namespace Sodium {
 
@@ -171,4 +171,4 @@ template<unsigned int N>
 
 } // namespace Sodium
 
-#endif // _SODIUMNONCE_H_
+#endif // _S_NONCE_H_

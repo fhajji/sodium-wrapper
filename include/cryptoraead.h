@@ -1,13 +1,13 @@
-// sodiumcryptoraead.h -- Authenticated Encryption with Added Data
+// cryptoraead.h -- Authenticated Encryption with Added Data
 //
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 
-#ifndef _SODIUMCRYPTORAEAD_H_
-#define _SODIUMCRYPTORAEAD_H_
+#ifndef _S_CRYPTORAEAD_H_
+#define _S_CRYPTORAEAD_H_
 
-#include "sodiumcommon.h"
-#include "sodiumkey.h"
-#include "sodiumnonce.h"
+#include "common.h"
+#include "key.h"
+#include "nonce.h"
 
 namespace Sodium {
 
@@ -74,4 +74,4 @@ class CryptorAEAD
 
 } // namespace Sodium
 
-#endif // _SODIUMCRYPTORAEAD_H_
+#endif // _S_CRYPTORAEAD_H_

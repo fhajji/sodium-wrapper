@@ -1,16 +1,16 @@
-// sodiumkey.h -- Sodium Key Wrapper
+// key.h -- Sodium Key Wrapper
 //
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 
-#ifndef _SODIUMKEY_H_
-#define _SODIUMKEY_H_
+#ifndef _S_KEY_H_
+#define _S_KEY_H_
 
 #include <cstddef>
 #include <vector>
 #include <algorithm>
 #include <string>
-#include "sodiumcommon.h"
-#include "sodiumalloc.h"
+#include "common.h"
+#include "alloc.h"
 
 namespace Sodium {
 
@@ -220,4 +220,4 @@ class Key
 
 } // namespace Sodium
 
-#endif // _SODIUMKEY_H_
+#endif // _S_KEY_H_

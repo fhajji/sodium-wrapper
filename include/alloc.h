@@ -1,9 +1,9 @@
-// sodiumalloc.h -- An allocator for keys in wired memory
+// alloc.h -- An allocator for keys in wired memory
 //
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 
-#ifndef _SODIUMALLOC_H_
-#define _SODIUMALLOC_H_
+#ifndef _S_ALLOC_H_
+#define _S_ALLOC_H_
 
 #include <sodium.h>
 
@@ -200,4 +200,4 @@ bool operator!= (const SodiumAlloc<T1>&,
   return false;
 }
 
-#endif // _SODIUMALLOC_H_
+#endif // _S_ALLOC_H_

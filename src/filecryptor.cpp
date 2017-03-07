@@ -1,11 +1,11 @@
-// sodiumfilecryptor.cpp -- file encryption/decryption
+// filecryptor.cpp -- file encryption/decryption
 //
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 
 #include <ios>
 #include <fstream>
 
-#include "sodiumfilecryptor.h"
+#include "filecryptor.h"
 
 using Sodium::FileCryptor;
 

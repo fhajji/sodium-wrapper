@@ -1,9 +1,9 @@
-// sodiumauth.cpp -- Secret Key Authentication (MAC)
+// auth.cpp -- Secret Key Authentication (MAC)
 //
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 
-#include "sodiumauth.h"
-#include "sodiumkey.h"
+#include "auth.h"
+#include "key.h"
 
 #include <stdexcept>
 #include <vector>

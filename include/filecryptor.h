@@ -1,13 +1,13 @@
-// sodiumfilecryptor.h -- file encryption/decryption
+// filecryptor.h -- file encryption/decryption
 //
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 
-#ifndef _SODIUMFILECRYPTOR_H_
-#define _SODIUMFILECRYPTOR_H_
+#ifndef _S_FILECRYPTOR_H_
+#define _S_FILECRYPTOR_H_
 
-#include "sodiumkey.h"
-#include "sodiumnonce.h"
-#include "sodiumcryptoraead.h"
+#include "key.h"
+#include "nonce.h"
+#include "cryptoraead.h"
 
 #include <sodium.h>
 
@@ -140,4 +140,4 @@ class FileCryptor {
   
 } // namespace Sodium
 
-#endif // _SODIUMFILECRYPTOR_H_
+#endif // _S_FILECRYPTOR_H_

@@ -1,8 +1,8 @@
-// sodiumstreamcryptor.cpp -- Symmetric blockwise stream encryption/decryption
+// streamcryptor.cpp -- Symmetric blockwise stream encryption/decryption
 //
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 
-#include "sodiumstreamcryptor.h"
+#include "streamcryptor.h"
 
 using Sodium::StreamCryptor;
 

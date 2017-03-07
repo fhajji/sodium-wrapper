@@ -1,10 +1,10 @@
-// sodiumcryptoraead.cpp -- Authenticated Encryption with Added Data
+// cryptoraead.cpp -- Authenticated Encryption with Added Data
 //
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 
-#include "sodiumcryptoraead.h"
-#include "sodiumkey.h"
-#include "sodiumnonce.h"
+#include "cryptoraead.h"
+#include "key.h"
+#include "nonce.h"
 
 #include <stdexcept>
 

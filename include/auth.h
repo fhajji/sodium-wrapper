@@ -1,12 +1,12 @@
-// sodiumauth.h -- Secret Key Authentication (MAC)
+// auth.h -- Secret Key Authentication (MAC)
 //
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 
-#ifndef _SODIUMAUTH_H_
-#define _SODIUMAUTH_H_
+#ifndef _S_AUTH_H_
+#define _S_AUTH_H_
 
-#include "sodiumcommon.h"
-#include "sodiumkey.h"
+#include "common.h"
+#include "key.h"
 #include <vector>
 
 namespace Sodium {
@@ -41,4 +41,4 @@ class Auth
 
 } // namespace Sodium
  
-#endif // _SODIUMAUTH_H_
+#endif // _S_AUTH_H_

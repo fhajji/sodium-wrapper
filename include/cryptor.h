@@ -1,13 +1,13 @@
-// sodiumcryptor.h -- Symmetric encryption / decryption with MAC
+// cryptor.h -- Symmetric encryption / decryption with MAC
 //
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 
-#ifndef _SODIUMCRYPTOR_H_
-#define _SODIUMCRYPTOR_H_
+#ifndef _S_CRYPTOR_H_
+#define _S_CRYPTOR_H_
 
-#include "sodiumcommon.h"
-#include "sodiumkey.h"
-#include "sodiumnonce.h"
+#include "common.h"
+#include "key.h"
+#include "nonce.h"
 
 namespace Sodium {
 
@@ -62,4 +62,4 @@ class Cryptor {
 
 } // namespace Sodium
  
-#endif // _SODIUMCRYPTER_H_
+#endif // _S_CRYPTOR_H_

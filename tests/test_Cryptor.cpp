@@ -7,9 +7,9 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include <sodium.h>
-#include "sodiumcryptor.h"
-#include "sodiumkey.h"
-#include "sodiumnonce.h"
+#include "cryptor.h"
+#include "key.h"
+#include "nonce.h"
 #include <string>
 
 using data_t = Sodium::data_t;

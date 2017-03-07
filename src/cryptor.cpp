@@ -1,10 +1,10 @@
-// sodiumcryptor.cpp -- Symmetric encryption / decryption with MAC
+// cryptor.cpp -- Symmetric encryption / decryption with MAC
 //
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 
-#include "sodiumcryptor.h"
-#include "sodiumnonce.h"
-#include "sodiumkey.h"
+#include "cryptor.h"
+#include "nonce.h"
+#include "key.h"
 
 #include <stdexcept>
 #include <vector>
