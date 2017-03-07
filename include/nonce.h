@@ -28,11 +28,7 @@
 #ifndef _S_NONCE_H_
 #define _S_NONCE_H_
 
-#include <cstddef>
-#include <vector>
-
 #include <sodium.h>
-
 #include "common.h"
 
 namespace Sodium {

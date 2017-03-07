@@ -38,7 +38,7 @@
 using data_t = Sodium::data_t;
 
 bool
-test_of_correctness(std::string &plaintext)
+test_of_correctness(const std::string &plaintext)
 {
   Sodium::Cryptor sc {};
   Sodium::Key     key(Sodium::Key::KEYSIZE_SECRETBOX);

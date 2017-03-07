@@ -30,7 +30,6 @@
 
 #include <sodium.h>
 
-#include <cstddef>
 #include <new>
 #include <stdexcept>
 

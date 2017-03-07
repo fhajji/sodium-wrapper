@@ -30,7 +30,6 @@
 
 #include "common.h"
 #include "key.h"
-#include <vector>
 
 namespace Sodium {
 

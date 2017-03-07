@@ -28,9 +28,7 @@
 #ifndef _S_KEY_H_
 #define _S_KEY_H_
 
-#include <cstddef>
 #include <vector>
-#include <algorithm>
 #include <string>
 #include "common.h"
 #include "alloc.h"

@@ -30,7 +30,6 @@
 #include "key.h"
 
 #include <stdexcept>
-#include <vector>
 
 using Sodium::data_t;
 using Sodium::Cryptor;
