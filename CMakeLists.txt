@@ -2,10 +2,17 @@
 #
 # Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
 #
-# Usage: $ cmake .
-#        $ make
+# Usage:
+#   $ mkdir build
+#   $ cd build
+#   $ cmake ..
+#   $ make
+#   $ ./sodiumtester
+#   $ ../testBin/test_{<YOURTEST>}
+#   $ cd ..
+#   $ rm -rf build testBin
 
-cmake_minimum_required ( VERSION 3.7 )
+cmake_minimum_required ( VERSION 2.8 )
 
 project ( sodiumtester )
 
