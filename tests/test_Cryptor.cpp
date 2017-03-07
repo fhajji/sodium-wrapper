@@ -1,15 +1,6 @@
-// unittest0.cpp -- Test the Sodium::Cryptor
+// test_Cryptor.cpp -- Test Sodium::Cryptor
 //
 // Copyright (C) 2017 Farid Hajji <farid@hajji.name>. All rights reserved.
-// 
-// Compile with:
-//   mkdir build
-//   cd build
-//   cmake ..
-//   make
-//   cd CMakeFiles/sodiumtester.dir   # this is where the .o files are!
-//   c++ -Wall -std=c++11 -I /usr/local/include -c ../../../unittest0.cpp
-//   c++ -L /usr/local/lib -o unittest0 unittest0.o sodiumcryptor.cpp.o -lsodium -lboost_unit_test_framework
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE Sodium::Cryptor Test

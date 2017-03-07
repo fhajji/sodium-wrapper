@@ -14,18 +14,72 @@ set ( CMAKE_CXX_STANDARD_REQUIRED ON )
 set ( CMAKE_CXX_CFLAGS "${CMAKE_CXX_CFLAGS} -std=c++11 -stdlib=libc++ -Wall" )
 
 # We would like pkg-config --{cflags|libs} libsodium without -I or -L...
-set ( MY_INCLUDE_DIR "/usr/local/include" )
-set ( MY_LIB_DIR "/usr/local/lib" )
+set ( LOCAL_INCLUDE_DIR "/usr/local/include" )
+set ( LOCAL_LIB_DIR "/usr/local/lib" )
 
-include_directories ( ${MY_INCLUDE_DIR} )
+# --------------- Build library libwrapsodium.so -------------------------
 
-set ( SOURCE_FILES main.cpp sodiumtester.cpp sodiumcryptor.cpp
-                   sodiumauth.cpp sodiumcryptoraead.cpp
-		   sodiumstreamcryptor.cpp sodiumfilecryptor.cpp
-		   sodiumutils.cpp )
+# Find source files of libwrapsodium.so:
+file (GLOB SOURCES src/*.cpp)
+
+# Include header files
+include_directories ( ${CMAKE_CURRENT_SOURCE_DIR}/include
+		      ${LOCAL_INCLUDE_DIR} )
+
+# Create shared library
+add_library (wrapsodium SHARED ${SOURCES})
+
+# Install library
+install (TARGETS wrapsodium DESTINATION lib/wrapsodium)
+
+# --------------- Build sodiumtester ------------------------------------
+
+file (GLOB SOURCES_TESTER srctest/*.cpp)
 
 find_library ( SODIUM_LIB sodium ${MY_LIB_DIR} )
+find_library ( WRAPSODIUM_LIB wrapsodium )
 
-add_executable (sodiumtester ${SOURCE_FILES})
-target_link_libraries ( sodiumtester "${SODIUM_LIB}" )
+add_executable (sodiumtester ${SOURCES_TESTER})
+target_link_libraries ( sodiumtester wrapsodium ${SODIUM_LIB} )
+
+# -----------------------------------------------------------------------
+#
+# This is (modified) from:
+#    http://neyasystems.com/an-engineers-guide-to-unit-testing-cmake-and-boost-unit-tests/
+#
+# XXX: See also http://stackoverflow.com/questions/16857517/cmake-how-to-add-boost-test-cases-with-relative-directories
+
+# Setup CMake to run tests
+# enable_testing()
+
+# Prep ourselves for compiling boost
+# find_package (Boost COMPONENTS unit_test_framework REQUIRED)
+# include_directories (${Boost_INCLUDE_DIRS})
+
+# I like to keep test files in a separate source directory called test
+# file (GLOB TEST_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tests/*.cpp)
+
+# Run through each source
+# foreach (testSrc ${TEST_SRCS})
+        # Extract the filename without an extension (NAME_WE)
+#         get_filename_component (testName ${testSrc} NAME_WE)
+
+        # Add compile target
+#         add_executable (${testName} ${testSrc})
+
+        # link to Boost libraries AND your targets and dependencies
+#         target_link_libraries (${testName} ${Boost_LIBRARIES}
+# 			       sodium*.cpp.o
+# 			       ${SODIUM_LIB})
+
+        # I like to move testing binaries into a testBin directory
+#         set_target_properties (${testName} PROPERTIES 
+#             RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_CURRENT_SOURCE_DIR}/testBin)
+
+        # Finally add it to test execution - 
+        # Notice the WORKING_DIRECTORY and COMMAND
+#         add_test (NAME ${testName} 
+#                   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/testBin 
+#                   COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/testBin/${testName} )
+# endforeach(testSrc)
 
