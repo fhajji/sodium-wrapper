@@ -44,11 +44,13 @@ struct SodiumFixture {
  * The previous fixture is RAII called _for each_ test case
  * individually; i.e. sodium_init() is initialized multiple times.
  *
+ * ------ FIXME: THIS ADVICE DUMPS CORE !!! ---------------------------
  * If you prefer to to this fixture only once for the whole test
  * suite, replace BOOST_FIXTURE_TEST_SUITE (...) by call call to
  * BOOST_AUTO_TEST_SUITE (sodium_test_suite,
  *                        * boost::unit_test::fixture<SodiumFixture>())
- * i.e. using decorators. 
+ * i.e. using decorators.
+ * ------ FIXME: THIS ADVICE DUMPS CORE !!! ---------------------------
  * 
  * To see the output of the messages, invoke with --log_level=message.
  **/
