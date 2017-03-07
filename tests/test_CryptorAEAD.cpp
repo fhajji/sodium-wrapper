@@ -170,4 +170,27 @@ BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_falsify_plaintext_falsify_header )
   BOOST_CHECK_EQUAL(csize, plaintext.size() + Sodium::CryptorAEAD::MACSIZE);
 }
 
+BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_big_header )
+{
+  std::string header(Sodium::CryptorAEAD::MACSIZE * 200, 'A');
+  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+  std::size_t csize;
+
+  // The following test shows that the header is NOT included in
+  // the ciphertext. Only the plaintext and the MAC are included
+  // in the ciphertext, no matter how big the header may be.
+  // It is the responsability of the user to transmit the header
+  // separately from the ciphertext, i.e. to tag it along.
+  
+  BOOST_CHECK_EQUAL(header.size(), Sodium::CryptorAEAD::MACSIZE * 200);
+  BOOST_CHECK(test_of_correctness(header, plaintext, csize, false, false));
+  BOOST_CHECK_EQUAL(csize, plaintext.size() + Sodium::CryptorAEAD::MACSIZE);
+
+  // However, a modification of the header WILL be detected.
+  // We modify only the 0-th byte right now, but a modification
+  // SHOULD also be detected past MACSIZE bytes... (not tested)
+  
+  BOOST_CHECK(! test_of_correctness(header, plaintext, csize, true, false));
+}
+
 BOOST_AUTO_TEST_SUITE_END ();
