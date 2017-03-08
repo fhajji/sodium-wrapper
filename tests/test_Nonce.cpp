@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_nonce_assignment )
   Sodium::Nonce<64> a {};
   Sodium::Nonce<64> b {};
 
-  BOOST_CHECK(a != b); // may fail in very rare cases (1 out of 2^64 cases)
+  BOOST_CHECK(a != b); // may fail in very rare cases (1 out of 2^{8*64} cases)
   a = b;
   BOOST_CHECK(a == b);
 }
@@ -95,8 +95,8 @@ BOOST_AUTO_TEST_CASE( sodium_test_nonce_increment_compare )
     a.increment();
 
   // The compare checks, except for == and !=, may fail in rare
-  // cases, if wrap around occurs. But that is very rare with
-  // huge number of bytes for the nonces.
+  // cases, if wrap around occurs. But that is rare with the
+  // nonces having the default number of bytes.
   
   BOOST_CHECK(! (a == a_copy));
   BOOST_CHECK(a != a_copy);
@@ -116,8 +116,9 @@ BOOST_AUTO_TEST_CASE( sodium_test_nonce_init_nonzero )
   Sodium::Nonce<> a {};
 
   // In rare cases, this check could fail, because all-zeroes is a
-  // valid initial nonce value. But this is extremely unlikely for
-  // large enough values of nonces.
+  // valid initial nonce value. It can happen once in every
+  // 2^{8*Sodium::NONCESIZE_SECRETBOX} cases.
+
   BOOST_CHECK(! a.is_zero());
 }
 
