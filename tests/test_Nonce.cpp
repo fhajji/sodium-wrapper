@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_nonce_assignment )
   Sodium::Nonce<64> a {};
   Sodium::Nonce<64> b {};
 
-  BOOST_CHECK(a != b);
+  BOOST_CHECK(a != b); // may fail in very rare cases (1 out of 2^64 cases)
   a = b;
   BOOST_CHECK(a == b);
 }
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_nonce_increment_compare )
   for (int i: {1,2,3,4,5})
     a.increment();
 
-  // The compare checks, except for == and !=, mail fail in rare
+  // The compare checks, except for == and !=, may fail in rare
   // cases, if wrap around occurs. But that is very rare with
   // huge number of bytes for the nonces.
   
