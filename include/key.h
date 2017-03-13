@@ -30,6 +30,7 @@
 
 #include <vector>
 #include <string>
+#include <algorithm>
 #include "common.h"
 #include "alloc.h"
 
@@ -65,6 +66,8 @@ class Key
   static constexpr std::size_t KEYSIZE_HASHKEY     = crypto_generichash_KEYBYTES;
   static constexpr std::size_t KEYSIZE_HASHKEY_MIN = crypto_generichash_KEYBYTES_MIN;
   static constexpr std::size_t KEYSIZE_HASHKEY_MAX = crypto_generichash_KEYBYTES_MAX;
+  static constexpr std::size_t KEYSIZE_PUBKEY      = crypto_box_PUBLICKEYBYTES;
+  static constexpr std::size_t KEYSIZE_PRIVKEY     = crypto_box_SECRETKEYBYTES;
   
   /**
    * key_t is protected memory for bytes of key material (see: sodiumkey.h)
@@ -106,17 +109,19 @@ class Key
    * Various libsodium functions used either directly or in
    * the wrappers need access to the bytes stored in the key.
    *
-   * data() gives const access to those bytes of which
+   * data() gives access to those bytes of which
    * size() bytes are stored in the key.
    *
-   * We don't provide mutable access to the bytes by design.
-   * The only functions that change those bytes are here:
-   *   initialize(), destroy(), and setpass().
+   * We don't provide mutable access to the bytes by design
+   * with this data()/size() interface by design.
+   * 
+   * The only OTHER functions that change those bytes are here:
+   *   initialize(), destroy(), setpass(), keypair().
    **/
   
   const unsigned char *data() const { return keydata.data(); }
   const std::size_t    size() const { return keydata.size(); }
-
+  
   /**
    * Derive key material from the string password, and the salt
    * (where salt.size() == KEYSIZE_SALT) and store that key material
@@ -149,6 +154,7 @@ class Key
     case strength_t::high:
       strength_mem = crypto_pwhash_MEMLIMIT_SENSITIVE;
       strength_cpu = crypto_pwhash_OPSLIMIT_SENSITIVE;
+      break;
     default:
       throw std::runtime_error {"Sodium:::Key::setpass() wrong strength"};
     }
@@ -170,6 +176,34 @@ class Key
   }
 
   /**
+   * keypair() generates a public/private keypair using libsodium's
+   * crypto_box_keypair() function. It returns the public key in
+   * unprotected data_t memory to the caller without storing
+   * it. Additionally, it stores the private key in protected memory
+   * into *this Key. Furthermore, the key is then made readonly().
+   *
+   * The reason keypair() is located here in Sodium::Key() is to allow
+   * direct access to keydata, without relaxing the const-ness of the
+   * data()/size() interface.
+   *
+   * If the size of the Key isn't KEYSIZE_PRIVKEY, this function will
+   * throw a std::runtime_error.
+   *
+   * This function will terminate the program if the Key is readonly()
+   * or noaccess() on systems that enforce mprotect().
+   **/
+
+  data_t keypair() {
+    if (keydata.size() != KEYSIZE_PRIVKEY)
+      throw std::runtime_error {"Sodium::Key::keypair() wrong keysize"};
+
+    data_t pubkey(KEYSIZE_PUBKEY,'\0');
+    crypto_box_keypair(pubkey.data(), keydata.data());
+    readonly();
+    return pubkey; // XXX: move semantics
+  }
+  
+  /**
    * Initialize, i.e. fill with random data generated with libsodium's
    * function randombytes_buf() the number of bytes already allocated
    * to this Key upon construction.
@@ -183,7 +217,9 @@ class Key
    * or noaccess() on systems that enforce mprotect().
    **/
   
-  void initialize() { randombytes_buf(keydata.data(), keydata.size()); }
+  void initialize() {
+    randombytes_buf(keydata.data(), keydata.size());
+  }
 
   /**
    * Destroy the bytes stored in protected memory of this key by
@@ -192,6 +228,9 @@ class Key
    * A Key that has been destroy()ed still holds size() zero-bytes in
    * protected memory, and can thus be reused, i.e. reset by calling
    * e.g. setpass().
+   *
+   * The key will be destroyed, even if it has been set readonly()
+   * or noaccess() previously.
    * 
    * You normally don't need to explicitely zero a Key, because Keys
    * self-destruct (including zeroing their bytes) when they go out
@@ -199,7 +238,10 @@ class Key
    * erase a Key anyway (think: Panic Button).
    **/
   
-  void destroy()    { sodium_memzero(keydata.data(), keydata.size()); }
+  void destroy() {
+    readwrite();
+    sodium_memzero(keydata.data(), keydata.size());
+  }
 
   /**
    * Mark this Key as non-accessible. All attempts to read or write
@@ -238,7 +280,10 @@ class Key
  private:
   key_t keydata; // the bytes of the key are stored in protected memory
 };
-
+ 
 } // namespace Sodium
+
+extern bool operator== (const Sodium::Key &k1, const Sodium::Key &k2);
+extern bool operator!= (const Sodium::Key &k1, const Sodium::Key &k2);
 
 #endif // _S_KEY_H_
