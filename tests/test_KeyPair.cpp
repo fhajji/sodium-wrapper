@@ -35,10 +35,8 @@
 #include <sodium.h>
 
 #include "common.h"
-#include "key.h"
 #include "keypair.h"
 
-using Sodium::Key;
 using Sodium::KeyPair;
 using data_t = Sodium::data_t;
 

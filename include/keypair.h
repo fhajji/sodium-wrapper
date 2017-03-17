@@ -151,8 +151,6 @@ class KeyPair
   const std::size_t    privkey_size() const { return privkey_.size(); }
 
  private:
-  
- private:
   data_t pubkey_;
   Key    privkey_;
 };
