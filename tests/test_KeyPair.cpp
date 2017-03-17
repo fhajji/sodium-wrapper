@@ -100,6 +100,26 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypair_size_ctor_privkey )
   BOOST_CHECK_EQUAL(keypair2.privkey_size(), ks_priv);
 }
 
+BOOST_AUTO_TEST_CASE ( sodium_test_keypair_copy_ctor )
+{
+  KeyPair keypair {};
+  KeyPair keypair_copy {keypair};
+
+  BOOST_CHECK(keypair == keypair_copy); // check also operator==()
+  BOOST_CHECK(keypair.privkey() == keypair_copy.privkey()); // Key::operator==()
+  BOOST_CHECK(keypair.pubkey()  == keypair_copy.pubkey());  // std::vector::operator==()
+}
+
+BOOST_AUTO_TEST_CASE ( sodium_test_keypair_copy_assignement )
+{
+  KeyPair keypair {};
+  KeyPair keypair_copy = keypair;
+
+  BOOST_CHECK(keypair == keypair_copy);
+  BOOST_CHECK(keypair.privkey() == keypair_copy.privkey());
+  BOOST_CHECK(keypair.pubkey()  == keypair_copy.pubkey());
+}
+
 BOOST_AUTO_TEST_CASE( sodium_test_keypair_nonzero_ctor_default )
 {
   KeyPair keypair {};

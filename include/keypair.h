@@ -150,6 +150,18 @@ class KeyPair
   const std::size_t    pubkey_size()  const { return pubkey_.size();  }
   const std::size_t    privkey_size() const { return privkey_.size(); }
 
+  /**
+   * Give const access to the stored private key as a Key object.
+   **/
+
+  const Key privkey() const { return privkey_; }
+
+  /**
+   * Give const access to the stored public key as a data_t object.
+   **/
+
+  const data_t pubkey() const { return pubkey_; }
+  
  private:
   data_t pubkey_;
   Key    privkey_;
