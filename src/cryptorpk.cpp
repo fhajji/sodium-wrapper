@@ -115,7 +115,7 @@ CryptorPK::decrypt (const data_t       &ciphertext_with_mac,
 			   ciphertext_with_mac.size(),
 			   nonce.data(),
 			   pubkey.data(), privkey.data()) == -1)
-    throw std::runtime_error {"CryptorPK::decrypt() decrption or verification failed"};
+    throw std::runtime_error {"CryptorPK::decrypt() decryption or verification failed"};
   
   return decrypted;    			       
 }
@@ -141,7 +141,7 @@ CryptorPK::decrypt (const data_t       &ciphertext_with_mac,
 			   nonce.data(),
 			   keypair.pubkey().data(),
 			   keypair.privkey().data()) == -1)
-    throw std::runtime_error {"CryptorPK::decrypt(keypair...) decrption or verification failed"};
+    throw std::runtime_error {"CryptorPK::decrypt(keypair...) decryption or verification failed"};
   
   return decrypted;    			       
 }
