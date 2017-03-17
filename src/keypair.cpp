@@ -31,15 +31,9 @@ using Sodium::KeyPair;
 
 bool operator== (const KeyPair &kp1, const KeyPair &kp2)
 {
-  return (kp1.pubkey_size() == kp2.pubkey_size()
-     &&
-          kp1.privkey_size() == kp2.privkey_size()
-     &&
-   std::equal(kp1.pubkey_data(), kp1.pubkey_data() + kp1.pubkey_size(),
-	      kp2.pubkey_data())
-     &&
-   std::equal(kp1.privkey_data(), kp1.privkey_data() + kp1.privkey_size(),
-	      kp2.privkey_data()));
+  return (kp1.pubkey() == kp2.pubkey()     // std::vector::operator==()
+	  &&
+	  kp1.privkey() == kp2.privkey()); // Sodium::Key::operator==()
 }
 
 bool operator!= (const KeyPair &kp1, const KeyPair &kp2)

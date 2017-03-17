@@ -76,8 +76,8 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypair_size_ctor_default )
 {
   KeyPair keypair {};
 
-  BOOST_CHECK_EQUAL(keypair.pubkey_size(), ks_pub);
-  BOOST_CHECK_EQUAL(keypair.privkey_size(), ks_priv);
+  BOOST_CHECK_EQUAL(keypair.pubkey().size(), ks_pub);
+  BOOST_CHECK_EQUAL(keypair.privkey().size(), ks_priv);
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_keypair_size_ctor_seed )
@@ -87,17 +87,17 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypair_size_ctor_seed )
   
   KeyPair keypair(seed);
 
-  BOOST_CHECK_EQUAL(keypair.pubkey_size(), ks_pub);
-  BOOST_CHECK_EQUAL(keypair.privkey_size(), ks_priv);
+  BOOST_CHECK_EQUAL(keypair.pubkey().size(), ks_pub);
+  BOOST_CHECK_EQUAL(keypair.privkey().size(), ks_priv);
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_keypair_size_ctor_privkey )
 {
   KeyPair keypair1 {};
-  KeyPair keypair2(keypair1.privkey_data(), keypair1.privkey_size());
+  KeyPair keypair2(keypair1.privkey().data(), keypair1.privkey().size());
 
-  BOOST_CHECK_EQUAL(keypair2.pubkey_size(),  ks_pub);
-  BOOST_CHECK_EQUAL(keypair2.privkey_size(), ks_priv);
+  BOOST_CHECK_EQUAL(keypair2.pubkey().size(),  ks_pub);
+  BOOST_CHECK_EQUAL(keypair2.privkey().size(), ks_priv);
 }
 
 BOOST_AUTO_TEST_CASE ( sodium_test_keypair_copy_ctor )
@@ -124,8 +124,8 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypair_nonzero_ctor_default )
 {
   KeyPair keypair {};
 
-  BOOST_CHECK (! isAllZero(keypair.pubkey_data(), keypair.pubkey_size()));
-  BOOST_CHECK (! isAllZero(keypair.privkey_data(), keypair.privkey_size()));
+  BOOST_CHECK (! isAllZero(keypair.pubkey().data(), keypair.pubkey().size()));
+  BOOST_CHECK (! isAllZero(keypair.privkey().data(), keypair.privkey().size()));
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_keypair_nonzero_ctor_seed )
@@ -135,25 +135,25 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypair_nonzero_ctor_seed )
 
   KeyPair keypair(seed);
 
-  BOOST_CHECK(! isAllZero(keypair.pubkey_data(), keypair.pubkey_size()));
-  BOOST_CHECK(! isAllZero(keypair.privkey_data(), keypair.privkey_size()));
+  BOOST_CHECK(! isAllZero(keypair.pubkey().data(), keypair.pubkey().size()));
+  BOOST_CHECK(! isAllZero(keypair.privkey().data(), keypair.privkey().size()));
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_keypair_nonzero_ctor_privkey )
 {
   KeyPair keypair1 {};
-  KeyPair keypair2(keypair1.privkey_data(), keypair1.privkey_size());
+  KeyPair keypair2(keypair1.privkey().data(), keypair1.privkey().size());
 
-  BOOST_CHECK(! isAllZero(keypair2.pubkey_data(), keypair2.pubkey_size()));
-  BOOST_CHECK(! isAllZero(keypair2.privkey_data(), keypair2.privkey_size()));
+  BOOST_CHECK(! isAllZero(keypair2.pubkey().data(), keypair2.pubkey().size()));
+  BOOST_CHECK(! isAllZero(keypair2.privkey().data(), keypair2.privkey().size()));
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_keypair_different_ctor_default )
 {
   KeyPair keypair {};
 
-  BOOST_CHECK(! isSameBytes(keypair.pubkey_data(), keypair.pubkey_size(),
-			    keypair.privkey_data(), keypair.privkey_size()));
+  BOOST_CHECK(! isSameBytes(keypair.pubkey().data(), keypair.pubkey().size(),
+			    keypair.privkey().data(), keypair.privkey().size()));
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_keypair_different_ctor_seed )
@@ -163,17 +163,17 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypair_different_ctor_seed )
 
   KeyPair keypair(seed);
 
-  BOOST_CHECK(! isSameBytes(keypair.pubkey_data(), keypair.pubkey_size(),
-			    keypair.privkey_data(), keypair.privkey_size()));
+  BOOST_CHECK(! isSameBytes(keypair.pubkey().data(), keypair.pubkey().size(),
+			    keypair.privkey().data(), keypair.privkey().size()));
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_keypair_different_ctor_privkey )
 {
   KeyPair keypair1 {};
-  KeyPair keypair2(keypair1.privkey_data(), keypair1.privkey_size());
+  KeyPair keypair2(keypair1.privkey().data(), keypair1.privkey().size());
 
-  BOOST_CHECK(! isSameBytes(keypair2.pubkey_data(), keypair2.pubkey_size(),
-			    keypair2.privkey_data(), keypair2.privkey_size()));
+  BOOST_CHECK(! isSameBytes(keypair2.pubkey().data(), keypair2.pubkey().size(),
+			    keypair2.privkey().data(), keypair2.privkey().size()));
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_keypair_seedcompare_ctor_same_seed )
@@ -184,10 +184,10 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypair_seedcompare_ctor_same_seed )
   KeyPair keypair1(seed);
   KeyPair keypair2(seed); // same seed
 
-  BOOST_CHECK(isSameBytes(keypair1.pubkey_data(), keypair1.pubkey_size(),
-			  keypair2.pubkey_data(), keypair2.pubkey_size()));
-  BOOST_CHECK(isSameBytes(keypair1.privkey_data(), keypair1.privkey_size(),
-			  keypair2.privkey_data(), keypair2.privkey_size()));
+  BOOST_CHECK(isSameBytes(keypair1.pubkey().data(), keypair1.pubkey().size(),
+			  keypair2.pubkey().data(), keypair2.pubkey().size()));
+  BOOST_CHECK(isSameBytes(keypair1.privkey().data(), keypair1.privkey().size(),
+			  keypair2.privkey().data(), keypair2.privkey().size()));
   
   BOOST_CHECK(keypair1 == keypair2); // check also operator==()
 }
@@ -204,10 +204,10 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypair_seedcompare_ctor_different_seed )
   KeyPair keypair1(seed1);
   KeyPair keypair2(seed2); // different seed
 
-  BOOST_CHECK(! isSameBytes(keypair1.pubkey_data(), keypair1.pubkey_size(),
-			    keypair2.pubkey_data(), keypair2.pubkey_size()));
-  BOOST_CHECK(! isSameBytes(keypair1.privkey_data(), keypair1.privkey_size(),
-			    keypair2.privkey_data(), keypair2.privkey_size()));
+  BOOST_CHECK(! isSameBytes(keypair1.pubkey().data(), keypair1.pubkey().size(),
+			    keypair2.pubkey().data(), keypair2.pubkey().size()));
+  BOOST_CHECK(! isSameBytes(keypair1.privkey().data(), keypair1.privkey().size(),
+			    keypair2.privkey().data(), keypair2.privkey().size()));
 
   BOOST_CHECK(keypair1 != keypair2); // check also operator!=()
 }

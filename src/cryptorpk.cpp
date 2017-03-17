@@ -83,7 +83,7 @@ CryptorPK::encrypt (const data_t       &plaintext,
   if (crypto_box_easy(ciphertext_with_mac.data(),
 		      plaintext.data(), plaintext.size(),
 		      nonce.data(),
-		      keypair.pubkey_data(), keypair.privkey_data()) == -1)
+		      keypair.pubkey().data(), keypair.privkey().data()) == -1)
     throw std::runtime_error {"Sodium::CryptorPK::encrypt(keypair...) crypto_box_easy() failed (-1)"};
 
   // return with move semantics
@@ -139,8 +139,8 @@ CryptorPK::decrypt (const data_t       &ciphertext_with_mac,
 			   ciphertext_with_mac.data(),
 			   ciphertext_with_mac.size(),
 			   nonce.data(),
-			   keypair.pubkey_data(),
-			   keypair.privkey_data()) == -1)
+			   keypair.pubkey().data(),
+			   keypair.privkey().data()) == -1)
     throw std::runtime_error {"CryptorPK::decrypt(keypair...) decrption or verification failed"};
   
   return decrypted;    			       

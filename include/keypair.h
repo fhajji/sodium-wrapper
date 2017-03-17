@@ -44,7 +44,8 @@ class KeyPair
    * memory, i.e. in an internal Key object.
    *
    * A KeyPair provides non-mutable data()/size() access to the bytes
-   * of the public/private keys in a uniform fashion.
+   * of the public/private keys in a uniform fashion via the
+   * pubkey() and privkey() accessors.
    *
    * A key pair can be constructed randomly, or deterministically by
    * providing a seed. Furthermore, given a private key previously
@@ -137,27 +138,21 @@ class KeyPair
   }
 
   /**
-   * pubkey_data() gives const access to the bytes of the public key,
-   * of which there are pubkey_size() bytes.
-   *
-   * privkey_data() gives const access to the bytes of the private key,
-   * of which there are privkey_size() bytes.
-   **/
-  
-  const unsigned char *pubkey_data()  const { return pubkey_.data();  }
-  const unsigned char *privkey_data() const { return privkey_.data(); }
-
-  const std::size_t    pubkey_size()  const { return pubkey_.size();  }
-  const std::size_t    privkey_size() const { return privkey_.size(); }
-
-  /**
    * Give const access to the stored private key as a Key object.
+   *
+   * This can be used to access the bytes of the private key via a
+   * non-mutable data()/size() interface like this:
+   *   <SOME_KEYPAIR>.privkey().data(), <SOME_KEYPAIR>.privkey().size()
    **/
 
   const Key privkey() const { return privkey_; }
 
   /**
    * Give const access to the stored public key as a data_t object.
+   *
+   * This can be used to access the bytes of the public key via a
+   * non-mutable data()/size() interface like this:
+   *  <SOME_KEYPAIR>.pubkey().data(), <SOME_KEYPAIR>.pubkey().size()
    **/
 
   const data_t pubkey() const { return pubkey_; }
