@@ -187,60 +187,6 @@ BOOST_AUTO_TEST_CASE( sodium_test_key_setpass )
   BOOST_CHECK(! isAllZero(key2.data(), key2.size()));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_test_key_keypair )
-{
-  data_t pubkey (ks_pub);
-  Key    privkey(ks_priv, false);
-  
-  BOOST_CHECK(isAllZero(pubkey.data(), pubkey.size()));
-  BOOST_CHECK(isAllZero(privkey.data(), privkey.size()));
-
-  pubkey = privkey.keypair();
-
-  BOOST_CHECK(! isAllZero(pubkey.data(), pubkey.size()));
-  BOOST_CHECK(! isAllZero(privkey.data(), privkey.size()));
-  BOOST_CHECK_EQUAL(pubkey.size(), ks_pub);
-  BOOST_CHECK_EQUAL(privkey.size(), ks_priv);
-}
-
-BOOST_AUTO_TEST_CASE( sodium_test_key_keypair_seed )
-{
-  data_t pubkey1  (ks_pub);
-  Key    privkey1 (ks_priv, false);
-  data_t seed1    (ks_seed);
-  randombytes_buf(seed1.data(), seed1.size());
-  BOOST_CHECK(! isAllZero(seed1.data(), seed1.size()));
-
-  // 1. Generate and compare 2 keypairs with the same seed:
-  pubkey1 = privkey1.keypair(seed1);
-
-  data_t pubkey2 (ks_pub);
-  Key    privkey2(ks_priv, false);
-
-  pubkey2 = privkey2.keypair(seed1); // new keypair with same old seed
-
-  BOOST_CHECK(isSameBytes(privkey1.data(), privkey1.size(),
-			  privkey2.data(), privkey2.size()));
-  
-  BOOST_CHECK(isSameBytes(pubkey1.data(), pubkey1.size(),
-			  pubkey2.data(), pubkey2.size()));
-
-  data_t seed2    (ks_seed);
-  randombytes_buf(seed2.data(), seed2.size());
-  BOOST_CHECK(! isSameBytes(seed1.data(), seed1.size(),
-			    seed2.data(), seed2.size()));
-
-  // 2. Generate a new keypair with a different seed
-  privkey2.readwrite();
-  pubkey2 = privkey2.keypair(seed2);
-
-  BOOST_CHECK(! isSameBytes(privkey1.data(), privkey1.size(),
-  			    privkey2.data(), privkey2.size()));
-
-  BOOST_CHECK(! isSameBytes(pubkey1.data(), pubkey1.size(),
-			    pubkey2.data(), pubkey2.size()));
-}
-
 BOOST_AUTO_TEST_CASE( sodium_test_key_destroy )
 {
   Key key(ks1);

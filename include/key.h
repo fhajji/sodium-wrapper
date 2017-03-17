@@ -47,7 +47,6 @@ class Key
    *   - default-constructed using random data,
    *   - default-constructed but left uninitialized
    *   - derived from a password string and a (hopefully random) salt.
-   *   - constructed as private key while generating a private/public keypair.
    *
    * A Key can be made read-only or non-accessible when no longer
    * needed.  In general, it is a good idea to be as restrictive as
@@ -123,7 +122,10 @@ class Key
    * with this data()/size() interface.
    * 
    * The only functions that change those bytes are:
-   *   initialize(), destroy(), setpass(), keypair().
+   *   initialize(), destroy(), setpass().
+   *
+   * Furthermore, the class KeyPair is a friend of Key, so it
+   * can also modify the bytes of a Key.
    **/
   
   const unsigned char *data() const { return keydata.data(); }
@@ -180,69 +182,6 @@ class Key
 		       crypto_pwhash_ALG_DEFAULT) != 0)
       throw std::runtime_error {"Sodium::Key::setpass() crypto_pwhash()"};
     readonly(); // relock the key
-  }
-
-  /**
-   * keypair() generates a public/private keypair using libsodium's
-   * crypto_box_keypair() function. It returns the public key in
-   * unprotected data_t memory to the caller without storing
-   * it. Additionally, it stores the private key in protected memory
-   * into *this Key. Furthermore, the key is then made readonly().
-   *
-   * The reason keypair() is located here in Sodium::Key() is to allow
-   * direct access to keydata, without relaxing the const-ness of the
-   * data()/size() interface.
-   *
-   * If the size of the Key isn't KEYSIZE_PRIVKEY, this function will
-   * throw a std::runtime_error.
-   *
-   * This function will terminate the program if the Key is readonly()
-   * or noaccess() on systems that enforce mprotect().
-   **/
-
-  data_t keypair() {
-    if (keydata.size() != KEYSIZE_PRIVKEY)
-      throw std::runtime_error {"Sodium::Key::keypair() wrong key size"};
-
-    data_t pubkey(KEYSIZE_PUBKEY,'\0');
-    crypto_box_keypair(pubkey.data(), keydata.data());
-    readonly();
-    return pubkey; // move semantics
-  }
-
-  /**
-   * keypair(const data_t &seed) generates a public/private keypair
-   * deterministically using libsodium's crypto_box_seed_keypair()
-   * function. It returns the public key in unprotected data_t memory
-   * to the caller without storing it. Additionally, it stores the
-   * private key in protected memory into *this Key. Furthermore, the
-   * key is then made readonly().
-   *
-   * The reason keypair() is located here in Sodium::Key() is to allow
-   * direct access to keydata, without relaxing the const-ness of the
-   * data()/size() interface.
-   *
-   * seed must be a data_t with exactly KEYSIZE_SEEDBYTES elements.
-   * If not, this function will throw a std::runtime_error.
-   *
-   * If the size of the Key isn't KEYSIZE_PRIVKEY, this function will
-   * throw a std::runtime_error.
-   *
-   * This function will terminate the program if the Key is readonly()
-   * or noaccess() on systems that enforce mprotect().
-   **/
-
-  data_t keypair(const data_t &seed) {
-    if (keydata.size() != KEYSIZE_PRIVKEY)
-      throw std::runtime_error {"Sodium::Key::keypair() wrong key size"};
-
-    if (seed.size() != KEYSIZE_SEEDBYTES)
-      throw std::runtime_error {"Sodium::Key::keypair() wrong seed size"};
-    
-    data_t pubkey(KEYSIZE_PUBKEY,'\0');
-    crypto_box_seed_keypair(pubkey.data(), keydata.data(), seed.data());
-    readonly();
-    return pubkey; // move semantics
   }
 
   /**
