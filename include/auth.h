@@ -28,6 +28,7 @@
 #ifndef _S_AUTH_H_
 #define _S_AUTH_H_
 
+#include <sodium.h>
 #include "common.h"
 #include "key.h"
 
@@ -37,9 +38,16 @@ class Auth
 {
  public:
 
+  // Some common constants for typical key and MAC sizes from <sodium.h>
+  static constexpr std::size_t KEYSIZE_AUTH = Key::KEYSIZE_AUTH;
+  static constexpr std::size_t MACSIZE      = crypto_auth_BYTES;
+
   /**
    * Create and return a Message Authentication Code (MAC) for the supplied
    * plaintext and secret key.
+   *
+   * The Key must be KEYSIZE_AUTH bytes long.
+   * The returned MAC is MACSIZE bytes long.
    *
    * This function will throw a std::runtime_error if the length of
    * the key doesn't make sense.
@@ -51,6 +59,9 @@ class Auth
   /**
    * Verify MAC of plaintext using supplied secret key, returing true
    * or false whether the plaintext has been tampered with or not.
+   *
+   * The MAC must be MACSIZE bytes long.
+   * The Key must be KEYSIZE_AUTH bytes long.
    *
    * This function will throw a std::runtime_error if the sizes of
    * the key or the mac don't make sense.

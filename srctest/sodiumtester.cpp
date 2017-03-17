@@ -134,7 +134,7 @@ bool
 SodiumTester::test1(const std::string &plaintext)
 {
   Sodium::Auth sa {}; // Secret Key Authenticator/Verifier
-  Sodium::Key  key(Sodium::Key::KEYSIZE_AUTH); // Create a random key
+  Sodium::Key  key(Sodium::Auth::KEYSIZE_AUTH); // Create a random key
   
   // transfer plaintext into a binary blob
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};

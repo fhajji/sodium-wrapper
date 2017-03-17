@@ -39,8 +39,8 @@ Auth::auth (const data_t &plaintext,
 	    const Key    &key)
 {
   // get the sizes
-  const std::size_t key_size = Key::KEYSIZE_AUTH;
-  const std::size_t mac_size = crypto_auth_BYTES;
+  const std::size_t key_size = Auth::KEYSIZE_AUTH;
+  const std::size_t mac_size = Auth::MACSIZE;
   
   // some sanity checks before we get started
   if (key.size() != key_size)
@@ -68,9 +68,9 @@ Auth::verify (const data_t &plaintext,
   const std::size_t key_size = key.size();
   
   // some sanity checks before we get started
-  if (mac_size != crypto_auth_BYTES)
+  if (mac_size != Auth::MACSIZE)
     throw std::runtime_error {"Sodium::Auth::verify() mac wrong size"};
-  if (key_size != Key::KEYSIZE_AUTH)
+  if (key_size != Auth::KEYSIZE_AUTH)
     throw std::runtime_error {"Sodium::Auth::verify() key wrong size"};
 
   // and now verify!
