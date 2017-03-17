@@ -170,6 +170,8 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypair_seedcompare_ctor_same_seed )
 			  keypair2.pubkey_data(), keypair2.pubkey_size()));
   BOOST_CHECK(isSameBytes(keypair1.privkey_data(), keypair1.privkey_size(),
 			  keypair2.privkey_data(), keypair2.privkey_size()));
+  
+  BOOST_CHECK(keypair1 == keypair2); // check also operator==()
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_keypair_seedcompare_ctor_different_seed )
@@ -188,6 +190,8 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypair_seedcompare_ctor_different_seed )
 			    keypair2.pubkey_data(), keypair2.pubkey_size()));
   BOOST_CHECK(! isSameBytes(keypair1.privkey_data(), keypair1.privkey_size(),
 			    keypair2.privkey_data(), keypair2.privkey_size()));
+
+  BOOST_CHECK(keypair1 != keypair2); // check also operator!=()
 }
 
 BOOST_AUTO_TEST_SUITE_END ();

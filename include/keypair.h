@@ -159,4 +159,7 @@ class KeyPair
   
 } // namespace Sodium
 
+extern bool operator== (const Sodium::KeyPair &kp1, const Sodium::KeyPair &kp2);
+extern bool operator!= (const Sodium::KeyPair &kp1, const Sodium::KeyPair &kp2);
+
 #endif // _S_KEYPAIR_H_
