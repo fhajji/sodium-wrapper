@@ -44,6 +44,11 @@ class CryptorMultiPK {
    * Create and store an internal shared key built out of a
    * private key and a public key.
    *
+   * The private and the public key need not be related, i.e. they
+   * need not belong to the same KeyPair and need not necessarily
+   * be generated as a pair by the underlying libsodium function(s)
+   * crypto_box_[seed_]keypair().
+   *
    * This shared key will be used by the sender to efficiently encrypt
    * and sign multiple plaintexts to the recipient using the encrypt()
    * member function (assuming the public key is the recipient's;
@@ -51,7 +56,7 @@ class CryptorMultiPK {
    *
    * In the other direction, this shared key will be used by the
    * recipient to efficiently decrypt and verify the signature of
-   * multiple plaintexts from the sender (assuming the public key
+   * multiple ciphertexts from the sender (assuming the public key
    * is the sender's, and the private key is the recipient's).
    *
    * privkey, the private key, must be KEYSIZE_PRIVKEY bytes long.
