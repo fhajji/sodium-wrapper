@@ -15,7 +15,7 @@ Criticism and pull requests welcome, of course.
 
 Dependencies:
   - libsodium (duh!)
-  - boost
+  - boost (Boost.Test for unit testing)
 
 Build dependencies:
   - a C++11 compliant compiler
