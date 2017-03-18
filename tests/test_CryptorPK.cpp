@@ -31,12 +31,10 @@
 
 #include <sodium.h>
 #include "cryptorpk.h"
-#include "key.h"
 #include "keypair.h"
 #include "nonce.h"
 #include <string>
 
-using Sodium::Key;
 using Sodium::KeyPair;
 using Sodium::Nonce;
 using Sodium::CryptorPK;
@@ -99,6 +97,80 @@ test_of_correctness(const std::string &plaintext)
   return plainblob == decrypted_by_alice_from_bob;
 }
 
+bool
+falsify_mac(const std::string &plaintext)
+{
+  CryptorPK               sc            {};
+  KeyPair                 keypair_alice {};
+  Nonce<CryptorPK::NSZPK> nonce         {};
+
+  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+
+  data_t ciphertext = sc.encrypt(plainblob,
+				 keypair_alice,
+				 nonce);
+
+  BOOST_CHECK(ciphertext.size() >= CryptorPK::MACSIZE);
+
+  // falsify mac, which starts before the ciphertext proper
+  ++ciphertext[0];
+
+  try {
+    data_t decrypted = sc.decrypt(ciphertext,
+				  keypair_alice,
+				  nonce);
+  }
+  catch (std::exception &e) {
+    // decryption failed as expected: test passed.
+    return true;
+  }
+
+  // No expection caught: decryption went ahead, eventhough we've
+  // modified the mac. Test failed.
+
+  return false;
+}
+
+bool
+falsify_ciphertext(const std::string &plaintext)
+{
+  // before even bothering falsifying a ciphertext, check that the
+  // corresponding plaintext is not emptry!
+  BOOST_CHECK_MESSAGE(! plaintext.empty(),
+		      "Nothing to falsify, empty plaintext");
+  
+  CryptorPK               sc            {};
+  KeyPair                 keypair_alice {};
+  Nonce<CryptorPK::NSZPK> nonce         {};
+
+  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+
+  // encrypt to self
+  data_t ciphertext = sc.encrypt(plainblob,
+				 keypair_alice,
+				 nonce);
+
+  BOOST_CHECK(ciphertext.size() > CryptorPK::MACSIZE);
+
+  // falsify ciphertext, which starts just after MAC
+  ++ciphertext[CryptorPK::MACSIZE];
+
+  try {
+    data_t decrypted = sc.decrypt(ciphertext,
+				  keypair_alice,
+				  nonce);
+  }
+  catch (std::exception &e) {
+    // Exception caught as expected. Test passed.
+    return true;
+  }
+
+  // Expection not caught: decryption went ahead, eventhough we've
+  // modified the ciphertext. Test failed.
+
+  return false;
+}
+
 struct SodiumFixture {
   SodiumFixture()  {
     BOOST_REQUIRE(sodium_init() != -1);
@@ -121,6 +193,52 @@ BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_empty_plaintext )
 {
   std::string plaintext {};
   BOOST_CHECK(test_of_correctness(plaintext));
+}
+
+BOOST_AUTO_TEST_CASE( sodium_cryptopk_test_encrypt_to_self )
+{
+  CryptorPK               sc            {};
+  KeyPair                 keypair_alice {};
+  Nonce<CryptorPK::NSZPK> nonce         {};
+
+  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+
+  data_t ciphertext = sc.encrypt(plainblob,
+				 keypair_alice,
+				 nonce);
+
+  BOOST_CHECK_EQUAL(ciphertext.size(), plainblob.size() + CryptorPK::MACSIZE);
+
+  data_t decrypted = sc.decrypt(ciphertext,
+				keypair_alice,
+				nonce);
+
+  // if the ciphertext (with MAC) was modified, or came from another
+  // source, decryption would have thrown. But we manually check anyway.
+
+  BOOST_CHECK(plainblob == decrypted);
+}
+
+BOOST_AUTO_TEST_CASE( sodium_cryptopk_test_falsify_ciphertext )
+{
+  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+
+  BOOST_CHECK(falsify_ciphertext(plaintext));
+}
+
+BOOST_AUTO_TEST_CASE( sodium_cryptopk_test_falsify_mac_fulltext )
+{
+  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+
+  BOOST_CHECK(falsify_mac(plaintext));
+}
+
+BOOST_AUTO_TEST_CASE( sodium_cryptopk_test_falsify_mac_empty )
+{
+  std::string plaintext {};
+
+  BOOST_CHECK(falsify_mac(plaintext));
 }
 
 BOOST_AUTO_TEST_SUITE_END ();
