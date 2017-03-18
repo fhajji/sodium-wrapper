@@ -59,7 +59,8 @@ class Key
   static constexpr std::size_t KEYSIZE_HASHKEY_MAX = crypto_generichash_KEYBYTES_MAX;
   static constexpr std::size_t KEYSIZE_PUBKEY      = crypto_box_PUBLICKEYBYTES;
   static constexpr std::size_t KEYSIZE_PRIVKEY     = crypto_box_SECRETKEYBYTES;
-
+  static constexpr std::size_t KEYSIZE_SHAREDKEY   = crypto_box_BEFORENMBYTES;
+  
   // for keypair(), size of optional data_t seed blob
   static constexpr std::size_t KEYSIZE_SEEDBYTES   = crypto_box_SEEDBYTES;
   
@@ -76,9 +77,6 @@ class Key
   // The strengh of the key derivation efforts for setpass()
   using strength_t = enum class Strength { low, medium, high };
 
-  // The class KeyPair can access keydata bytes directly
-  friend class KeyPair;
-  
   /**
    * Construct a Key of size key_size.
    *
@@ -114,14 +112,28 @@ class Key
    * 
    * The only functions that change those bytes are:
    *   initialize(), destroy(), setpass().
-   *
-   * Furthermore, the class KeyPair is a friend of Key, so it
-   * can also modify the bytes of a Key.
    **/
-  
+
   const unsigned char *data() const { return keydata.data(); }
   const std::size_t    size() const { return keydata.size(); }
-  
+
+  /**
+   * Provide mutable access to the bytes of the key, so that users
+   * can change / set them from the outside.
+   *
+   * It is the responsibility of the user to ensure that
+   *   - the Key is set to readwrite(), if data is to be changed
+   *   - no more than [setdata(), setdata()+size()) bytes are changed
+   * 
+   * This function is primarily provided for the classes whose
+   * underlying libsodium functions write the bytes of a Key directly,
+   * like: 
+   *   - KeyPair
+   *   - CryptorMultiPK
+   **/
+
+  unsigned char *setdata() { return keydata.data(); }
+    
   /**
    * Derive key material from the string password, and the salt
    * (where salt.size() == KEYSIZE_SALT) and store that key material

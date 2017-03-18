@@ -19,6 +19,8 @@
 #ifndef _S_KEYPAIR_H_
 #define _S_KEYPAIR_H_
 
+#include <algorithm>
+
 #include "key.h"
 
 namespace Sodium {
@@ -70,7 +72,7 @@ class KeyPair
   
   KeyPair()
     : privkey_(KEYSIZE_PRIVKEY, false), pubkey_(KEYSIZE_PUBKEY, '\0') {
-    crypto_box_keypair(pubkey_.data(), privkey_.keydata.data());
+    crypto_box_keypair(pubkey_.data(), privkey_.setdata());
     privkey_.readonly();
   }
 
@@ -90,7 +92,7 @@ class KeyPair
     : privkey_(KEYSIZE_PRIVKEY, false), pubkey_(KEYSIZE_PUBKEY, '\0') {
     if (seed.size() != KEYSIZE_SEEDBYTES)
       throw std::runtime_error {"Sodium::KeyPair::KeyPair(seed) wrong seed size"};
-    crypto_box_seed_keypair(pubkey_.data(), privkey_.keydata.data(),
+    crypto_box_seed_keypair(pubkey_.data(), privkey_.setdata(),
 			    seed.data());
     privkey_.readonly();
   }
@@ -119,7 +121,8 @@ class KeyPair
     : privkey_(KEYSIZE_PRIVKEY, false), pubkey_(KEYSIZE_PUBKEY, '\0') {
     if (privkey_size != KEYSIZE_PRIVKEY)
       throw std::runtime_error {"Sodium::KeyPair::KeyPair(privkey_data, privkey_size) wrong privkey_size"};
-    privkey_.keydata.assign(privkey_data, privkey_data+privkey_size); 
+    std::copy(privkey_data, privkey_data+privkey_size,
+	      privkey_.setdata());
     
     // public key can be reconstructed from private key
     // previously computed by crypto_box_[seed_]keypair()!
@@ -152,7 +155,7 @@ class KeyPair
   data_t pubkey_;
   Key    privkey_;
 };
-  
+
 } // namespace Sodium
 
 extern bool operator== (const Sodium::KeyPair &kp1, const Sodium::KeyPair &kp2);
