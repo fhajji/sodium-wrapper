@@ -171,6 +171,61 @@ falsify_ciphertext(const std::string &plaintext)
   return false;
 }
 
+bool
+falsify_sender(const std::string &plaintext)
+{
+  CryptorPK               sc            {};
+  KeyPair                 keypair_alice {}; // recipient
+  KeyPair                 keypair_bob   {}; // impersonated sender
+  KeyPair                 keypair_oscar {}; // real sender
+  Nonce<CryptorPK::NSZPK> nonce         {};
+
+  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+
+  // 1. Oscar encrypts a plaintext that looks as if it was written by Bob
+  // with Alice's public key, and signs it with his own private key.
+  
+  data_t ciphertext = sc.encrypt(plainblob,
+				 keypair_alice.pubkey(),
+				 keypair_oscar.privkey(), // !!!
+				 nonce);
+
+  // 2. Oscar prepends forged headers to the ciphertext, making it appear
+  // as if the message (= headers + ciphertext) came indeed from Bob,
+  // and sends the whole message, i.e. the envelope, to Alice.
+  // Not shown here.
+
+  // 3. Alice receives the message. Because of the envelope's headers,
+  // she thinks the message came from Bob. Not shown here.
+  
+  // 4. Alice decrypts the message with her own private key. She
+  // tries to verify the signature with Bob's public key. This is
+  // the place where decryption MUST fail.
+
+  try {
+    data_t decrypted = sc.decrypt(ciphertext,
+				  keypair_alice.privkey(),
+				  keypair_bob.pubkey(),  // !!!
+				  nonce);
+
+    // if decryption succeeded, Oscar was successful in impersonating Bob.
+    // The test therefore failed!
+
+    return false;
+  }
+  catch (std::exception &e) {
+    // decryption failed; either because ciphertext was modified
+    // en route, or, more likely here, because keypair_bob.pubkey()
+    // doesn't match keypair_oscar.privkey(). Oscar was not able to
+    // impersonate Bob. Test was successful.
+
+    return true;
+  }
+
+  // NOTREACHED
+  return true;
+}
+
 struct SodiumFixture {
   SodiumFixture()  {
     BOOST_REQUIRE(sodium_init() != -1);
@@ -218,6 +273,20 @@ BOOST_AUTO_TEST_CASE( sodium_cryptopk_test_encrypt_to_self )
   // source, decryption would have thrown. But we manually check anyway.
 
   BOOST_CHECK(plainblob == decrypted);
+}
+
+BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_detect_wrong_sender_fulltext )
+{
+  std::string plaintext {"Hi Alice, this is Bob!"};
+
+  BOOST_CHECK(falsify_sender(plaintext));
+}
+
+BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_detect_wrong_sender_empty_text)
+{
+  std::string plaintext {};
+
+  BOOST_CHECK(falsify_sender(plaintext));
 }
 
 BOOST_AUTO_TEST_CASE( sodium_cryptopk_test_falsify_ciphertext )
