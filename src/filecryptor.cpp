@@ -120,11 +120,11 @@ FileCryptor::decrypt(std::ifstream &ifs, std::ostream &ostr)
   // and decrypting...
   ifs.seekg(0, std::ios_base::beg);
   std::ifstream::pos_type current_pos = ifs.tellg();
-  bool in_mac = false;
+  bool in_hash = false;
   
   while (ifs.read(reinterpret_cast<char *>(ciphertext.data()),
 		  MACSIZE + blocksize_)
-	 && !in_mac) {
+	 && !in_hash) {
 
     // before we decrypt, we must be sure that we didn't read
     // info the hash at the end of the file. drop what we read
@@ -133,7 +133,7 @@ FileCryptor::decrypt(std::ifstream &ifs, std::ostream &ostr)
 
     if (current_pos > hash_pos) {
       ciphertext.resize(ciphertext.size() - (current_pos - hash_pos));
-      in_mac = true;
+      in_hash = true;
     }
     // we've got a whole MACSIZE + blocksize_ chunk
     data_t plaintext = sc_aead_.decrypt(header_, ciphertext,
@@ -147,7 +147,7 @@ FileCryptor::decrypt(std::ifstream &ifs, std::ostream &ostr)
     crypto_generichash_update(&state, ciphertext.data(), ciphertext.size());
   }
 
-  if (!in_mac) {
+  if (!in_hash) {
     // check to see if we've read a final partial chunk
     auto s = ifs.gcount();
     if (s != 0) {
