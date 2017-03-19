@@ -16,8 +16,8 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef _S_CRYPTORPK_H_
-#define _S_CRYPTORPK_H_
+#ifndef _S_CRYPTORMULTIPK_H_
+#define _S_CRYPTORMULTIPK_H_
 
 #include "common.h"
 #include "key.h"
@@ -188,4 +188,4 @@ class CryptorMultiPK {
 
 } // namespace Sodium
  
-#endif // _S_CRYPTORPK_H_
+#endif // _S_CRYPTORMULTIPK_H_
