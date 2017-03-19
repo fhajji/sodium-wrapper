@@ -272,7 +272,8 @@ void
 time_encrypt(const unsigned long nr_of_messages)
 {
   KeyPair                      keypair_alice   {};
-  Nonce<CryptorMultiPK::NSZPK> nonce           {};
+  Nonce<CryptorMultiPK::NSZPK> nonce_single    {};
+  Nonce<CryptorPK::NSZPK>      nonce_multi     {};
   CryptorPK                    sc_single_alice {};
   CryptorMultiPK               sc_multi_alice  (keypair_alice);
 
@@ -287,8 +288,8 @@ time_encrypt(const unsigned long nr_of_messages)
   auto t00 = system_clock::now();
   for (unsigned long i=0; i!=nr_of_messages; ++i) {
     ciphertext_multi = sc_multi_alice.encrypt(plainblob,
-					      nonce);
-    nonce.increment();
+					      nonce_multi);
+    nonce_multi.increment();
   }
   auto t01 = system_clock::now();
   auto tmulti = duration_cast<milliseconds>(t01-t00).count();
@@ -301,8 +302,8 @@ time_encrypt(const unsigned long nr_of_messages)
   for (unsigned long i=0; i!=nr_of_messages; ++i) {
     ciphertext_single = sc_single_alice.encrypt(plainblob,
 						keypair_alice,
-						nonce);
-    nonce.increment();
+						nonce_single);
+    nonce_single.increment();
   }
   auto t11 = system_clock::now();
   auto tsingle = duration_cast<milliseconds>(t11-t10).count();
@@ -314,6 +315,63 @@ time_encrypt(const unsigned long nr_of_messages)
   
   BOOST_CHECK_MESSAGE(tmulti < tsingle,
 		      "Sodium::CryptorMultiPK::encrypt() slower than Sodium::CryptorPK::encrypt()");
+}
+
+void
+time_decrypt(const unsigned long nr_of_messages)
+{
+  KeyPair                      keypair_alice   {};
+  Nonce<CryptorPK::NSZPK>      nonce_single    {};
+  Nonce<CryptorMultiPK::NSZPK> nonce_multi     {};
+  CryptorPK                    sc_single_alice {};
+  CryptorMultiPK               sc_multi_alice  (keypair_alice);
+
+  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  data_t decrypted_multi (plaintext.size());
+  data_t decrypted_single(plaintext.size());
+
+  // 0. encrypt once the plaintext without timing
+  data_t ciphertext_multi  = sc_multi_alice.encrypt(plainblob, nonce_multi);
+  data_t ciphertext_single = sc_single_alice.encrypt(plainblob,
+					      keypair_alice,
+					      nonce_single);
+  
+  std::ostringstream os;
+
+  // 1. time decrypting nr_of_messages with CryptorMultiPK
+  auto t00 = system_clock::now();
+  for (unsigned long i=0; i!=nr_of_messages; ++i) {
+    decrypted_multi = sc_multi_alice.decrypt(ciphertext_multi,
+					     nonce_multi);
+    // since we decrypt over and over the same ciphertext message,
+    // we don't nonce_multi.increment() here.
+  }
+  auto t01 = system_clock::now();
+  auto tmulti = duration_cast<milliseconds>(t01-t00).count();
+
+  os << "Decrypting " << nr_of_messages << " messages (multi ): "
+     << tmulti << " milliseconds." << std::endl;
+  
+  // 2. time decrypting nr_of_messages with CryptorPK
+  auto t10 = system_clock::now();
+  for (unsigned long i=0; i!=nr_of_messages; ++i) {
+    decrypted_single = sc_single_alice.decrypt(ciphertext_single,
+					       keypair_alice,
+					       nonce_single);
+    // since we decrypt over and over the same ciphtertext message,
+    // we don't nonce_single.increment() here.
+  }
+  auto t11 = system_clock::now();
+  auto tsingle = duration_cast<milliseconds>(t11-t10).count();
+
+  os << "Decrypting " << nr_of_messages << " messages (single): "
+     << tsingle << " milliseconds." << std::endl;
+
+  BOOST_TEST_MESSAGE(os.str());
+  
+  BOOST_CHECK_MESSAGE(tmulti < tsingle,
+		      "Sodium::CryptorMultiPK::decrypt() slower than Sodium::CryptorPK::decrypt()");
 }
 
 struct SodiumFixture {
@@ -424,10 +482,12 @@ BOOST_AUTO_TEST_CASE( sodium_cryptormultipk_test_time_multimessages_encrypt )
 {
   time_encrypt(1000);
   time_encrypt(10000);
-  time_encrypt(100000);
 }
 
-// TODO: decrypt multiple messages, and time it;
-// compare with CryptorPK's decrypt function.
+BOOST_AUTO_TEST_CASE( sodium_cryptormultipk_test_time_multimessages_decrypt )
+{
+  time_decrypt(1000);
+  time_decrypt(10000);
+}
 
 BOOST_AUTO_TEST_SUITE_END ();
