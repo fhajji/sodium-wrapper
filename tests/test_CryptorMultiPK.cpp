@@ -203,6 +203,60 @@ falsify_sender(const std::string &plaintext)
   return true;
 }
 
+bool
+destroy_shared_key_then_encrypt(const data_t &plaintext)
+{
+  KeyPair                      keypair_alice {};
+  Nonce<CryptorMultiPK::NSZPK> nonce         {};
+  CryptorMultiPK               sc_alice(keypair_alice);
+  
+  // 1. alice panics and destroys the shared key:
+  sc_alice.destroy_shared_key();
+
+  try {
+    data_t ciphertext = sc_alice.encrypt(plaintext, nonce);
+
+    // 2. encryption succeeded despite destroyed shared key.
+    // test failed.
+    return false;
+  }
+  catch (std::exception &e) {
+    // 3. encryption failed as expected because of destroyed shared key.
+    // test succeeded.
+    return true;
+  }
+
+  // NOTREACHED
+  return true;
+}
+
+bool
+destroy_shared_key_then_decrypt(const data_t                       &ciphertext,
+				const KeyPair                      &keypair,
+				const Nonce<CryptorMultiPK::NSZPK> &nonce)
+{
+  CryptorMultiPK               sc_alice(keypair);
+  
+  // 1. alice panics and destroys the shared key:
+  sc_alice.destroy_shared_key();
+
+  try {
+    data_t decrypted = sc_alice.decrypt(ciphertext, nonce);
+
+    // 2. decryption succeeded despite destroyed shared key.
+    // test failed.
+    return false;
+  }
+  catch (std::exception &e) {
+    // 3. decryption failed as expected, probably because of
+    // destroyed shared key. test succeeded.
+    return true;
+  }
+
+  // NOTREACHED
+  return true;
+}
+
 struct SodiumFixture {
   SodiumFixture()  {
     BOOST_REQUIRE(sodium_init() != -1);
@@ -277,11 +331,34 @@ BOOST_AUTO_TEST_CASE( sodium_cryptormultipk_test_falsify_mac_fulltext )
   BOOST_CHECK(falsify_mac(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_falsify_mac_empty )
+BOOST_AUTO_TEST_CASE( sodium_cryptormultipk_test_falsify_mac_empty )
 {
   std::string plaintext {};
 
   BOOST_CHECK(falsify_mac(plaintext));
+}
+
+BOOST_AUTO_TEST_CASE( sodium_cryptormultipk_test_destroysharedkey_encrypt )
+{
+  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+
+  BOOST_CHECK(destroy_shared_key_then_encrypt(plainblob));
+}
+
+BOOST_AUTO_TEST_CASE( sodium_cryptormultipk_test_destroysharedkey_decrypt )
+{
+  KeyPair                      keypair_alice {};
+  Nonce<CryptorMultiPK::NSZPK> nonce         {};
+  CryptorMultiPK               sc_alice(keypair_alice);
+  
+  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  data_t ciphertext = sc_alice.encrypt(plainblob, nonce);
+
+  BOOST_CHECK(destroy_shared_key_then_decrypt(ciphertext,
+					      keypair_alice,
+					      nonce));
 }
 
 // TODO: encrypt and decrypt multiple messages, and time it;

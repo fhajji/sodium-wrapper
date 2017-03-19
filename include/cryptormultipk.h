@@ -103,7 +103,7 @@ class CryptorMultiPK {
    * longer needed.
    *
    * Normally, you don't need to call this function directly, because
-   * the shared key will destroy itself anyway when this CrytorMultiPK
+   * the shared key will destroy itself anyway when this CryptorMultiPK
    * object goes out of scope.
    **/
   
