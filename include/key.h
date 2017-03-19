@@ -50,19 +50,20 @@ class Key
  public:
 
   // Some common constants for typical key sizes from <sodium.h>
-  static constexpr std::size_t KEYSIZE_SECRETBOX   = crypto_secretbox_KEYBYTES;
-  static constexpr std::size_t KEYSIZE_AUTH        = crypto_auth_KEYBYTES;
-  static constexpr std::size_t KEYSIZE_SALT        = crypto_pwhash_SALTBYTES;
-  static constexpr std::size_t KEYSIZE_AEAD        = crypto_aead_chacha20poly1305_KEYBYTES;
-  static constexpr std::size_t KEYSIZE_HASHKEY     = crypto_generichash_KEYBYTES;
-  static constexpr std::size_t KEYSIZE_HASHKEY_MIN = crypto_generichash_KEYBYTES_MIN;
-  static constexpr std::size_t KEYSIZE_HASHKEY_MAX = crypto_generichash_KEYBYTES_MAX;
-  static constexpr std::size_t KEYSIZE_PUBKEY      = crypto_box_PUBLICKEYBYTES;
-  static constexpr std::size_t KEYSIZE_PRIVKEY     = crypto_box_SECRETKEYBYTES;
-  static constexpr std::size_t KEYSIZE_SHAREDKEY   = crypto_box_BEFORENMBYTES;
-  
-  // for keypair(), size of optional data_t seed blob
-  static constexpr std::size_t KEYSIZE_SEEDBYTES   = crypto_box_SEEDBYTES;
+  static constexpr std::size_t KEYSIZE_SECRETBOX      = crypto_secretbox_KEYBYTES;
+  static constexpr std::size_t KEYSIZE_AUTH           = crypto_auth_KEYBYTES;
+  static constexpr std::size_t KEYSIZE_SALT           = crypto_pwhash_SALTBYTES;
+  static constexpr std::size_t KEYSIZE_AEAD           = crypto_aead_chacha20poly1305_KEYBYTES;
+  static constexpr std::size_t KEYSIZE_HASHKEY        = crypto_generichash_KEYBYTES;
+  static constexpr std::size_t KEYSIZE_HASHKEY_MIN    = crypto_generichash_KEYBYTES_MIN;
+  static constexpr std::size_t KEYSIZE_HASHKEY_MAX    = crypto_generichash_KEYBYTES_MAX;
+  static constexpr std::size_t KEYSIZE_PUBKEY         = crypto_box_PUBLICKEYBYTES;
+  static constexpr std::size_t KEYSIZE_PRIVKEY        = crypto_box_SECRETKEYBYTES;
+  static constexpr std::size_t KEYSIZE_SHAREDKEY      = crypto_box_BEFORENMBYTES;
+  static constexpr std::size_t KEYSIZE_SEEDBYTES      = crypto_box_SEEDBYTES;
+  static constexpr std::size_t KEYSIZE_PUBKEY_SIGN    = crypto_sign_PUBLICKEYBYTES;
+  static constexpr std::size_t KEYSIZE_PRIVKEY_SIGN   = crypto_sign_SECRETKEYBYTES;
+  static constexpr std::size_t KEYSIZE_SEEDBYTES_SIGN = crypto_sign_SEEDBYTES;
   
   /**
    * key_t is protected memory for bytes of key material (see: sodiumkey.h)
