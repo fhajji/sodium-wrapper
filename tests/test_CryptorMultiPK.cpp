@@ -16,6 +16,9 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+// To see some timing output, run this test like this:
+//   ./test_CryptorMultiPK --log_level=message
+
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE Sodium::CryptorMultiPK Test
 #include <boost/test/included/unit_test.hpp>
@@ -27,6 +30,7 @@
 #include "nonce.h"
 
 #include <string>
+#include <sstream>
 #include <chrono>
 
 using namespace std::chrono;
@@ -37,10 +41,6 @@ using Sodium::CryptorPK;
 using Sodium::CryptorMultiPK;
 
 using data_t = Sodium::data_t;
-
-// number of messages to encrypt in test:
-// sodium_cryptormultipk_test_time_multimessages
-static constexpr unsigned long NR_OF_MESSAGES = 100000UL;
 
 bool
 test_of_correctness(const std::string &plaintext)
@@ -268,13 +268,61 @@ destroy_shared_key_then_decrypt(const data_t                       &ciphertext,
   return true;
 }
 
+void
+time_encrypt(const unsigned long nr_of_messages)
+{
+  KeyPair                      keypair_alice   {};
+  Nonce<CryptorMultiPK::NSZPK> nonce           {};
+  CryptorPK                    sc_single_alice {};
+  CryptorMultiPK               sc_multi_alice  (keypair_alice);
+
+  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  data_t ciphertext_multi (plaintext.size() + CryptorMultiPK::MACSIZE);
+  data_t ciphertext_single(plaintext.size() + CryptorPK::MACSIZE);
+
+  std::ostringstream os;
+  
+  // 1. time encrypting nr_of_messages with CryptorMultiPK
+  auto t00 = system_clock::now();
+  for (unsigned long i=0; i!=nr_of_messages; ++i) {
+    ciphertext_multi = sc_multi_alice.encrypt(plainblob,
+					      nonce);
+    nonce.increment();
+  }
+  auto t01 = system_clock::now();
+  auto tmulti = duration_cast<milliseconds>(t01-t00).count();
+
+  os << "Encrypting " << nr_of_messages << " messages (multi ): "
+     << tmulti << " milliseconds." << std::endl;
+  
+  // 2. time encrypting nr_of_messages with CryptorPK
+  auto t10 = system_clock::now();
+  for (unsigned long i=0; i!=nr_of_messages; ++i) {
+    ciphertext_single = sc_single_alice.encrypt(plainblob,
+						keypair_alice,
+						nonce);
+    nonce.increment();
+  }
+  auto t11 = system_clock::now();
+  auto tsingle = duration_cast<milliseconds>(t11-t10).count();
+
+  os << "Encrypting " << nr_of_messages << " messages (single): "
+     << tsingle << " milliseconds." << std::endl;
+
+  BOOST_TEST_MESSAGE(os.str());
+  
+  BOOST_CHECK_MESSAGE(tmulti < tsingle,
+		      "Sodium::CryptorMultiPK::encrypt() slower than Sodium::CryptorPK::encrypt()");
+}
+
 struct SodiumFixture {
   SodiumFixture()  {
     BOOST_REQUIRE(sodium_init() != -1);
-    BOOST_TEST_MESSAGE("SodiumFixture(): sodium_init() successful.");
+    // BOOST_TEST_MESSAGE("SodiumFixture(): sodium_init() successful.");
   }
   ~SodiumFixture() {
-    BOOST_TEST_MESSAGE("~SodiumFixture(): teardown -- no-op.");
+    // BOOST_TEST_MESSAGE("~SodiumFixture(): teardown -- no-op.");
   }
 };
 
@@ -374,42 +422,12 @@ BOOST_AUTO_TEST_CASE( sodium_cryptormultipk_test_destroysharedkey_decrypt )
 
 BOOST_AUTO_TEST_CASE( sodium_cryptormultipk_test_time_multimessages_encrypt )
 {
-  KeyPair                      keypair_alice   {};
-  Nonce<CryptorMultiPK::NSZPK> nonce           {};
-  CryptorPK                    sc_single_alice {};
-  CryptorMultiPK               sc_multi_alice  (keypair_alice);
-
-  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
-  data_t ciphertext_multi (plaintext.size() + CryptorMultiPK::MACSIZE);
-  data_t ciphertext_single(plaintext.size() + CryptorPK::MACSIZE);
-  
-  // 1. time encrypting NR_OF_MESSAGES with CryptorMultiPK
-  auto t00 = system_clock::now();
-  for (unsigned long i=0; i!=NR_OF_MESSAGES; ++i) {
-    ciphertext_multi = sc_multi_alice.encrypt(plainblob,
-					      nonce);
-    nonce.increment();
-  }
-  auto t01 = system_clock::now();
-  auto tmulti = duration_cast<milliseconds>(t01-t00).count();
-
-  // 2. time encrypting NR_OF_MESSAGES with CryptorPK
-  auto t10 = system_clock::now();
-  for (unsigned long i=0; i!=NR_OF_MESSAGES; ++i) {
-    ciphertext_single = sc_single_alice.encrypt(plainblob,
-						keypair_alice,
-						nonce);
-    nonce.increment();
-  }
-  auto t11 = system_clock::now();
-  auto tsingle = duration_cast<milliseconds>(t01-t00).count();
-
-  BOOST_CHECK_MESSAGE(tmulti < tsingle,
-		      "Sodium::CryptorMultiPK::encrypt() slower than Sodium::CryptorPK::encrypt()");
+  time_encrypt(1000);
+  time_encrypt(10000);
+  time_encrypt(100000);
 }
 
-// TODO: encrypt and decrypt multiple messages, and time it;
-// compare with CryptorPK's encrypt and decrypt functions.
+// TODO: decrypt multiple messages, and time it;
+// compare with CryptorPK's decrypt function.
 
 BOOST_AUTO_TEST_SUITE_END ();
