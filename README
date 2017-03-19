@@ -23,7 +23,7 @@ Build dependencies:
 
 I'm developing on:
   - FreeBSD/amd64 11.0-STABLE
-  - clang++ 3.8.0 / llvm 3.8.0
+  - clang++ 3.9.1 / llvm 3.9.1
   - cmake version 3.7.2
   
 Thanks,
