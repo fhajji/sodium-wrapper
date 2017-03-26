@@ -97,6 +97,7 @@ falsify_mac(const std::string &plaintext)
 
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
 
+  // encrypt to self
   data_t ciphertext = sc.encrypt(plainblob,
 				 keypair_alice,
 				 nonce);
@@ -241,7 +242,7 @@ BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_empty_plaintext )
   BOOST_CHECK(test_of_correctness(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptopk_test_encrypt_to_self )
+BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_encrypt_to_self )
 {
   CryptorPK               sc            {};
   KeyPair                 keypair_alice {};
@@ -250,6 +251,7 @@ BOOST_AUTO_TEST_CASE( sodium_cryptopk_test_encrypt_to_self )
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
 
+  // encrypt to self
   data_t ciphertext = sc.encrypt(plainblob,
 				 keypair_alice,
 				 nonce);
@@ -280,21 +282,21 @@ BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_detect_wrong_sender_empty_text)
   BOOST_CHECK(falsify_sender(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptopk_test_falsify_ciphertext )
+BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_falsify_ciphertext )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
 
   BOOST_CHECK(falsify_ciphertext(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptopk_test_falsify_mac_fulltext )
+BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_falsify_mac_fulltext )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
 
   BOOST_CHECK(falsify_mac(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptopk_test_falsify_mac_empty )
+BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_falsify_mac_empty )
 {
   std::string plaintext {};
 
