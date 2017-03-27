@@ -33,7 +33,9 @@ using Sodium::Nonce;
 using data_t = Sodium::data_t;
 
 bool
-test_of_correctness(const std::string &plaintext)
+test_of_correctness(const std::string &plaintext,
+		    bool falsify_ciphertext=false,
+		    bool falsify_mac=false)
 {
   Cryptor sc    {};
   Key     key   (Cryptor::KEYSIZE);
@@ -42,18 +44,46 @@ test_of_correctness(const std::string &plaintext)
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
 
   data_t ciphertext = sc.encrypt(plainblob, key, nonce);
-  data_t decrypted  = sc.decrypt(ciphertext, key, nonce);
 
-  key.noaccess();
-
-  BOOST_CHECK(ciphertext.size() == plainblob.size() + Sodium::Cryptor::MACSIZE);
-  BOOST_CHECK(decrypted.size()  == plainblob.size());
+  BOOST_CHECK(ciphertext.size() == plainblob.size() + Cryptor::MACSIZE);
   
-  return plainblob == decrypted;
+  if (! plaintext.empty() && falsify_ciphertext) {
+    // ciphertext is of the form: (MAC || actual_ciphertext)
+    ++ciphertext[Cryptor::MACSIZE]; // falsify ciphertext
+  }
+  
+  if (falsify_mac) {
+    // ciphertext is of the form: (MAC || actual_ciphertext)
+    ++ciphertext[0]; // falsify MAC
+  }
+
+  try {
+    data_t decrypted  = sc.decrypt(ciphertext, key, nonce);
+
+    BOOST_CHECK(decrypted.size()  == plainblob.size());
+
+    // decryption succeeded and plainblob == decrypted if and only if
+    // we didn't falsify the ciphertext nor the MAC
+    
+    return !falsify_ciphertext &&
+      !falsify_mac &&
+      (plainblob == decrypted);
+  }
+  catch (std::exception &e) {
+    // decryption failed. This is expected if and only if we falsified
+    // the ciphertext OR we falsified the MAC (or both).
+
+    return falsify_ciphertext || falsify_mac;
+  }
+
+  // NOTREACHED (hopefully)
+  return false;
 }
 
 bool
-test_of_correctness_detached(const std::string &plaintext)
+test_of_correctness_detached(const std::string &plaintext,
+			     bool falsify_ciphertext=false,
+			     bool falsify_mac=false)
 {
   Cryptor sc    {};
   Key     key   (Cryptor::KEYSIZE);
@@ -63,14 +93,37 @@ test_of_correctness_detached(const std::string &plaintext)
   data_t mac(Cryptor::MACSIZE);
 
   data_t ciphertext = sc.encrypt(plainblob, key, nonce, mac);
-  data_t decrypted  = sc.decrypt(ciphertext, mac, key, nonce);
-
-  key.noaccess();
 
   BOOST_CHECK(ciphertext.size() == plainblob.size());
-  BOOST_CHECK(decrypted.size()  == plainblob.size());
+
   
-  return plainblob == decrypted;
+  if (! plaintext.empty() && falsify_ciphertext)
+    ++ciphertext[0]; // falsify ciphertext
+
+  if (falsify_mac)
+    ++mac[0]; // falsify MAC
+
+  try {
+    data_t decrypted  = sc.decrypt(ciphertext, mac, key, nonce);
+
+    BOOST_CHECK(decrypted.size()  == plainblob.size());
+
+    // decryption succeeded and plainblob == decrypted if and only if
+    // we didn't falsify the ciphertext nor the MAC:
+    
+    return !falsify_ciphertext &&
+      !falsify_mac &&
+      (plainblob == decrypted);
+  }
+  catch (std::exception &e) {
+    // decryption failed. This is expected if and only if we falsified
+    // the ciphertext OR we falsified the MAC (or both).
+
+    return falsify_ciphertext || falsify_mac;
+  }
+
+  // NOTREACHED (hopefully)
+  return false;
 }
 
 struct SodiumFixture {
@@ -107,6 +160,54 @@ BOOST_AUTO_TEST_CASE( sodium_cryptor_test_empty_plaintext_detached )
 {
   std::string plaintext {};
   BOOST_CHECK(test_of_correctness_detached(plaintext));
+}
+
+BOOST_AUTO_TEST_CASE( sodium_cryptor_test_falsify_ciphertext )
+{
+  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+  BOOST_CHECK(test_of_correctness(plaintext, true, false));
+}
+
+BOOST_AUTO_TEST_CASE( sodium_cryptor_test_falsify_mac )
+{
+  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+  BOOST_CHECK(test_of_correctness(plaintext, false, true));
+}
+
+BOOST_AUTO_TEST_CASE( sodium_cryptor_test_falsify_mac_empty )
+{
+  std::string plaintext {};
+  BOOST_CHECK(test_of_correctness(plaintext, false, true));
+}
+
+BOOST_AUTO_TEST_CASE( sodium_cryptor_test_falsify_ciphertext_and_mac )
+{
+  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+  BOOST_CHECK(test_of_correctness(plaintext, true, true));
+}
+
+BOOST_AUTO_TEST_CASE( sodium_cryptor_test_falsify_ciphertext_detached )
+{
+  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+  BOOST_CHECK(test_of_correctness_detached(plaintext, true, false));
+}
+
+BOOST_AUTO_TEST_CASE( sodium_cryptor_test_falsify_mac_detached )
+{
+  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+  BOOST_CHECK(test_of_correctness_detached(plaintext, false, true));
+}
+
+BOOST_AUTO_TEST_CASE( sodium_cryptor_test_falsify_mac_empty_detached )
+{
+  std::string plaintext {};
+  BOOST_CHECK(test_of_correctness_detached(plaintext, false, true));
+}
+
+BOOST_AUTO_TEST_CASE( sodium_cryptor_test_falsify_ciphertext_and_mac_detached )
+{
+  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+  BOOST_CHECK(test_of_correctness_detached(plaintext, true, true));
 }
 
 BOOST_AUTO_TEST_SUITE_END ();
