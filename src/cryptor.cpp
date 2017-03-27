@@ -33,16 +33,13 @@ Cryptor::encrypt (const data_t     &plaintext,
 		  const Nonce<NSZ> &nonce)
 {
   // get the sizes
-  const std::size_t ciphertext_size =
-    crypto_secretbox_MACBYTES + plaintext.size();
-  const std::size_t key_size        = Key::KEYSIZE_SECRETBOX;
-  const std::size_t nonce_size      = Sodium::NONCESIZE_SECRETBOX;
+  const std::size_t ciphertext_size = MACSIZE + plaintext.size();
   
   // some sanity checks before we get started
-  if (key.size() != key_size)
-    throw std::runtime_error {"Sodium::Cryptor::encrypt() wrong key size"};
-  if (nonce.size() != nonce_size)
-    throw std::runtime_error {"Sodium::Cryptor::encrypt() wrong nonce size"};
+  if (key.size() != KEYSIZE)
+    throw std::runtime_error {"Sodium::Cryptor::encrypt(combined) wrong key size"};
+  if (nonce.size() != NSZ)
+    throw std::runtime_error {"Sodium::Cryptor::encrypt(combined) wrong nonce size"};
   
   // make space for MAC and encrypted message
   data_t ciphertext(ciphertext_size);
@@ -58,24 +55,49 @@ Cryptor::encrypt (const data_t     &plaintext,
 }
 
 data_t
+Cryptor::encrypt (const data_t     &plaintext,
+		  const Key        &key,
+		  const Nonce<NSZ> &nonce,
+		  data_t           &mac)
+{
+  // some sanity checks before we get started
+  if (key.size() != KEYSIZE)
+    throw std::runtime_error {"Sodium::Cryptor::encrypt(detached) wrong key size"};
+  if (nonce.size() != NSZ)
+    throw std::runtime_error {"Sodium::Cryptor::encrypt(detached) wrong nonce size"};
+  if (mac.size() != MACSIZE)
+    throw std::runtime_error {"Sodium::Cryptor::encrypt(detached) wrong mac size"};
+  
+  // make space for encrypted message
+  data_t ciphertext(plaintext.size()); // stream cipher: same size as plaintext
+  
+  // let's encrypt now!
+  crypto_secretbox_detached (ciphertext.data(),
+			     mac.data(),
+			     plaintext.data(), plaintext.size(),
+			     nonce.data(),
+			     key.data());
+
+  // return the encrypted bytes (mac is returned by reference)
+  return ciphertext; // by move semantics
+}
+
+data_t
 Cryptor::decrypt (const data_t     &ciphertext,
 		  const Key        &key,
 		  const Nonce<NSZ> &nonce)
 {
   // get the sizes
-  const std::size_t key_size        = key.size();
-  const std::size_t nonce_size      = nonce.size();
   const std::size_t ciphertext_size = ciphertext.size();
-  const std::size_t plaintext_size  =
-    ciphertext_size - crypto_secretbox_MACBYTES;
+  const std::size_t plaintext_size  = ciphertext_size - MACSIZE;
   
   // some sanity checks before we get started
-  if (key_size != Key::KEYSIZE_SECRETBOX)
-    throw std::runtime_error {"Sodium::Cryptor::decrypt() wrong key size"};
-  if (nonce_size != Sodium::NONCESIZE_SECRETBOX)
-    throw std::runtime_error {"Sodium::Cryptor::decrypt() wrong nonce size"};
-  if (ciphertext_size < crypto_secretbox_MACBYTES)
-    throw std::runtime_error {"Sodium::Cryptor::decrypt() ciphertext too small for mac"};
+  if (ciphertext_size < MACSIZE)
+    throw std::runtime_error {"Sodium::Cryptor::decrypt(combined) ciphertext too small for mac"};
+  if (key.size() != KEYSIZE)
+    throw std::runtime_error {"Sodium::Cryptor::decrypt(combined) wrong key size"};
+  if (nonce.size() != NSZ)
+    throw std::runtime_error {"Sodium::Cryptor::decrypt(combined) wrong nonce size"};
 
   // make space for decrypted buffer
   data_t decryptedtext(plaintext_size);
@@ -85,7 +107,36 @@ Cryptor::decrypt (const data_t     &ciphertext,
 				  ciphertext.data(), ciphertext.size(),
 				  nonce.data(),
 				  key.data()) != 0)
-    throw std::runtime_error {"Sodium::Cryptor::decrypt() can't decrypt (sodium test)"};
+    throw std::runtime_error {"Sodium::Cryptor::decrypt(combined) can't decrypt (sodium test)"};
 
   return decryptedtext;
+}
+
+data_t
+Cryptor::decrypt (const data_t     &ciphertext,
+		  const data_t     &mac,
+		  const Key        &key,
+		  const Nonce<NSZ> &nonce)
+{
+  // some sanity checks before we get started
+  if (mac.size() != MACSIZE)
+    throw std::runtime_error {"Sodium::Cryptor::decrypt(detached) wrong mac size"};
+  if (key.size() != KEYSIZE)
+    throw std::runtime_error {"Sodium::Cryptor::decrypt(detached) wrong key size"};
+  if (nonce.size() != NSZ)
+    throw std::runtime_error {"Sodium::Cryptor::decrypt(detached) wrong nonce size"};
+
+  // make space for decrypted buffer
+  data_t decryptedtext(ciphertext.size());
+
+  // and now decrypt!
+  if (crypto_secretbox_open_detached (decryptedtext.data(),
+				      ciphertext.data(),
+				      mac.data(),
+				      ciphertext.size(),
+				      nonce.data(),
+				      key.data()) != 0)
+    throw std::runtime_error {"Sodium::Cryptor::decrypt(detached) can't decrypt (sodium test)"};
+
+  return decryptedtext; // by move semantics
 }
