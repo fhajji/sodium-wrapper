@@ -14,7 +14,7 @@ USE AT YOUR OWN RISK. YOU'VE BEEN WARNED.
 Criticism and pull requests welcome, of course.
 
 Dependencies:
-  - libsodium (duh!)
+  - libsodium 1.0.12
   - boost (Boost.Test for unit testing)
 
 Build dependencies:
