@@ -443,7 +443,6 @@ BOOST_AUTO_TEST_CASE( sodium_signorpk_test_detect_wrong_sender_detached_empty_te
   BOOST_CHECK(falsify_sender_detached(plaintext));
 }
 
-
 BOOST_AUTO_TEST_CASE( sodium_signorpk_test_falsify_signedtext )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
@@ -514,7 +513,5 @@ BOOST_AUTO_TEST_CASE( sodium_signorpk_test_plaintext_remains_plaintext )
 			 signedtext.data() + signedtext.size(),
 			 plainblob.data()));
 }
-
-// add tests for the _detached() variants
 
 BOOST_AUTO_TEST_SUITE_END ();
