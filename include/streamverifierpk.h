@@ -42,7 +42,7 @@ class StreamVerifierPK {
    * potentially unlimited length using the
    * crypto_sign_{init,update,final_verify}() libsodium API.
    *
-   * The stream will be verified in a blockwise fashion with blocks
+   * The stream will be read in a blockwise fashion with blocks
    * of size at most blocksize bytes.
    * 
    * The constructor takes a public _signing_ Key of size
@@ -66,7 +66,7 @@ class StreamVerifierPK {
    * potentially unlimited length using the
    * crypto_sign_{init,update,final_verify}() libsodium API.
    *
-   * The stream will be verified in a blockwise fashion with blocks
+   * The stream will be read in a blockwise fashion with blocks
    * of size at most blocksize bytes.
    * 
    * The constructor takes a KeyPairSign and uses the pubkey part of
@@ -85,10 +85,10 @@ class StreamVerifierPK {
    * Verify the data provided by the std::istream istr, using the
    * public signing key provided by the constructor to compute a
    * signature. As soon as the stream reaches eof(), true or false is
-   * returned, depending on whether the computed signature matches or doesn't
-   * match the provided signature.
+   * returned, depending on whether the computed signature matches or
+   * doesn't match the provided signature.
    *
-   * The internal _state is reset after verify() returns.
+   * The internal state_ is reset after verify() returns.
    * It is thus possible to call verify() multiple times.
    *
    * The stream is read() blockwise, using blocks of size up to

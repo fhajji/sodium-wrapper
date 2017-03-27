@@ -41,7 +41,7 @@ class StreamSignorPK {
    * A StreamSignorPK will sign streams of potentially unlimited length
    * using the crypto_sign_{init,update,final_create}() libsodium API.
    *
-   * The stream will be signed in a blockwise fashion with blocks
+   * The stream will be read in a blockwise fashion with blocks
    * of size at most blocksize bytes.
    * 
    * The constructor takes a private _signing_ Key of size
@@ -64,10 +64,9 @@ class StreamSignorPK {
    * A StreamSignorPK will sign streams of potentially unlimited length
    * using the crypto_sign_{init,update,final_create}() libsodium API.
    *
-   * The stream will be signed in a blockwise fashion with blocks
+   * The stream will be read in a blockwise fashion with blocks
    * of size at most blocksize bytes.
    * 
-   *
    * The constructor takes a KeyPairSign and uses the privkey part of
    * it to sign the messages.
    **/

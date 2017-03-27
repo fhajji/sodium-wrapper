@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE( sodium_streamsignorpk_test_sign_to_self )
   
   BOOST_CHECK(sc_verifier.verify(istr_received, signature));
   
-  // if the signedtext was modified, or came from another
+  // if the plaintext was modified, or came from another
   // source, verification would have returned false, thus failing
   // the test. Further more, verification would've thrown, if the
   // stream failed. If we came this far, the test succeeded.
@@ -251,6 +251,45 @@ BOOST_AUTO_TEST_CASE( sodium_streamsignorpk_test_falsify_signature_empty )
   std::string plaintext {};
 
   BOOST_CHECK(falsify_signature(plaintext));
+}
+
+BOOST_AUTO_TEST_CASE( sodium_streamsignorpk_test_multiple_sign_verify )
+{
+  KeyPairSign      keypair_alice {};
+  StreamSignorPK   sc_signor     (keypair_alice.privkey(), blocksize);
+  StreamVerifierPK sc_verifier   (keypair_alice.pubkey(),  blocksize);
+  
+  std::string plaintext1 {"the quick brown fox jumps over the lazy dog"};
+  std::string plaintext2 {"CPE1704TKS"};
+
+  std::istringstream istr1(plaintext1);
+  std::istringstream istr2(plaintext2);
+
+  data_t signature1 = sc_signor.sign(istr1);
+  data_t signature2 = sc_signor.sign(istr2); // should reset state internally
+
+  std::istringstream istr1_received(plaintext1);
+  std::istringstream istr2_received(plaintext2); 
+  
+  BOOST_CHECK(sc_verifier.verify(istr1_received, signature1));
+  BOOST_CHECK(sc_verifier.verify(istr2_received, signature2)); // ditto
+}
+
+BOOST_AUTO_TEST_CASE( sodium_streamsignorpk_test_small_plaintext )
+{
+  KeyPairSign      keypair_alice {};
+  StreamSignorPK   sc_signor     (keypair_alice.privkey(), 128);
+  StreamVerifierPK sc_verifier   (keypair_alice.pubkey(),  128);
+  
+  std::string plaintext {"CPE1704TKS"}; // Note: plaintext.size() < 128
+
+  std::istringstream istr(plaintext);
+
+  data_t signature = sc_signor.sign(istr);
+
+  std::istringstream istr_received(plaintext);
+  
+  BOOST_CHECK(sc_verifier.verify(istr_received, signature));
 }
 
 BOOST_AUTO_TEST_SUITE_END ();
