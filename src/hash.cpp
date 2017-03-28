@@ -28,8 +28,8 @@ using Sodium::Key;
 using Sodium::Hash;
 
 data_t
-Hash::hash (const data_t &plaintext,
-	    const Key    &key,
+Hash::hash (const data_t      &plaintext,
+	    const Key         &key,
 	    const std::size_t hashsize)
 {
   // some sanity checks before we start
@@ -55,7 +55,7 @@ Hash::hash (const data_t &plaintext,
 }
 
 data_t
-Hash::hash (const data_t &plaintext,
+Hash::hash (const data_t      &plaintext,
 	    const std::size_t hashsize)
 {
   // some sanity checks before we start

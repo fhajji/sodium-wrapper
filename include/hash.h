@@ -74,7 +74,7 @@ class Hash {
    * Hash a plaintext, using the provided key, into a hash of the
    * size outHash.size(). Save the computed hash into outHash.
    *
-   * Tthe following preconditions must hold, or else hash() will throw
+   * The following preconditions must hold, or else hash() will throw
    * a std::runtime_error:
    * 
    *   KEYSIZE_MIN  <= key.size()     <= KEYSIZE_MAX,  KEYSIZE  recommended.
