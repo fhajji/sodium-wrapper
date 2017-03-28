@@ -51,7 +51,7 @@ class Cryptor {
    * Nonces don't need to be kept secret from Eve/Oscar, and therefore
    * don't need to be stored in key_t memory. However, care MUST be
    * taken not to reuse a previously used nonce. When using a big
-   * noncespace (24 bits here), generating them randomly e.g. with
+   * noncespace (24 bytes here), generating them randomly e.g. with
    * libsodium's randombytes_buf() may be good enough... but be careful
    * nonetheless.
    *
@@ -80,7 +80,7 @@ class Cryptor {
    * Nonces don't need to be kept secret from Eve/Oscar, and therefore
    * don't need to be stored in key_t memory. However, care MUST be
    * taken not to reuse a previously used nonce. When using a big
-   * noncespace (24 bits here), generating them randomly e.g. with
+   * noncespace (24 bytes here), generating them randomly e.g. with
    * libsodium's randombytes_buf() may be good enough... but be careful
    * nonetheless.
    *
