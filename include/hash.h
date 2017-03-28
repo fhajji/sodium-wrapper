@@ -40,8 +40,8 @@ class Hash {
    * Hash a plaintext, using the provided key, into a hash of the desired
    * size of hashsize bytes. Return the generated hash.
    *
-   * If key != nullptr, the following preconditions must hold, or else
-   * hash() will throw a std::runtime_error:
+   * The following preconditions must hold, or else hash() will throw
+   * a std::runtime_error:
    * 
    *   KEYSIZE_MIN  <= key.size() <= KEYSIZE_MAX,  with KEYSIZE  recommended.
    *   HASHSIZE_MIN <= hashsize   <= HASHSIZE_MAX, with HASHSIZE recommended.
@@ -53,9 +53,9 @@ class Hash {
    * The computed and returned hash will be hashsize bytes long.
    **/
   
-  data_t hash(const data_t &plaintext,
-	      const Key    &key,
-	      const std::size_t hashsize=HASHSIZE);
+  data_t hash(const data_t       &plaintext,
+	      const Key          &key,
+	      const std::size_t  hashsize=HASHSIZE);
 
   /**
    * Hash a plaintext into a hash of the desired size of hashsize
@@ -74,8 +74,8 @@ class Hash {
    * Hash a plaintext, using the provided key, into a hash of the
    * size outHash.size(). Save the computed hash into outHash.
    *
-   * If key != nullptr, the following preconditions must hold, or else
-   * hash() will throw a std::runtime_error:
+   * Tthe following preconditions must hold, or else hash() will throw
+   * a std::runtime_error:
    * 
    *   KEYSIZE_MIN  <= key.size()     <= KEYSIZE_MAX,  KEYSIZE  recommended.
    *   HASHSIZE_MIN <= outHash.size() <= HASHSIZE_MAX, HASHSIZE recommended.
