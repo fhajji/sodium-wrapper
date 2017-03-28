@@ -122,9 +122,6 @@ class CryptorPK {
   data_t decrypt(const data_t       &ciphertext_with_mac,
 		 const KeyPair      &keypair,
 		 const Nonce<NSZPK> &nonce);
-
-  // TODO: beforenm, afternm functions to speed up multi-message
-  // encryption / decryption with shared keys.
 };
 
 } // namespace Sodium
