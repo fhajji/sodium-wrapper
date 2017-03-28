@@ -238,14 +238,14 @@ BOOST_AUTO_TEST_CASE( sodium_sealedbox_test_encrypt_to_self )
   BOOST_CHECK(plainblob == decrypted);
 }
 
-BOOST_AUTO_TEST_CASE( sodium_sealedbox_test_detect_wrong_sender_fulltext )
+BOOST_AUTO_TEST_CASE( sodium_sealedbox_test_detect_wrong_recipient_fulltext )
 {
   std::string plaintext {"Hi Bob, this is your secret admirer!"};
 
   BOOST_CHECK(falsify_recipient(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_sealedbox_test_detect_wrong_sender_empty_text)
+BOOST_AUTO_TEST_CASE( sodium_sealedbox_test_detect_wrong_recipient_empty_text)
 {
   std::string plaintext {};
 
