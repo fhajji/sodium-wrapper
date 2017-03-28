@@ -66,7 +66,7 @@ class Hash {
    * Otherwise, see hash() above.
    **/
 
-  data_t hash(const data_t &plaintext,
+  data_t hash(const data_t      &plaintext,
 	      const std::size_t hashsize=HASHSIZE);
   
   
