@@ -25,6 +25,9 @@
 //   build/tests/test_Key --run_test=sodium_test_suite/sodium_test_key_move_ctor
 //   build/tests/test_Key --run_test=sodium_test_suite/sodium_test_key_copy_assign
 //   build/tests/test_Key --run_test=sodium_test_suite/sodium_test_key_move_assignment
+//
+// To see output of sodium_test_key_select_copy_or_move, run like this:
+//   build/tests/test_Key ---run_test=sodium_test_suite/sodium_test_key_select_copy_or_move --log_level=message
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE Sodium::Key Test
@@ -65,6 +68,23 @@ bool isSameBytes(const unsigned char *bytes1, const std::size_t &size1,
 
   return std::equal(bytes1, bytes1+size1,
 		    bytes2);
+}
+
+void selectKey(const Key &key)
+{
+  BOOST_TEST_MESSAGE("selectKey(const Key &) invoked");
+
+  BOOST_CHECK(key.size() != 0);
+}
+
+void selectKey(Key &&key)
+{
+  BOOST_TEST_MESSAGE("selectKey(Key &&) invoked");
+
+  Key internalKey {std::move(key)}; // pilfer resources from parameter
+  
+  BOOST_CHECK(internalKey.size() != 0);
+  BOOST_CHECK(key.size() == 0); // key is now an empty shell
 }
 
 struct SodiumFixture {
@@ -134,6 +154,8 @@ BOOST_AUTO_TEST_CASE( sodium_test_key_copy_assign )
   Key key(ks3);
   Key key_copy(ks3, false); // no init
 
+  auto key_copy_data = key_copy.data(); // address
+  
   BOOST_CHECK(key != key_copy); // test operator!=()
   BOOST_CHECK(key.size() == key_copy.size());
   BOOST_CHECK(! isSameBytes(key.data(), key.size(),
@@ -145,13 +167,21 @@ BOOST_AUTO_TEST_CASE( sodium_test_key_copy_assign )
   // or we'll crash the program here:
   // key.noaccess();
 
-  // we MAY remove write access to key_copy,
-  // because further copy-assignment will assign a completely
-  // different key_t page to it anyway (the old key_copy was irrelevant).
-  key_copy.readonly();
+  // we MUST NOT remove write access to key_copy,
+  // because copy-assignment will copy into the same
+  // key_t page as already belongs to key_copy
+  // (no additional allocation of resources involved)
+  // key_copy.readonly();
   
   key_copy = key; // copy-assign
 
+  auto key_copy_data_after_assignment = key_copy.data();
+
+  // copy-assignment didn't allocate a new key_t page;
+  // the key didn't move in memory; it just changed values.
+  BOOST_CHECK(key_copy_data == key_copy_data_after_assignment);
+
+  // restore access for further testing...
   // key.readonly();
   // key_copy.readonly();
   
@@ -307,6 +337,51 @@ BOOST_AUTO_TEST_CASE( sodium_test_key_move_assignment )
 
   // both key and key2 had the same key_t representation in memory
   BOOST_CHECK(key_data == key2_data_new);
+}
+
+BOOST_AUTO_TEST_CASE( sodium_test_key_std_move_doesnt_empty_key )
+{
+  Key key (ks1);
+
+  BOOST_CHECK(key.size() != 0);
+
+  // merely calling std::move(key) doesn't empty the key of its
+  // resources.
+  
+  // If we don't explicitely do something that invokes
+  // a Key move constructor as in
+  // 
+  //      Key newKey {std::move(key)};
+  //
+  // or a Key move assignment operator, as in
+  // 
+  //      Key newKey = std::move(key);
+  //
+  // key itself will remain untouched and unharmed:
+  
+  BOOST_CHECK((std::move(key)).size() != 0);
+  BOOST_CHECK(key.size() != 0);
+}
+
+BOOST_AUTO_TEST_CASE( sodium_test_key_select_copy_or_move )
+{
+  Key key (ks1);
+
+  // interestingly, this doesn't generate a new key_t allocation:
+  selectKey(key);            // calls selectKey(const Key &);
+
+  // this doesn't either, but that was expected not to:
+  selectKey(std::move(key)); // calls selectKey(Key &&);
+
+  // after emptying key of its resources, selectKey(Key &&) has left
+  // key as an empty shell:
+  
+  Key key_empty;
+  BOOST_CHECK(key.size() == 0);
+  BOOST_CHECK(key == key_empty);
+
+  // note that had selectKey(Key &&) not explicitely pilfered the
+  // resources from its key parameter, key here wouldn't be empty.
 }
 
 // NYI: add test cases for readwrite(), readonly() and noaccess()...

@@ -79,7 +79,6 @@ class Key
   // The strengh of the key derivation efforts for setpass()
   using strength_t = enum class Strength { low, medium, high };
 
-
   /**
    * Construct a Key of size key_size.
    *
@@ -118,7 +117,8 @@ class Key
    **/
   
   Key(const Key &other)             = default;
-
+  Key& operator=(const Key &other)  = default;
+  
   /**
    * A Key can be move-constructed and move-assigned from another
    * existing Key, thereby destroying that other Key along the way.
@@ -142,18 +142,14 @@ class Key
 
   Key(Key &&other) noexcept :
     Key {} {
-      swap(other);
+      std::swap(this->keydata, other.keydata);
   }
 
-  Key & operator=(Key other) {
-    swap(other);
+  Key& operator=(Key &&other) {
+    this->keydata = std::move(other.keydata);
     return *this;
   }
     
-  void swap(Key &other) {
-    std::swap(this->keydata, other.keydata);
-  }
-  
   /**
    * Various libsodium functions used either directly or in
    * the wrappers need access to the bytes stored in the key.
