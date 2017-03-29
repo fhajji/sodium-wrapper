@@ -16,11 +16,22 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+// To see something useful during the tests of the copy vs. move
+// c'tors and assignments, uncomment the line #define NDEBUG in
+// include/alloc.h.
+//
+// Then, invoke like this:
+//   build_tests/test_Key --run_test=sodium_test_suite/sodium_test_key_copy_ctor
+//   build/tests/test_Key --run_test=sodium_test_suite/sodium_test_key_move_ctor
+//   build/tests/test_Key --run_test=sodium_test_suite/sodium_test_key_copy_assign
+//   build/tests/test_Key --run_test=sodium_test_suite/sodium_test_key_move_assignment
+
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE Sodium::Key Test
 #include <boost/test/included/unit_test.hpp>
 
 #include <algorithm>
+#include <utility>
 #include <stdexcept>
 #include <string>
 
@@ -96,15 +107,26 @@ BOOST_AUTO_TEST_CASE( sodium_test_key_init )
   BOOST_CHECK(! isAllZero(key.data(), key.size()));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_test_copy_ctor )
+BOOST_AUTO_TEST_CASE( sodium_test_key_copy_ctor )
 {
   Key key(ks_salt);
+
+  // we MUST NOT remove access to key prior to copy c'tor,
+  // or we'll crash the program here:
+  // key.noaccess();
+  
   Key key_copy(key); // copy c'tor
 
+  // restore access to key for further testing:
+  // key.readonly();
+  
   BOOST_CHECK(key == key_copy); // test operator==()
   BOOST_CHECK(key.size() == key_copy.size());
   BOOST_CHECK(isSameBytes(key.data(), key.size(),
 			  key_copy.data(), key_copy.size()));
+
+  // both keys have different key_t pages in protected memory
+  BOOST_CHECK(key.data() != key_copy.data());
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_key_copy_assign )
@@ -119,11 +141,26 @@ BOOST_AUTO_TEST_CASE( sodium_test_key_copy_assign )
   BOOST_CHECK(! isAllZero(key.data(), key.size()));
   BOOST_CHECK(isAllZero(key_copy.data(), key_copy.size()));
 
+  // we MUST NOT remove access to key prior to copy-assignment,
+  // or we'll crash the program here:
+  // key.noaccess();
+
+  // we MAY remove write access to key_copy,
+  // because further copy-assignment will assign a completely
+  // different key_t page to it anyway (the old key_copy was irrelevant).
+  key_copy.readonly();
+  
   key_copy = key; // copy-assign
 
+  // key.readonly();
+  // key_copy.readonly();
+  
   BOOST_CHECK(key.size() == key_copy.size());
   BOOST_CHECK(isSameBytes(key.data(), key.size(),
 			  key_copy.data(), key_copy.size()));
+
+  // both keys have different key_t pages in protected memory
+  BOOST_CHECK(key.data() != key_copy.data());
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_key_setpass )
@@ -189,6 +226,87 @@ BOOST_AUTO_TEST_CASE( sodium_test_key_destroy )
 
   BOOST_CHECK(isAllZero(key.data(), key.size())); // must be all-zero now!
   BOOST_CHECK_EQUAL(key.size(), ks1);
+}
+
+BOOST_AUTO_TEST_CASE( sodium_test_key_empty_key )
+{
+  Key key; // default constructor: empty key with 0 bytes.
+
+  BOOST_CHECK_EQUAL(key.size(), 0);
+}
+
+BOOST_AUTO_TEST_CASE( sodium_test_key_move_ctor )
+{
+  Key key      (ks1);            // create random key
+  auto key_data = key.data();
+
+  Key key_copy {key};            // copy c'tor
+
+  // it doesn't harm to remove access prior to move c'tor...
+  key.noaccess();
+  
+  Key key_move {std::move(key)}; // move c'tor, key is now invalid
+  auto key_move_data = key_move.data();
+  
+  // ... provided that we restored it to the target for more
+  // testing further down.
+  key_move.readonly();
+  
+  // we made a key_copy of key, so we can check that key_move
+  // and key_copy are essentially the same key material
+  
+  BOOST_CHECK_EQUAL(key_copy.size(), key_move.size());
+  BOOST_CHECK(isSameBytes(key_copy.data(), key_copy.size(),
+			  key_move.data(), key_move.size()));
+
+  // key itself must still be valid, but empty,
+  // i.e. same as default-constructed with 0 bytes.
+  BOOST_CHECK_EQUAL(key.size(), 0);
+
+  // another way to test for empty keys:
+  Key key_empty;
+  BOOST_CHECK(key == key_empty);
+
+  // both key and key_move had the same key_t representation in memory
+  BOOST_CHECK(key_data == key_move_data);
+}
+
+BOOST_AUTO_TEST_CASE( sodium_test_key_move_assignment )
+{
+  Key key      (ks1);       // create random key
+  auto key_data = key.data();
+  
+  Key key_copy {key};       // copy c'tor
+  Key key2     (ks2);       // create another random key, even diff size
+  auto key2_data = key2.data();
+  
+  // it doesn't harm to remove access prior to move assignemnt...
+  key.noaccess();
+  
+  key2 = std::move(key); // move-assignement. key is now empty.
+  auto key2_data_new = key2.data();
+
+  // old key2 has been overwritten, and doesn't exist anymore.
+  // new key2's underlying key_t keydata is at a completely new address.
+  BOOST_CHECK(key2_data_new != key2_data);
+  
+  // ... provided that we restored it for testing further down.
+  key2.readonly();
+  
+  BOOST_CHECK_EQUAL(key2.size(), key_copy.size()); // size has changed!
+  BOOST_CHECK(isSameBytes(key_copy.data(), key_copy.size(),
+			  key2.data(), key2.size()));
+
+  // key must still be valid, but empty,
+  // i.e. same as default-constructed with 0 bytes.
+  BOOST_CHECK_EQUAL(key.size(), 0);
+
+  // another way to test for empty keys:
+  Key key_empty;
+  BOOST_CHECK(key == key_empty);
+
+  // both key and key2 had the same key_t representation in memory
+  BOOST_CHECK(key_data == key2_data_new);
 }
 
 // NYI: add test cases for readwrite(), readonly() and noaccess()...

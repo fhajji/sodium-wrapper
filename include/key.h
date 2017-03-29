@@ -22,6 +22,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <utility>
 #include "common.h"
 #include "alloc.h"
 
@@ -78,6 +79,7 @@ class Key
   // The strengh of the key derivation efforts for setpass()
   using strength_t = enum class Strength { low, medium, high };
 
+
   /**
    * Construct a Key of size key_size.
    *
@@ -97,10 +99,61 @@ class Key
     // CAREFUL: read/write uninitialized key
   }
 
-  // Keys can be copied (for now), but be careful
+  /**
+   * Copy constructor for Keys
+   * 
+   * Note that copying a Key can be expensive, as the underlying keydata
+   * needs to be copied as well, i.e. new key_t virtual pages need to
+   * be allocated, mprotect()ed etc.
+   * 
+   * Consider using move semantics/constructor when passing Key(s) along
+   * for better performance (see below).
+   * 
+   * Note that the copied Key will be readwrite(), even if the source
+   * was readonly(). If you want a read-only copy, you'll have manually
+   * set it to readonly() after it was copy-constructed.
+   * 
+   * If the source Key was noaccess(), this copy c'tor will terminate
+   * the program.
+   **/
+  
   Key(const Key &other)             = default;
-  Key& operator= (const Key &other) = default;
 
+  /**
+   * A Key can be move-constructed and move-assigned from another
+   * existing Key, thereby destroying that other Key along the way.
+   * 
+   * Move semantics for a Key means that the underlying keydata key_t
+   * representation won't be unnecessarily duplicated / copied around;
+   * saving us from creating virtual pages and mprotect()-ing them
+   * when passing Key(s) around.
+   * 
+   * For move semantics to take effect, don't forget to use
+   * either r-values for Key(s) when passing them to functions,
+   * or convert Key l-values to r-values with std::move().
+   * 
+   * The following constructor / members implement move semantics for
+   * Keys.
+   **/
+  
+  Key() : keydata(0) {
+    // leave readwrite()
+  }
+
+  Key(Key &&other) noexcept :
+    Key {} {
+      swap(other);
+  }
+
+  Key & operator=(Key other) {
+    swap(other);
+    return *this;
+  }
+    
+  void swap(Key &other) {
+    std::swap(this->keydata, other.keydata);
+  }
+  
   /**
    * Various libsodium functions used either directly or in
    * the wrappers need access to the bytes stored in the key.
