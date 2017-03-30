@@ -49,9 +49,9 @@ class KeyPair
 
  public:
   // common constants for typical key and seed sizes
-  static constexpr std::size_t KEYSIZE_PUBKEY      = Key::KEYSIZE_PUBKEY;
-  static constexpr std::size_t KEYSIZE_PRIVKEY     = Key::KEYSIZE_PRIVKEY;
-  static constexpr std::size_t KEYSIZE_SEEDBYTES   = Key::KEYSIZE_SEEDBYTES;
+  static constexpr std::size_t KEYSIZE_PUBKEY      = Sodium::KEYSIZE_PUBKEY;
+  static constexpr std::size_t KEYSIZE_PRIVKEY     = Sodium::KEYSIZE_PRIVKEY;
+  static constexpr std::size_t KEYSIZE_SEEDBYTES   = Sodium::KEYSIZE_SEEDBYTES;
 
   /**
    * Generate a new (random) key pair of public/private keys.
@@ -71,7 +71,7 @@ class KeyPair
    **/
   
   KeyPair()
-    : privkey_(KEYSIZE_PRIVKEY, false), pubkey_(KEYSIZE_PUBKEY, '\0') {
+    : privkey_(false), pubkey_(KEYSIZE_PUBKEY, '\0') {
     crypto_box_keypair(pubkey_.data(), privkey_.setdata());
     privkey_.readonly();
   }
@@ -89,7 +89,7 @@ class KeyPair
    **/
   
   KeyPair(const data_t &seed)
-    : privkey_(KEYSIZE_PRIVKEY, false), pubkey_(KEYSIZE_PUBKEY, '\0') {
+    : privkey_(false), pubkey_(KEYSIZE_PUBKEY, '\0') {
     if (seed.size() != KEYSIZE_SEEDBYTES)
       throw std::runtime_error {"Sodium::KeyPair::KeyPair(seed) wrong seed size"};
     crypto_box_seed_keypair(pubkey_.data(), privkey_.setdata(),
@@ -118,7 +118,7 @@ class KeyPair
    **/
   
   KeyPair(const unsigned char *privkey_data, const std::size_t privkey_size)
-    : privkey_(KEYSIZE_PRIVKEY, false), pubkey_(KEYSIZE_PUBKEY, '\0') {
+    : privkey_(false), pubkey_(KEYSIZE_PUBKEY, '\0') {
     if (privkey_size != KEYSIZE_PRIVKEY)
       throw std::runtime_error {"Sodium::KeyPair::KeyPair(privkey_data, privkey_size) wrong privkey_size"};
     std::copy(privkey_data, privkey_data+privkey_size,
@@ -139,7 +139,7 @@ class KeyPair
    *   <SOME_KEYPAIR>.privkey().data(), <SOME_KEYPAIR>.privkey().size()
    **/
 
-  const Key privkey() const { return privkey_; }
+  const Key<KEYSIZE_PRIVKEY> privkey() const { return privkey_; }
 
   /**
    * Give const access to the stored public key as a data_t object.
@@ -152,8 +152,8 @@ class KeyPair
   const data_t pubkey() const { return pubkey_; }
   
  private:
-  data_t pubkey_;
-  Key    privkey_;
+  data_t               pubkey_;
+  Key<KEYSIZE_PRIVKEY> privkey_;
 };
 
 } // namespace Sodium

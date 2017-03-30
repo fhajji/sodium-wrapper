@@ -34,7 +34,7 @@ namespace Sodium {
 class StreamVerifierPK {
  public:
 
-  static constexpr std::size_t KEYSIZE_PUBKEY = Key::KEYSIZE_PUBKEY_SIGN;
+  static constexpr std::size_t KEYSIZE_PUBKEY = Sodium::KEYSIZE_PUBKEY_SIGN;
   static constexpr std::size_t SIGNATURE_SIZE = crypto_sign_BYTES;
 
   /**
@@ -101,9 +101,9 @@ class StreamVerifierPK {
 	      const data_t &signature);
   
  private:
-  data_t                pubkey_;
-  crypto_sign_state     state_;
-  std::size_t           blocksize_;
+  data_t            pubkey_;
+  crypto_sign_state state_;
+  std::size_t       blocksize_;
 };
 
 } // namespace Sodium

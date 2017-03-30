@@ -33,7 +33,7 @@ StreamHash::hash(std::istream &istr)
   data_t plaintext(blocksize_, '\0');
   data_t outHash(hashsize_);
 
-  if (key_.size() != 0)
+  if (! isKeyless_)
     crypto_generichash_init(&state_, key_.data(), key_.size(), hashsize_);
   else
     crypto_generichash_init(&state_, NULL, 0, hashsize_); // keyless
@@ -57,7 +57,7 @@ StreamHash::hash(std::istream &istr)
   crypto_generichash_final(&state_, outHash.data(), outHash.size());
 
   // reset state_, so can call hash() again
-  if (key_.size() != 0)
+  if (! isKeyless_)
     crypto_generichash_init(&state_, key_.data(), key_.size(), hashsize_);
   else
     crypto_generichash_init(&state_, NULL, 0, hashsize_); // keyless
@@ -75,7 +75,7 @@ StreamHash::hash(std::istream &istr,
 
   data_t plaintext(blocksize_, '\0');
 
-  if (key_.size() != 0)
+  if (! isKeyless_)
     crypto_generichash_init(&state_, key_.data(), key_.size(), hashsize_);
   else
     crypto_generichash_init(&state_, NULL, 0, hashsize_); // keyless
@@ -99,7 +99,7 @@ StreamHash::hash(std::istream &istr,
   crypto_generichash_final(&state_, outHash.data(), outHash.size());
 
   // reset state_, so can call hash() again
-  if (key_.size() != 0)
+  if (! isKeyless_)
     crypto_generichash_init(&state_, key_.data(), key_.size(), hashsize_);
   else
     crypto_generichash_init(&state_, NULL, 0, hashsize_); // keyless

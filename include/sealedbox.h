@@ -31,9 +31,9 @@ class SealedBox {
 
  public:
 
-  static constexpr std::size_t  KEYSIZE_PUBKEY      = Key::KEYSIZE_PUBKEY;
-  static constexpr std::size_t  KEYSIZE_PRIVKEY     = Key::KEYSIZE_PRIVKEY;
-  static constexpr std::size_t  SEALSIZE            = crypto_box_SEALBYTES;
+  static constexpr std::size_t KEYSIZE_PUBKEY  = Sodium::KEYSIZE_PUBKEY;
+  static constexpr std::size_t KEYSIZE_PRIVKEY = Sodium::KEYSIZE_PRIVKEY;
+  static constexpr std::size_t SEALSIZE        = crypto_box_SEALBYTES;
 
   /**
    * Encrypt plaintext using recipient's public key pubkey. Return
@@ -59,8 +59,8 @@ class SealedBox {
    * this function here.
    **/
 
-  data_t encrypt(const data_t  &plaintext,
-		 const data_t  &pubkey);
+  data_t encrypt(const data_t &plaintext,
+		 const data_t &pubkey);
 
   /**
    * Encrypt plaintext using recipient's public key part of
@@ -80,7 +80,7 @@ class SealedBox {
    * success.
    * 
    * The decryption can fail for two reasons:
-   *   - the ciphertext or the embedded MAC has been tampered with
+   *   - the ciphertext or the embedded MAC have been tampered with
    *   - the seal didn't match our private/public keypair.
    * In both cases, throw a std::runtime_error.
    * 
@@ -96,9 +96,9 @@ class SealedBox {
    *   - Sodium::KeyPair
    **/
   
-  data_t decrypt(const data_t  &ciphertext_with_seal,
-		 const Key     &privkey,
-		 const data_t  &pubkey);
+  data_t decrypt(const data_t               &ciphertext_with_seal,
+		 const Key<KEYSIZE_PRIVKEY> &privkey,
+		 const data_t               &pubkey);
 
   /**
    * Decrypt the sealed ciphertext with the private key part privkey,

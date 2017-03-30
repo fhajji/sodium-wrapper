@@ -39,8 +39,8 @@ bool
 test_hash_size(const std::string &plaintext,
 	       const std::size_t hashsize)
 {
-  Key  key    (Hash::KEYSIZE);
-  Hash hasher {};
+  Key<Hash::KEYSIZE> key;
+  Hash               hasher {};
   
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -63,8 +63,12 @@ test_key_size(const std::string &plaintext,
 	      const std::size_t keysize,
 	      bool  return_hash_as_value=true)
 {
-  Key  key    (keysize);
-  Hash hasher {};
+  // short-circuit/fail this test for now, because all hash keys are
+  // currently pegged at Hash::KEYSIZE.
+  BOOST_CHECK(keysize == Hash::KEYSIZE);
+  
+  Key<Hash::KEYSIZE> key;
+  Hash               hasher {};
 
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -91,9 +95,9 @@ test_key_size(const std::string &plaintext,
 bool
 test_different_keys(const std::string &plaintext)
 {
-  Key  key1   (Hash::KEYSIZE);
-  Key  key2   (Hash::KEYSIZE);
-  Hash hasher {};
+  Key<Hash::KEYSIZE> key1;
+  Key<Hash::KEYSIZE> key2;
+  Hash               hasher {};
 
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -254,8 +258,8 @@ BOOST_AUTO_TEST_CASE( sodium_hash_test_key_size_too_big_outHash )
 
 BOOST_AUTO_TEST_CASE( sodium_hash_test_falsify_plaintext )
 {
-  Key   key    (Hash::KEYSIZE);
-  Hash  hasher {};
+  Key<Hash::KEYSIZE> key;
+  Hash               hasher {};
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   data_t      plainblob { plaintext.cbegin(), plaintext.cend() };

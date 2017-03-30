@@ -37,15 +37,15 @@ test_of_correctness(const std::string &plaintext,
 		    bool falsify_ciphertext=false,
 		    bool falsify_mac=false)
 {
-  Cryptor sc    {};
-  Key     key   (Cryptor::KEYSIZE);
-  Nonce<> nonce {};
+  Cryptor               sc    {};
+  Key<Cryptor::KEYSIZE> key;
+  Nonce<>               nonce {};
 
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
 
   data_t ciphertext = sc.encrypt(plainblob, key, nonce);
 
-  BOOST_CHECK(ciphertext.size() == plainblob.size() + Cryptor::MACSIZE);
+  BOOST_CHECK(ciphertext.size() == Cryptor::MACSIZE + plainblob.size());
   
   if (! plaintext.empty() && falsify_ciphertext) {
     // ciphertext is of the form: (MAC || actual_ciphertext)
@@ -85,9 +85,9 @@ test_of_correctness_detached(const std::string &plaintext,
 			     bool falsify_ciphertext=false,
 			     bool falsify_mac=false)
 {
-  Cryptor sc    {};
-  Key     key   (Cryptor::KEYSIZE);
-  Nonce<> nonce {};
+  Cryptor               sc    {};
+  Key<Cryptor::KEYSIZE> key;
+  Nonce<>               nonce {};
 
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
   data_t mac(Cryptor::MACSIZE);
@@ -95,7 +95,6 @@ test_of_correctness_detached(const std::string &plaintext,
   data_t ciphertext = sc.encrypt(plainblob, key, nonce, mac);
 
   BOOST_CHECK(ciphertext.size() == plainblob.size());
-
   
   if (! plaintext.empty() && falsify_ciphertext)
     ++ciphertext[0]; // falsify ciphertext

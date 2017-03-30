@@ -46,8 +46,8 @@ BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture );
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_size )
 {
-  Auth sa {};                   // Secret Key Authenticator/Verifier
-  Key  key(Auth::KEYSIZE_AUTH); // Create a random key
+  Auth                    sa {}; // Secret Key Authenticator/Verifier
+  Key<Auth::KEYSIZE_AUTH> key;   // Create a random key
   
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -60,8 +60,8 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_size )
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_full )
 {
-  Auth sa {};
-  Key  key(Auth::KEYSIZE_AUTH);
+  Auth                    sa {};
+  Key<Auth::KEYSIZE_AUTH> key;
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -75,8 +75,8 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_full )
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_empty )
 {
-  Auth sa {};
-  Key  key(Auth::KEYSIZE_AUTH);
+  Auth                    sa {};
+  Key<Auth::KEYSIZE_AUTH> key;
 
   std::string plaintext {};
   data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_empty )
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_falsify_plaintext )
 {
   Auth sa {};
-  Key  key(Auth::KEYSIZE_AUTH);
+  Key<Auth::KEYSIZE_AUTH> key;
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_falsify_plaintext )
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_full_falsify_mac )
 {
   Auth sa {};
-  Key  key(Auth::KEYSIZE_AUTH);
+  Key<Auth::KEYSIZE_AUTH> key;
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_full_falsify_mac )
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_empty_falsify_mac )
 {
   Auth sa {};
-  Key  key(Auth::KEYSIZE_AUTH);
+  Key<Auth::KEYSIZE_AUTH> key;
 
   std::string plaintext {};
   data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_empty_falsify_mac )
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_full_falsify_key )
 {
   Auth sa {};
-  Key  key(Auth::KEYSIZE_AUTH);
+  Key<Auth::KEYSIZE_AUTH> key;
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_full_falsify_key )
   data_t      mac { sa.auth(plainblob, key) };
 
   // create another key
-  Key  key2(Auth::KEYSIZE_AUTH);
+  Key<Auth::KEYSIZE_AUTH> key2;
   BOOST_CHECK(key != key2); // very unlikely that they are equal!
   
   // the MAC must NOT verify with key2
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_full_falsify_key )
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_empty_falsify_key )
 {
   Auth sa {};
-  Key  key(Auth::KEYSIZE_AUTH);
+  Key<Auth::KEYSIZE_AUTH> key;
 
   std::string plaintext {};
   data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_empty_falsify_key )
   data_t      mac { sa.auth(plainblob, key) };
 
   // create another key
-  Key  key2(Auth::KEYSIZE_AUTH);
+  Key<Auth::KEYSIZE_AUTH> key2;
   BOOST_CHECK(key != key2); // very unlikely that they are equal!
   
   // the MAC must NOT verify with key2

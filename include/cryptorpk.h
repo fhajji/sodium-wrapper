@@ -31,8 +31,8 @@ class CryptorPK {
  public:
 
   static constexpr unsigned int NSZPK               = Sodium::NONCESIZE_PK;
-  static constexpr std::size_t  KEYSIZE_PUBKEY      = Key::KEYSIZE_PUBKEY;
-  static constexpr std::size_t  KEYSIZE_PRIVKEY     = Key::KEYSIZE_PRIVKEY;
+  static constexpr std::size_t  KEYSIZE_PUBKEY      = Sodium::KEYSIZE_PUBKEY;
+  static constexpr std::size_t  KEYSIZE_PRIVKEY     = Sodium::KEYSIZE_PRIVKEY;
   static constexpr std::size_t  MACSIZE             = crypto_box_MACBYTES;
 
   /**
@@ -60,17 +60,16 @@ class CryptorPK {
    * this is to increment nonce after or prior to each encrypt() invocation.
    * 
    * The public  key must be KEYSIZE_PUBKEY  bytes long
-   * The private key must be KEYSIZE_PRIVKEY bytes long
    * 
    * The (MAC || ciphertext) size is 
    *    MACSIZE + plaintext.size()
    * bytes long.
    **/
 
-  data_t encrypt(const data_t       &plaintext,
-		 const data_t       &pubkey,
-		 const Key          &privkey,
-		 const Nonce<NSZPK> &nonce);
+  data_t encrypt(const data_t               &plaintext,
+		 const data_t               &pubkey,
+		 const Key<KEYSIZE_PRIVKEY> &privkey,
+		 const Nonce<NSZPK>         &nonce);
 
   /**
    * Encrypt plaintext using recipient's public key, sign it using
@@ -98,14 +97,15 @@ class CryptorPK {
    * the one who she claims to be), decryption will fail and
    * this function with throw a std::runtime_error.
    *
-   * This function will also throw a std::runtime_error if the sizes
-   * of the keys or of the ciphertext don't make sense.
+   * This function will also throw a std::runtime_error if the size
+   * of the public key isn't KEYSIZE_PUBKEY, or if the ciphertext
+   * is even too small to hold the MAC (i.e. less than MACSIZE).
    **/
 
-  data_t decrypt(const data_t       &ciphertext_with_mac,
-		 const Key          &privkey,
-		 const data_t       &pubkey,
-		 const Nonce<NSZPK> &nonce);
+  data_t decrypt(const data_t               &ciphertext_with_mac,
+		 const Key<KEYSIZE_PRIVKEY> &privkey,
+		 const data_t               &pubkey,
+		 const Nonce<NSZPK>         &nonce);
 
   /**
    * Decrypt ciphertext using recipient's private key and nonce,

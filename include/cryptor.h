@@ -31,7 +31,7 @@ class Cryptor {
 
  public:
   static constexpr std::size_t NONCESIZE = Sodium::NONCESIZE_SECRETBOX;
-  static constexpr std::size_t KEYSIZE   = Key::KEYSIZE_SECRETBOX;
+  static constexpr std::size_t KEYSIZE   = Sodium::KEYSIZE_SECRETBOX;
   static constexpr std::size_t MACSIZE   = crypto_secretbox_MACBYTES;
   
   /**
@@ -42,9 +42,6 @@ class Cryptor {
    * helps detect tampering of the ciphertext and will also prevent
    * decryption.
    *
-   * This function will throw a std::runtime_error if the size of
-   * the key doesn't make sense.
-   *
    * To safely use this function, it is recommended that
    *   - NO value of nonce is EVER reused again with the same key
    * 
@@ -55,12 +52,12 @@ class Cryptor {
    * libsodium's randombytes_buf() may be good enough... but be careful
    * nonetheless.
    *
-   * The ciphertext is meant to be sent over the unsecure channel,
+   * The ciphertext is meant to be sent over the insecure channel,
    * and it too won't be stored in protected key_t memory.
    **/
 
   data_t encrypt(const data_t           &plaintext,
-		 const Key              &key,
+		 const Key<KEYSIZE>     &key,
 		 const Nonce<NONCESIZE> &nonce);
 
   /**
@@ -71,8 +68,8 @@ class Cryptor {
    * (detached mode). This helps detect tampering of the ciphertext
    * and will also prevent decryption.
    *
-   * This function will throw a std::runtime_error if the sizes of
-   * the key or mac don't make sense.
+   * This function will throw a std::runtime_error if the size of
+   * the mac isn't MACSIZE.
    *
    * To safely use this function, it is recommended that
    *   - NO value of nonce is EVER reused again with the same key
@@ -84,12 +81,12 @@ class Cryptor {
    * libsodium's randombytes_buf() may be good enough... but be careful
    * nonetheless.
    *
-   * The ciphertext and mac are meant to be sent over the unsecure
+   * The ciphertext and mac are meant to be sent over the insecure
    * channel, and they too won't be stored in protected key_t memory.
    **/
   
   data_t encrypt(const data_t           &plaintext,
-		 const Key              &key,
+		 const Key<KEYSIZE>     &key,
 		 const Nonce<NONCESIZE> &nonce,
 		 data_t                 &mac);
   
@@ -101,12 +98,12 @@ class Cryptor {
    * If the ciphertext has been tampered with, decryption will fail and
    * this function with throw a std::runtime_error.
    *
-   * This function will also throw a std::runtime_error if the sizes of
-   * the key or ciphertext don't make sense.
+   * This function will also throw a std::runtime_error if the size of
+   * the ciphertext is too small to even contain the MAC (MACSIZE bytes).
    **/
 
   data_t decrypt(const data_t           &ciphertext,
-		 const Key              &key,
+		 const Key<KEYSIZE>     &key,
 		 const Nonce<NONCESIZE> &nonce);
 
   /**
@@ -119,13 +116,13 @@ class Cryptor {
    * If the ciphertext has been tampered with, decryption will fail and
    * this function with throw a std::runtime_error.
    *
-   * This function will also throw a std::runtime_error if the sizes of
-   * the key or mac don't make sense.
+   * This function will also throw a std::runtime_error if the size of
+   * the mac isn't MACSIZE.
    **/
   
   data_t decrypt(const data_t           &ciphertext,
 		 const data_t           &mac,
-		 const Key              &key,
+		 const Key<KEYSIZE>     &key,
 		 const Nonce<NONCESIZE> &nonce);
 
 };

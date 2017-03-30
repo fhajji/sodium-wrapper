@@ -24,7 +24,7 @@ bool operator== (const KeyPairSign &kp1, const KeyPairSign &kp2)
 {
   return (kp1.pubkey() == kp2.pubkey()     // std::vector::operator==()
 	  &&
-	  kp1.privkey() == kp2.privkey()); // Sodium::Key::operator==()
+	  kp1.privkey() == kp2.privkey()); // Sodium::Key<KEYSIZE_PRIVKEY>::operator==()
 }
 
 bool operator!= (const KeyPairSign &kp1, const KeyPairSign &kp2)

@@ -36,6 +36,11 @@ class StreamCryptor {
  public:
 
   /**
+   * We encrypt with AEAD.
+   **/
+  constexpr static std::size_t KEYSIZE = Sodium::KEYSIZE_AEAD;
+  
+  /**
    * Each block of plaintext will be encrypted to a block of the same
    * size of ciphertext, combined with a MAC of size MACSIZE.  Note
    * that the total blocksize of the (MAC || ciphertext)s will be
@@ -53,7 +58,7 @@ class StreamCryptor {
    * data is for each block an empty header. Each block is encrypted
    * with the same key, but with a monotonically incremented nonce.
    * 
-   * The constructor saves a copy of the key of Key::KEYSIZE_AEAD bytes,
+   * The constructor saves a copy of the key of KEYSIZE bytes,
    * and a copy of a Nonce<NONCESIZE_AEAD> for later use in its internal
    * state. Furthermore, it also saves the desired blocksize that will
    * be used for both encryption and decryption of the streams.
@@ -62,13 +67,11 @@ class StreamCryptor {
    * the constructor throws a std::runtime_error.
    **/
   
- StreamCryptor(const Key &key,
+ StreamCryptor(const Key<KEYSIZE> &key,
 	       const Nonce<NONCESIZE_AEAD> &nonce,
 	       const std::size_t blocksize) :
   key_ {key}, nonce_ {nonce}, header_ {}, blocksize_ {blocksize} {
     // some sanity checks, before we start
-    if (key.size() != Key::KEYSIZE_AEAD)
-      throw std::runtime_error {"Sodium::StreamCryptor::StreamCryptor(): wrong key size"};
     if (blocksize < 1)
       throw std::runtime_error {"Sodium::StreamCryptor::StreamCryptor(): wrong blocksize"};
     key_.readonly();
@@ -145,7 +148,7 @@ class StreamCryptor {
   void decrypt(std::istream &istr, std::ostream &ostr);
   
  private:
-  Key                   key_;
+  Key<KEYSIZE>          key_;
   Nonce<NONCESIZE_AEAD> nonce_;
   data_t                header_;
   std::size_t           blocksize_;

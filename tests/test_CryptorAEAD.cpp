@@ -26,6 +26,10 @@
 #include "nonce.h"
 #include <string>
 
+using Sodium::Key;
+using Sodium::Nonce;
+using Sodium::CryptorAEAD;
+
 using data_t = Sodium::data_t;
 
 bool
@@ -35,9 +39,9 @@ test_of_correctness(const std::string &header,
 		    bool falsify_header = false,
 		    bool falsify_ciphertext = false)
 {
-  Sodium::CryptorAEAD                   sc {};
-  Sodium::Key                           key(Sodium::Key::KEYSIZE_AEAD);
-  Sodium::Nonce<Sodium::NONCESIZE_AEAD> nonce {};
+  CryptorAEAD                   sc {};
+  Key<CryptorAEAD::KEYSIZE>     key;
+  Nonce<Sodium::NONCESIZE_AEAD> nonce {};
 
   data_t plainblob    {plaintext.cbegin(), plaintext.cend()};
   data_t headerblob   {header.cbegin(), header.cend()};
@@ -101,7 +105,7 @@ BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_full_plaintext_full_header )
   std::size_t csize;
 
   BOOST_CHECK(test_of_correctness(header, plaintext, csize, false, false));
-  BOOST_CHECK_EQUAL(csize, plaintext.size() + Sodium::CryptorAEAD::MACSIZE);
+  BOOST_CHECK_EQUAL(csize, plaintext.size() + CryptorAEAD::MACSIZE);
 }
 
 BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_full_plaintext_empty_header )
@@ -111,7 +115,7 @@ BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_full_plaintext_empty_header )
   std::size_t csize;
 
   BOOST_CHECK(test_of_correctness(header, plaintext, csize, false, false));
-  BOOST_CHECK_EQUAL(csize, plaintext.size() + Sodium::CryptorAEAD::MACSIZE);
+  BOOST_CHECK_EQUAL(csize, plaintext.size() + CryptorAEAD::MACSIZE);
 }
 
 BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_empty_plaintext_full_header )
@@ -121,7 +125,7 @@ BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_empty_plaintext_full_header )
   std::size_t csize;
 
   BOOST_CHECK(test_of_correctness(header, plaintext, csize, false, false));
-  BOOST_CHECK_EQUAL(csize, plaintext.size() + Sodium::CryptorAEAD::MACSIZE);
+  BOOST_CHECK_EQUAL(csize, plaintext.size() + CryptorAEAD::MACSIZE);
 }
 
 BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_empty_plaintext_empty_header )
@@ -131,7 +135,7 @@ BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_empty_plaintext_empty_header )
   std::size_t csize;
 
   BOOST_CHECK(test_of_correctness(header, plaintext, csize, false, false));
-  BOOST_CHECK_EQUAL(csize, plaintext.size() + Sodium::CryptorAEAD::MACSIZE);
+  BOOST_CHECK_EQUAL(csize, plaintext.size() + CryptorAEAD::MACSIZE);
 }
 
 BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_empty_plaintext_falsify_header )
@@ -141,7 +145,7 @@ BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_empty_plaintext_falsify_header )
   std::size_t csize;
 
   BOOST_CHECK(! test_of_correctness(header, plaintext, csize, true, false));
-  BOOST_CHECK_EQUAL(csize, plaintext.size() + Sodium::CryptorAEAD::MACSIZE);
+  BOOST_CHECK_EQUAL(csize, plaintext.size() + CryptorAEAD::MACSIZE);
 }
 
 BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_full_plaintext_falsify_header )
@@ -151,7 +155,7 @@ BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_full_plaintext_falsify_header )
   std::size_t csize;
 
   BOOST_CHECK(! test_of_correctness(header, plaintext, csize, true, false));
-  BOOST_CHECK_EQUAL(csize, plaintext.size() + Sodium::CryptorAEAD::MACSIZE);
+  BOOST_CHECK_EQUAL(csize, plaintext.size() + CryptorAEAD::MACSIZE);
 }
 
 BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_falsify_plaintext_empty_header )
@@ -161,7 +165,7 @@ BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_falsify_plaintext_empty_header )
   std::size_t csize;
 
   BOOST_CHECK(! test_of_correctness(header, plaintext, csize, false, true));
-  BOOST_CHECK_EQUAL(csize, plaintext.size() + Sodium::CryptorAEAD::MACSIZE);
+  BOOST_CHECK_EQUAL(csize, plaintext.size() + CryptorAEAD::MACSIZE);
 }
 
 BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_falsify_plaintext_full_header )
@@ -171,7 +175,7 @@ BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_falsify_plaintext_full_header )
   std::size_t csize;
 
   BOOST_CHECK(! test_of_correctness(header, plaintext, csize, false, true));
-  BOOST_CHECK_EQUAL(csize, plaintext.size() + Sodium::CryptorAEAD::MACSIZE);
+  BOOST_CHECK_EQUAL(csize, plaintext.size() + CryptorAEAD::MACSIZE);
 }
 
 BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_falsify_plaintext_falsify_header )
@@ -181,12 +185,12 @@ BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_falsify_plaintext_falsify_header )
   std::size_t csize;
 
   BOOST_CHECK(! test_of_correctness(header, plaintext, csize, true, true));
-  BOOST_CHECK_EQUAL(csize, plaintext.size() + Sodium::CryptorAEAD::MACSIZE);
+  BOOST_CHECK_EQUAL(csize, plaintext.size() + CryptorAEAD::MACSIZE);
 }
 
 BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_big_header )
 {
-  std::string header(Sodium::CryptorAEAD::MACSIZE * 200, 'A');
+  std::string header(CryptorAEAD::MACSIZE * 200, 'A');
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   std::size_t csize;
 
@@ -196,9 +200,9 @@ BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_big_header )
   // It is the responsability of the user to transmit the header
   // separately from the ciphertext, i.e. to tag it along.
   
-  BOOST_CHECK_EQUAL(header.size(), Sodium::CryptorAEAD::MACSIZE * 200);
+  BOOST_CHECK_EQUAL(header.size(), CryptorAEAD::MACSIZE * 200);
   BOOST_CHECK(test_of_correctness(header, plaintext, csize, false, false));
-  BOOST_CHECK_EQUAL(csize, plaintext.size() + Sodium::CryptorAEAD::MACSIZE);
+  BOOST_CHECK_EQUAL(csize, plaintext.size() + CryptorAEAD::MACSIZE);
 
   // However, a modification of the header WILL be detected.
   // We modify only the 0-th byte right now, but a modification

@@ -29,9 +29,9 @@ namespace Sodium {
 class Hash {
 
  public:
-  static constexpr std::size_t KEYSIZE      = Key::KEYSIZE_HASHKEY;
-  static constexpr std::size_t KEYSIZE_MIN  = Key::KEYSIZE_HASHKEY_MIN;
-  static constexpr std::size_t KEYSIZE_MAX  = Key::KEYSIZE_HASHKEY_MAX;
+  static constexpr std::size_t KEYSIZE      = Sodium::KEYSIZE_HASHKEY;
+  static constexpr std::size_t KEYSIZE_MIN  = Sodium::KEYSIZE_HASHKEY_MIN;
+  static constexpr std::size_t KEYSIZE_MAX  = Sodium::KEYSIZE_HASHKEY_MAX;
   static constexpr std::size_t HASHSIZE     = crypto_generichash_BYTES;
   static constexpr std::size_t HASHSIZE_MIN = crypto_generichash_BYTES_MIN;
   static constexpr std::size_t HASHSIZE_MAX = crypto_generichash_BYTES_MAX;
@@ -51,10 +51,12 @@ class Hash {
    * the key will very likely result in a different hash.
    *
    * The computed and returned hash will be hashsize bytes long.
+   *
+   * CAUTION: Currently, key size is pegged at KEYSIZE.
    **/
   
   data_t hash(const data_t       &plaintext,
-	      const Key          &key,
+	      const Key<KEYSIZE> &key,
 	      const std::size_t  hashsize=HASHSIZE);
 
   /**
@@ -87,11 +89,13 @@ class Hash {
    * The same plaintext with the same key and same desired hashsize
    * will always result in same hash. All things being equal, changing
    * the key will very likely result in a different hash.
+   * 
+   * CAUTION: Currently, key size is pegged at KEYSIZE.
    **/
 
-  void   hash(const data_t &plaintext,
-	      const Key    &key,
-	      data_t       &outHash);
+  void   hash(const data_t       &plaintext,
+	      const Key<KEYSIZE> &key,
+	      data_t             &outHash);
 
   /**
    * Hash a plaintext into a hash of the size outHash.size().

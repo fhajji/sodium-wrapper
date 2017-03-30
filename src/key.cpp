@@ -20,15 +20,5 @@
 
 using Sodium::Key;
 
-bool operator== (const Key &k1, const Key &k2)
-{
-  return (k1.size() == k2.size())
-    &&
-  std::equal(k1.data(), k1.data() + k1.size(),
-	     k2.data());
-}
-
-bool operator!= (const Key &k1, const Key &k2)
-{
-  return (! (k1 == k2));
-}
+// moved code to "key.h"
+// key.cpp is scheduled for removal.

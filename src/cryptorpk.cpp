@@ -31,16 +31,14 @@ using Sodium::KeyPair;
 using Sodium::Nonce;
 
 data_t
-CryptorPK::encrypt (const data_t       &plaintext,
-		    const data_t       &pubkey,
-		    const Key          &privkey,
-		    const Nonce<NSZPK> &nonce)
+CryptorPK::encrypt (const data_t               &plaintext,
+		    const data_t               &pubkey,
+		    const Key<KEYSIZE_PRIVKEY> &privkey,
+		    const Nonce<NSZPK>         &nonce)
 {
   // some sanity checks before we get started
   if (pubkey.size() != CryptorPK::KEYSIZE_PUBKEY)
     throw std::runtime_error {"Sodium::CryptorPK::encrypt() wrong pubkey size"};
-  if (privkey.size() != CryptorPK::KEYSIZE_PRIVKEY)
-    throw std::runtime_error {"Sodium::CryptorPK::encrypt() wrong privkey size"};
 
   // make space for MAC and encrypted message, i.e. for (MAC || encrypted)
   data_t ciphertext_with_mac(CryptorPK::MACSIZE + plaintext.size());
@@ -78,16 +76,14 @@ CryptorPK::encrypt (const data_t       &plaintext,
 }
 
 data_t
-CryptorPK::decrypt (const data_t       &ciphertext_with_mac,
-		    const Key          &privkey,
-		    const data_t       &pubkey,
-		    const Nonce<NSZPK> &nonce)
+CryptorPK::decrypt (const data_t               &ciphertext_with_mac,
+		    const Key<KEYSIZE_PRIVKEY> &privkey,
+		    const data_t               &pubkey,
+		    const Nonce<NSZPK>         &nonce)
 {
   // some sanity checks before we get started
   if (ciphertext_with_mac.size() < CryptorPK::MACSIZE)
     throw std::runtime_error {"CryptorPK::decrypt() ciphertext too small for MAC"};
-  if (privkey.size() != KEYSIZE_PRIVKEY)
-    throw std::runtime_error {"CryptorPK::decrypt() privkey wrong size"};
   if (pubkey.size()  != KEYSIZE_PUBKEY)
     throw std::runtime_error {"CryptorPK::decrypt() pubkey wrong size"};
 

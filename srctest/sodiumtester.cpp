@@ -82,7 +82,7 @@ std::string
 SodiumTester::test0(const std::string &plaintext)
 {  
   Cryptor sc {};                       // encryptor, decryptor.
-  Key     key(Key::KEYSIZE_SECRETBOX); // create random key
+  Key<Sodium::KEYSIZE_SECRETBOX> key;  // create random key
   Nonce<> nonce {};                    // create random nonce;
   
   // transfer plaintext into a binary blob
@@ -132,8 +132,8 @@ SodiumTester::test0(const std::string &plaintext)
 bool
 SodiumTester::test1(const std::string &plaintext)
 {
-  Auth sa {};                   // Secret Key Authenticator/Verifier
-  Key  key(Auth::KEYSIZE_AUTH); // Create a random key
+  Auth sa {};                  // Secret Key Authenticator/Verifier
+  Key<Auth::KEYSIZE_AUTH> key; // Create a random key
   
   // transfer plaintext into a binary blob
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -183,10 +183,9 @@ SodiumTester::test2(const std::string &plaintext,
 		    const std::string &pw1,
 		    const std::string &pw2)
 {
-  Cryptor         sc {};                       // encryptor, decryptor.
-  Key             key(Key::KEYSIZE_SECRETBOX,
-		      false);                  // uninitialized, r/w for now
-  Sodium::Nonce<> nonce {};
+  Cryptor                        sc {};      // encryptor, decryptor.
+  Key<Sodium::KEYSIZE_SECRETBOX> key(false); // uninitialized, r/w for now
+  Sodium::Nonce<>                nonce {};
 
   // random salt, needed by the key derivation function.
   // NOTE: can't move this into Key::setpass(),
@@ -195,20 +194,20 @@ SodiumTester::test2(const std::string &plaintext,
   // the salt in setpass() randomly, users would have no
   // way to recreate the key -- that would be throw-away
   // use-once keys.
-  data_t salt(Key::KEYSIZE_SALT);
+  data_t salt(Sodium::KEYSIZE_SALT);
   randombytes_buf(salt.data(), salt.size());
 
   // transfer plaintext into a binary blob
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // try the first key
-  key.setpass(pw1, salt, Key::strength_t::medium);
+  key.setpass(pw1, salt, Key<Sodium::KEYSIZE_SECRETBOX>::strength_t::medium);
   
   // now encrypt with that key
   data_t ciphertext = sc.encrypt(plainblob, key, nonce);
 
   // try the second key
-  key.setpass(pw2, salt, Key::strength_t::medium);
+  key.setpass(pw2, salt, Key<Sodium::KEYSIZE_SECRETBOX>::strength_t::medium);
   
   // now decrypt with that new key.
   // if the key/password was different, we will throw right here and now
@@ -327,7 +326,7 @@ SodiumTester::test4(const std::string &plaintext,
 		    const std::string &header)
 {
   CryptorAEAD                   sc_aead {};
-  Key                           key(Key::KEYSIZE_AEAD);
+  Key<Sodium::KEYSIZE_AEAD>     key;
   Nonce<Sodium::NONCESIZE_AEAD> nonce {};
 
   std::ostringstream os; // to collect output
@@ -336,7 +335,7 @@ SodiumTester::test4(const std::string &plaintext,
   // check at compile time that we got the right size of the Nonce
   static_assert(nonce.size() == Sodium::NONCESIZE_AEAD,
 		"SodiumTester::test4() wrong nonce size");
-
+  
   // transfer plaintext and header into binary blobs
   data_t plainblob  {plaintext.cbegin(), plaintext.cend()};
   data_t headerblob {header.cbegin(), header.cend()};
@@ -514,9 +513,9 @@ SodiumTester::test4(const std::string &plaintext,
 bool
 SodiumTester::test5(const std::string &filename)
 {
-  std::size_t                              MYBLKSIZE = 1024;
+  std::size_t                   MYBLKSIZE = 1024;
   
-  Key                           key        (Key::KEYSIZE_AEAD);
+  Key<Sodium::KEYSIZE_AEAD>     key;
   Nonce<Sodium::NONCESIZE_AEAD> nonce      {};
   StreamCryptor                 strm_crypt (key, nonce, MYBLKSIZE);
 
@@ -561,8 +560,8 @@ SodiumTester::test6(const std::string &filename)
 {
   std::size_t                   MYBLKSIZE  = 1024;
   
-  Key                           key        (Key::KEYSIZE_AEAD);
-  Key                           hashkey    (FileCryptor::HASHKEYSIZE);
+  Key<Sodium::KEYSIZE_AEAD>     key;
+  Key<FileCryptor::HASHKEYSIZE> hashkey;
   Nonce<Sodium::NONCESIZE_AEAD> nonce      {};
   FileCryptor                   file_crypt (key, nonce, MYBLKSIZE,
 					    hashkey, FileCryptor::HASHSIZE);

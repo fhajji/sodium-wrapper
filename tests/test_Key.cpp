@@ -1,4 +1,4 @@
-// test_Key.cpp -- Test Sodium::Key
+// test_Key.cpp -- Test Sodium::Key<>
 //
 // ISC License
 // 
@@ -46,13 +46,13 @@
 using Sodium::Key;
 using data_t = Sodium::data_t;
 
-static constexpr std::size_t ks1     = Key::KEYSIZE_SECRETBOX;
-static constexpr std::size_t ks2     = Key::KEYSIZE_AUTH;
-static constexpr std::size_t ks3     = Key::KEYSIZE_AEAD;
-static constexpr std::size_t ks_salt = Key::KEYSIZE_SALT;
-static constexpr std::size_t ks_pub  = Key::KEYSIZE_PUBKEY;
-static constexpr std::size_t ks_priv = Key::KEYSIZE_PRIVKEY;
-static constexpr std::size_t ks_seed = Key::KEYSIZE_SEEDBYTES;
+static constexpr std::size_t ks1     = Sodium::KEYSIZE_SECRETBOX;
+static constexpr std::size_t ks2     = Sodium::KEYSIZE_AUTH;
+static constexpr std::size_t ks3     = Sodium::KEYSIZE_AEAD;
+static constexpr std::size_t ks_salt = Sodium::KEYSIZE_SALT;
+static constexpr std::size_t ks_pub  = Sodium::KEYSIZE_PUBKEY;
+static constexpr std::size_t ks_priv = Sodium::KEYSIZE_PRIVKEY;
+static constexpr std::size_t ks_seed = Sodium::KEYSIZE_SEEDBYTES;
 
 bool isAllZero(const unsigned char *bytes, const std::size_t &size)
 {
@@ -70,18 +70,20 @@ bool isSameBytes(const unsigned char *bytes1, const std::size_t &size1,
 		    bytes2);
 }
 
-void selectKey(const Key &key)
+template <std::size_t KEYSIZE>
+void selectKey(const Key<KEYSIZE> &key)
 {
-  BOOST_TEST_MESSAGE("selectKey(const Key &) invoked");
+  BOOST_TEST_MESSAGE("selectKey(const Key<KEYSIZE> &) invoked");
 
   BOOST_CHECK(key.size() != 0);
 }
 
-void selectKey(Key &&key)
+template <std::size_t KEYSIZE>
+void selectKey(Key<KEYSIZE> &&key)
 {
-  BOOST_TEST_MESSAGE("selectKey(Key &&) invoked");
+  BOOST_TEST_MESSAGE("selectKey(Key<KEYSIZE> &&) invoked");
 
-  Key internalKey {std::move(key)}; // pilfer resources from parameter
+  Key<KEYSIZE> internalKey {std::move(key)}; // pilfer resources from parameter
   
   BOOST_CHECK(internalKey.size() != 0);
   BOOST_CHECK(key.size() == 0); // key is now an empty shell
@@ -101,7 +103,7 @@ BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture );
 
 BOOST_AUTO_TEST_CASE( sodium_test_key_size )
 {
-  Key key(ks1);
+  Key<ks1> key;
 
   BOOST_CHECK_EQUAL(key.size(), ks1);
   BOOST_CHECK(! isAllZero(key.data(), key.size()));
@@ -109,7 +111,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_key_size )
 
 BOOST_AUTO_TEST_CASE( sodium_test_key_noinit )
 {
-  Key key(ks2, false);
+  Key<ks2> key {false};
 
   BOOST_CHECK(isAllZero(key.data(), key.size()));
   BOOST_CHECK_EQUAL(key.size(), ks2);
@@ -122,20 +124,20 @@ BOOST_AUTO_TEST_CASE( sodium_test_key_noinit )
 
 BOOST_AUTO_TEST_CASE( sodium_test_key_init )
 {
-  Key key(ks2);
+  Key<ks2> key;
 
   BOOST_CHECK(! isAllZero(key.data(), key.size()));
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_key_copy_ctor )
 {
-  Key key(ks_salt);
+  Key<ks_salt> key;
 
   // we MUST NOT remove access to key prior to copy c'tor,
   // or we'll crash the program here:
   // key.noaccess();
   
-  Key key_copy(key); // copy c'tor
+  Key<ks_salt> key_copy(key); // copy c'tor
 
   // restore access to key for further testing:
   // key.readonly();
@@ -151,8 +153,8 @@ BOOST_AUTO_TEST_CASE( sodium_test_key_copy_ctor )
 
 BOOST_AUTO_TEST_CASE( sodium_test_key_copy_assign )
 {
-  Key key(ks3);
-  Key key_copy(ks3, false); // no init
+  Key<ks3> key;
+  Key<ks3> key_copy {false}; // no init
 
   auto key_copy_data = key_copy.data(); // address
   
@@ -201,12 +203,12 @@ BOOST_AUTO_TEST_CASE( sodium_test_key_setpass )
   std::string pw1 { "CPE1704TKS" };
   std::string pw2 { "12345" };
 
-  Key key1(ks3, false);
-  key1.setpass(pw1, salt1, Key::strength_t::medium);
+  Key<ks3> key1 {false};
+  key1.setpass(pw1, salt1, Key<ks3>::strength_t::medium);
   BOOST_CHECK(! isAllZero(key1.data(), key1.size()));
   
-  Key key2(ks3, false);
-  key2.setpass(pw1, salt1, Key::strength_t::medium);
+  Key<ks3> key2 {false};
+  key2.setpass(pw1, salt1, Key<ks3>::strength_t::medium);
   BOOST_CHECK(! isAllZero(key2.data(), key2.size()));
 
   // invoking setpass() with the same parameters must yield the
@@ -216,7 +218,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_key_setpass )
   
   // invoking setpass() with different password must yield
   // different bytes
-  key2.setpass(pw2, salt1, Key::strength_t::medium);
+  key2.setpass(pw2, salt1, Key<ks3>::strength_t::medium);
   BOOST_CHECK(! isAllZero(key2.data(), key2.size()));
   
   BOOST_CHECK(! isSameBytes(key1.data(), key1.size(),
@@ -226,7 +228,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_key_setpass )
   // must yield different bytes
   data_t salt2(ks_salt);
   randombytes_buf(salt2.data(), salt2.size());
-  key2.setpass(pw1, salt2, Key::strength_t::medium);
+  key2.setpass(pw1, salt2, Key<ks3>::strength_t::medium);
   BOOST_CHECK(! isAllZero(key2.data(), key2.size()));
   
   BOOST_CHECK(! isSameBytes(key1.data(), key1.size(),
@@ -234,20 +236,20 @@ BOOST_AUTO_TEST_CASE( sodium_test_key_setpass )
 
   // invoking setpass() with same password, same salt, but
   // different strength, must yield different bytes
-  key2.setpass(pw1, salt1, Key::strength_t::low);
+  key2.setpass(pw1, salt1, Key<ks3>::strength_t::low);
   BOOST_CHECK(! isAllZero(key2.data(), key2.size()));
   
   BOOST_CHECK(! isSameBytes(key1.data(), key1.size(),
 			    key2.data(), key2.size()));
 
   // try memory / cpu intensive key generation (patience...)
-  key2.setpass(pw1, salt1, Key::strength_t::high);
+  key2.setpass(pw1, salt1, Key<ks3>::strength_t::high);
   BOOST_CHECK(! isAllZero(key2.data(), key2.size()));
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_key_destroy )
 {
-  Key key(ks1);
+  Key<ks1> key;
 
   BOOST_CHECK(! isAllZero(key.data(), key.size()));
   BOOST_CHECK_EQUAL(key.size(), ks1);
@@ -260,22 +262,31 @@ BOOST_AUTO_TEST_CASE( sodium_test_key_destroy )
 
 BOOST_AUTO_TEST_CASE( sodium_test_key_empty_key )
 {
-  Key key; // default constructor: empty key with 0 bytes.
+  Key<> key(false);  // default constructor: empty key with 0 bytes.
 
+  // XXX: an empty key MUST be created with false, so that it
+  // remains readwrite(). Calling it without arguments will
+  // try a readonly(), which will crash the program with a
+  // "no mapping at fault address" (because mprotect() on a
+  // 0-page won't work).
+
+  // We need a template specialization for Key<> that handles
+  // this case separately...
+  
   BOOST_CHECK_EQUAL(key.size(), 0);
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_key_move_ctor )
 {
-  Key key      (ks1);            // create random key
+  Key<ks1> key;                       // create random key
   auto key_data = key.data();
 
-  Key key_copy {key};            // copy c'tor
+  Key<ks1> key_copy {key};            // copy c'tor
 
   // it doesn't harm to remove access prior to move c'tor...
   key.noaccess();
   
-  Key key_move {std::move(key)}; // move c'tor, key is now invalid
+  Key<ks1> key_move {std::move(key)}; // move c'tor, key is now invalid
   auto key_move_data = key_move.data();
   
   // ... provided that we restored it to the target for more
@@ -294,20 +305,23 @@ BOOST_AUTO_TEST_CASE( sodium_test_key_move_ctor )
   BOOST_CHECK_EQUAL(key.size(), 0);
 
   // another way to test for empty keys:
-  Key key_empty;
+  Key<> key_empty(false);
   BOOST_CHECK(key == key_empty);
 
+  // XXX: even if ks1 != 0, key == key_empty after they have been
+  // both emptied?
+  
   // both key and key_move had the same key_t representation in memory
   BOOST_CHECK(key_data == key_move_data);
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_key_move_assignment )
 {
-  Key key      (ks1);       // create random key
+  Key<ks1> key;                  // create random key
   auto key_data = key.data();
   
-  Key key_copy {key};       // copy c'tor
-  Key key2     (ks2);       // create another random key, even diff size
+  Key<ks1> key_copy {key};       // copy c'tor
+  Key<ks1> key2;                 // create another random key
   auto key2_data = key2.data();
   
   // it doesn't harm to remove access prior to move assignemnt...
@@ -332,8 +346,8 @@ BOOST_AUTO_TEST_CASE( sodium_test_key_move_assignment )
   BOOST_CHECK_EQUAL(key.size(), 0);
 
   // another way to test for empty keys:
-  Key key_empty;
-  BOOST_CHECK(key == key_empty);
+  Key<> key_empty(false);
+  BOOST_CHECK(key == key_empty); // XXX
 
   // both key and key2 had the same key_t representation in memory
   BOOST_CHECK(key_data == key2_data_new);
@@ -341,7 +355,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_key_move_assignment )
 
 BOOST_AUTO_TEST_CASE( sodium_test_key_std_move_doesnt_empty_key )
 {
-  Key key (ks1);
+  Key<ks1> key;
 
   BOOST_CHECK(key.size() != 0);
 
@@ -351,11 +365,11 @@ BOOST_AUTO_TEST_CASE( sodium_test_key_std_move_doesnt_empty_key )
   // If we don't explicitely do something that invokes
   // a Key move constructor as in
   // 
-  //      Key newKey {std::move(key)};
+  //      Key<SIZE> newKey {std::move(key)};
   //
   // or a Key move assignment operator, as in
   // 
-  //      Key newKey = std::move(key);
+  //      Key<SIZE> newKey = std::move(key);
   //
   // key itself will remain untouched and unharmed:
   
@@ -365,7 +379,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_key_std_move_doesnt_empty_key )
 
 BOOST_AUTO_TEST_CASE( sodium_test_key_select_copy_or_move )
 {
-  Key key (ks1);
+  Key<ks1> key;
 
   // interestingly, this doesn't generate a new key_t allocation:
   selectKey(key);            // calls selectKey(const Key &);
@@ -376,7 +390,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_key_select_copy_or_move )
   // after emptying key of its resources, selectKey(Key &&) has left
   // key as an empty shell:
   
-  Key key_empty;
+  Key<> key_empty(false);
   BOOST_CHECK(key.size() == 0);
   BOOST_CHECK(key == key_empty);
 

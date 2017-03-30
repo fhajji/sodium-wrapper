@@ -27,9 +27,10 @@ using Sodium::SealedBox;
 using Sodium::Key;
 
 data_t
-SealedBox::encrypt(const data_t  &plaintext,
-		   const data_t  &pubkey)
+SealedBox::encrypt(const data_t &plaintext,
+		   const data_t &pubkey)
 {
+  // some sanity checks before we get started
   if (pubkey.size() != KEYSIZE_PUBKEY)
     throw std::runtime_error {"Sodium::SealedBox::encrypt() wrong pubkey size"};
   
@@ -42,11 +43,10 @@ SealedBox::encrypt(const data_t  &plaintext,
 }
 
 data_t
-SealedBox::decrypt(const data_t  &ciphertext_with_seal,
-		   const Key     &privkey,
-		   const data_t  &pubkey) {
-  if (privkey.size() != KEYSIZE_PRIVKEY)
-    throw std::runtime_error {"Sodium::SealedBox::decrypt() wrong privkey size"};
+SealedBox::decrypt(const data_t               &ciphertext_with_seal,
+		   const Key<KEYSIZE_PRIVKEY> &privkey,
+		   const data_t               &pubkey) {
+  // some sanity checks before we get started
   if (pubkey.size() != KEYSIZE_PUBKEY)
     throw std::runtime_error {"Sodium::SealedBox::decrypt() wrong pubkey size"};
   if (ciphertext_with_seal.size() < SEALSIZE)

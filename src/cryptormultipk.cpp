@@ -30,16 +30,13 @@ using Sodium::Key;
 using Sodium::Nonce;
 
 void
-CryptorMultiPK::set_shared_key (const Key    &privkey,
-				const data_t &pubkey)
+CryptorMultiPK::set_shared_key (const Key<KEYSIZE_PRIVKEY> &privkey,
+				const data_t               &pubkey)
 {
   // some sanity checks before we get started
   if (pubkey.size() != KEYSIZE_PUBKEY)
     throw std::runtime_error {"Sodium::CryptorMultiPK::initkey() wrong pubkey size"};
-  
-  if (privkey.size() != KEYSIZE_PRIVKEY)
-    throw std::runtime_error {"Sodium::CryptorMultiPK::initkey() wrong privkey size"};
-  
+    
   // now, ready to go
   shared_key_.readwrite();
   if (crypto_box_beforenm(shared_key_.setdata(),
@@ -61,7 +58,7 @@ CryptorMultiPK::encrypt(const data_t       &plaintext,
     throw std::runtime_error {"CryptorMultiPK::encrypt() shared key not ready"};
 
   // make space for ciphertext, i.e. for (MAC || encrypted)
-  data_t ciphertext(plaintext.size() + MACSIZE);
+  data_t ciphertext(MACSIZE + plaintext.size());
 
   // and now, encrypt!
   if (crypto_box_easy_afternm(ciphertext.data(),

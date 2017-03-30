@@ -28,22 +28,13 @@ using Sodium::Key;
 using Sodium::Nonce;
 
 data_t
-CryptorAEAD::encrypt (const data_t      &header,
-		      const data_t      &plaintext,
-		      const Key         &key,
-		      const Nonce<NSZA> &nonce)
+CryptorAEAD::encrypt (const data_t       &header,
+		      const data_t       &plaintext,
+		      const Key<KEYSIZE> &key,
+		      const Nonce<NSZA>  &nonce)
 {
-  // get the sizes
-  const std::size_t ciphertext_size =
-    plaintext.size() + CryptorAEAD::MACSIZE;
-  const std::size_t key_size        = Key::KEYSIZE_AEAD;
-
-  // some sanity checks before we get started
-  if (key.size() != key_size)
-    throw std::runtime_error {"Sodium::CryptorAEAD::encrypt() wrong key size"};
-
   // make space for MAC and encrypted message, i.e. (MAC || encrypted)
-  data_t ciphertext(ciphertext_size);
+  data_t ciphertext(MACSIZE + plaintext.size());
 
   // so many bytes will really be written into output buffer
   unsigned long long clen;
@@ -61,24 +52,17 @@ CryptorAEAD::encrypt (const data_t      &header,
 }
 
 data_t
-CryptorAEAD::decrypt (const data_t      &header,
-		      const data_t      &ciphertext_with_mac,
-		      const Key         &key,
-		      const Nonce<NSZA> &nonce)
+CryptorAEAD::decrypt (const data_t       &header,
+		      const data_t       &ciphertext_with_mac,
+		      const Key<KEYSIZE> &key,
+		      const Nonce<NSZA>  &nonce)
 {
-  // get the sizes
-  const std::size_t key_size   = key.size();
-  const std::size_t plaintext_size =
-    ciphertext_with_mac.size() - CryptorAEAD::MACSIZE;
-
   // some sanity checks before we get started
-  if (key_size != Key::KEYSIZE_AEAD)
-    throw std::runtime_error {"Sodium::CryptorAEAD::decrypt() wrong key size"};
-  if (ciphertext_with_mac.size() < CryptorAEAD::MACSIZE)
+  if (ciphertext_with_mac.size() < MACSIZE)
     throw std::runtime_error {"Sodium::CryptorAEAD::decrypt() ciphertext length too small for a tag"};
 
   // make space for decrypted buffer
-  data_t plaintext(plaintext_size);
+  data_t plaintext(ciphertext_with_mac.size() - MACSIZE);
 
   // how many bytes we decrypt
   unsigned long long mlen;

@@ -31,6 +31,12 @@ class FileCryptor {
  public:
 
   /**
+   * We're encrypting with AEAD.
+   **/
+  
+  constexpr static std::size_t KEYSIZE = Sodium::KEYSIZE_AEAD;
+  
+  /**
    * Each block of plaintext will be encrypted to a block of the same
    * size of ciphertext, combined with a MAC of size MACSIZE.  Note
    * that the total blocksize of the (MAC || ciphertext) will be
@@ -44,10 +50,11 @@ class FileCryptor {
    *   - HASHKEYSIZE is the recommended number of key bytes
    *   - HASHKEYSIZE_MIN is the minimum number of key bytes
    *   - HASHKEYSIZE_MAX is the maximum number of key bytes
+   * CAVEAT: for now, only HASHKEYSIZE is allowed.
    **/
-  constexpr static std::size_t HASHKEYSIZE     = Key::KEYSIZE_HASHKEY;
-  constexpr static std::size_t HASHKEYSIZE_MIN = Key::KEYSIZE_HASHKEY_MIN;
-  constexpr static std::size_t HASHKEYSIZE_MAX = Key::KEYSIZE_HASHKEY_MAX;
+  constexpr static std::size_t HASHKEYSIZE     = Sodium::KEYSIZE_HASHKEY;
+  constexpr static std::size_t HASHKEYSIZE_MIN = Sodium::KEYSIZE_HASHKEY_MIN;
+  constexpr static std::size_t HASHKEYSIZE_MAX = Sodium::KEYSIZE_HASHKEY_MAX;
 
   /**
    * The hash can be stored in so many bytes:
@@ -83,22 +90,21 @@ class FileCryptor {
    * the hash MUST be the same as the one given here.
    **/
 
-  FileCryptor(const Key &key,
+  FileCryptor(const Key<KEYSIZE> &key,
 	      const Nonce<NONCESIZE_AEAD> &nonce,
 	      const std::size_t blocksize,
-	      const Key &hashkey,
+	      const Key<HASHKEYSIZE> &hashkey,
 	      const std::size_t hashsize) :
   key_ {key}, nonce_ {nonce}, header_ {}, blocksize_ {blocksize},
   hashkey_ {hashkey}, hashsize_ {hashsize} {
     // some sanity checks, before we start
-    if (key.size() != Key::KEYSIZE_AEAD)
-      throw std::runtime_error {"Sodium::FileCryptor::FileCryptor(): wrong key size"};
     if (blocksize < 1)
       throw std::runtime_error {"Sodium::FileCryptor::FileCryptor(): wrong blocksize"};
-    if (hashkey.size() < HASHKEYSIZE_MIN)
-      throw std::runtime_error {"Sodium::FileCryptor::FileCryptor(): hash key too small"};
-    if (hashkey.size() > HASHKEYSIZE_MAX)
-      throw std::runtime_error {"Sodium::FileCryptor::FileCryptor(): hash key too big"};
+    // !!! --->>> hashkey.size() is currently pegged at HASHKEYSIZE <<<--- !!!
+    // if (hashkey.size() < HASHKEYSIZE_MIN)
+    //   throw std::runtime_error {"Sodium::FileCryptor::FileCryptor(): hash key too small"};
+    // if (hashkey.size() > HASHKEYSIZE_MAX)
+    //   throw std::runtime_error {"Sodium::FileCryptor::FileCryptor(): hash key too big"};
   }
 
   /**
@@ -134,16 +140,18 @@ class FileCryptor {
    * to OSTR prior to throwing.
    *
    * To be able to decrypt a file, a user must provide:
-   *   the key, the initial nonce, the blocksize,
-   *   the authentication key for the hash (with the right number of bytes),
-   *   the hashsize, i.e. the number of bytes of the hash at the end.
+   *   - the key, the initial nonce, the blocksize,
+   *   - the authentication key for the hash (with the right number of bytes,
+   *     currently pegged at HASHKEYSIZE),
+   *   - the hashsize, i.e. the number of bytes of the hash at the end.
    * Failing to provide all those informations, decryption will fail.
    **/
   
   void decrypt(std::ifstream &ifs, std::ostream &ostr);
 
  private:
-  Key                   key_, hashkey_;
+  Key<KEYSIZE>          key_;
+  Key<HASHKEYSIZE>      hashkey_;
   Nonce<NONCESIZE_AEAD> nonce_;
   data_t                header_;
   std::size_t           blocksize_, hashsize_;

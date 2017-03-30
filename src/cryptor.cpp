@@ -29,19 +29,12 @@ using Sodium::Nonce;
 
 data_t
 Cryptor::encrypt (const data_t           &plaintext,
-		  const Key              &key,
+		  const Key<KEYSIZE>     &key,
 		  const Nonce<NONCESIZE> &nonce)
 {
-  // get the sizes
-  const std::size_t ciphertext_size = MACSIZE + plaintext.size();
-  
-  // some sanity checks before we get started
-  if (key.size() != KEYSIZE)
-    throw std::runtime_error {"Sodium::Cryptor::encrypt(combined) wrong key size"};
-  
   // make space for MAC and encrypted message,
   // combined form, i.e. (MAC || encrypted)
-  data_t ciphertext(ciphertext_size);
+  data_t ciphertext(MACSIZE + plaintext.size());
   
   // let's encrypt now!
   crypto_secretbox_easy (ciphertext.data(),
@@ -55,13 +48,11 @@ Cryptor::encrypt (const data_t           &plaintext,
 
 data_t
 Cryptor::encrypt (const data_t           &plaintext,
-		  const Key              &key,
+		  const Key<KEYSIZE>     &key,
 		  const Nonce<NONCESIZE> &nonce,
 		  data_t                 &mac)
 {
   // some sanity checks before we get started
-  if (key.size() != KEYSIZE)
-    throw std::runtime_error {"Sodium::Cryptor::encrypt(detached) wrong key size"};
   if (mac.size() != MACSIZE)
     throw std::runtime_error {"Sodium::Cryptor::encrypt(detached) wrong mac size"};
   
@@ -82,21 +73,15 @@ Cryptor::encrypt (const data_t           &plaintext,
 
 data_t
 Cryptor::decrypt (const data_t           &ciphertext,
-		  const Key              &key,
+		  const Key<KEYSIZE>     &key,
 		  const Nonce<NONCESIZE> &nonce)
 {
-  // get the sizes
-  const std::size_t ciphertext_size = ciphertext.size();
-  const std::size_t plaintext_size  = ciphertext_size - MACSIZE;
-  
   // some sanity checks before we get started
-  if (ciphertext_size < MACSIZE)
+  if (ciphertext.size() < MACSIZE)
     throw std::runtime_error {"Sodium::Cryptor::decrypt(combined) ciphertext too small for mac"};
-  if (key.size() != KEYSIZE)
-    throw std::runtime_error {"Sodium::Cryptor::decrypt(combined) wrong key size"};
 
   // make space for decrypted buffer
-  data_t decryptedtext(plaintext_size);
+  data_t decryptedtext(ciphertext.size() - MACSIZE);
 
   // and now decrypt!
   if (crypto_secretbox_open_easy (decryptedtext.data(),
@@ -111,14 +96,12 @@ Cryptor::decrypt (const data_t           &ciphertext,
 data_t
 Cryptor::decrypt (const data_t           &ciphertext,
 		  const data_t           &mac,
-		  const Key              &key,
+		  const Key<KEYSIZE>     &key,
 		  const Nonce<NONCESIZE> &nonce)
 {
   // some sanity checks before we get started
   if (mac.size() != MACSIZE)
     throw std::runtime_error {"Sodium::Cryptor::decrypt(detached) wrong mac size"};
-  if (key.size() != KEYSIZE)
-    throw std::runtime_error {"Sodium::Cryptor::decrypt(detached) wrong key size"};
 
   // make space for decrypted buffer;
   // detached mode. stream cipher => decryptedtext size == ciphertext size

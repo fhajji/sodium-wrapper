@@ -64,9 +64,9 @@ class SignorPK {
   
  public:
 
-  static constexpr std::size_t  KEYSIZE_PUBKEY      = Key::KEYSIZE_PUBKEY_SIGN;
-  static constexpr std::size_t  KEYSIZE_PRIVKEY     = Key::KEYSIZE_PRIVKEY_SIGN;
-  static constexpr std::size_t  SIGNATURE_SIZE      = crypto_sign_BYTES;
+  static constexpr std::size_t  KEYSIZE_PUBKEY  = Sodium::KEYSIZE_PUBKEY_SIGN;
+  static constexpr std::size_t  KEYSIZE_PRIVKEY = Sodium::KEYSIZE_PRIVKEY_SIGN;
+  static constexpr std::size_t  SIGNATURE_SIZE  = crypto_sign_BYTES;
 
   /**
    * Sign the plaintext with the private key privkey.  Return
@@ -74,16 +74,16 @@ class SignorPK {
    * long.
    **/
 
-  data_t sign(const data_t       &plaintext,
-	      const Key          &privkey);
+  data_t sign(const data_t               &plaintext,
+	      const Key<KEYSIZE_PRIVKEY> &privkey);
 
   /**
    * Sign the plaintext with the private key part of the keypair.
    * Return (signature || plaintext), where signature is
    * SIGNATURE_SIZE bytes long.
    **/
-  data_t sign(const data_t       &plaintext,
-	      const KeyPairSign  &keypair) {
+  data_t sign(const data_t      &plaintext,
+	      const KeyPairSign &keypair) {
     return sign(plaintext, keypair.privkey());
   }
 
@@ -91,8 +91,8 @@ class SignorPK {
    * Sign the plaintext with the private key privkey. Return the
    * signature, which is SIGNATURE_SIZE bytes long.
    **/
-  data_t sign_detached(const data_t &plaintext,
-		       const Key    &privkey);
+  data_t sign_detached(const data_t               &plaintext,
+		       const Key<KEYSIZE_PRIVKEY> &privkey);
   
   /**
    * Sign the plaintext with the private key part of the keypair.
@@ -112,8 +112,8 @@ class SignorPK {
    * with signature being SIGNATURE_SIZE bytes long.
    **/
 
-  data_t verify(const data_t      &plaintext_with_signature,
-		const data_t      &pubkey);
+  data_t verify(const data_t &plaintext_with_signature,
+		const data_t &pubkey);
 
   /**
    * Verify the signature contained in plaintext_with_signature
@@ -137,9 +137,9 @@ class SignorPK {
    * signature isn't SIGNATURE_SIZE bytes, throw std::runtime_error.
    **/
   
-  bool verify_detached(const data_t      &plaintext,
-		       const data_t      &signature,
-		       const data_t      &pubkey);
+  bool verify_detached(const data_t &plaintext,
+		       const data_t &signature,
+		       const data_t &pubkey);
 
   /**
    * Verify the signature of the plaintext against the public key part
@@ -152,8 +152,7 @@ class SignorPK {
 		       const KeyPairSign &keypair) {
     return verify_detached(plaintext, signature, keypair.pubkey());
   }
-
-  // TODO: multipart messages (signormultipk.h ?)
+  
 };
 
 } // namespace Sodium

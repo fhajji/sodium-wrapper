@@ -43,8 +43,8 @@ falsify_plaintext(const std::string &plaintext)
   BOOST_CHECK_MESSAGE(! plaintext.empty(),
 		      "Nothing to falsify, empty plaintext");
 
-  Key        key    (keysize);
-  StreamHash hasher {key, hashsize, blocksize};
+  Key<StreamHash::KEYSIZE> key;
+  StreamHash               hasher {key, hashsize, blocksize};
   
   std::istringstream istr(plaintext);
   
@@ -71,8 +71,8 @@ falsify_plaintext(const std::string &plaintext)
 bool
 falsify_key(const std::string &plaintext)
 {
-  Key        key    (keysize);
-  StreamHash hasher {key, hashsize, blocksize};
+  Key<StreamHash::KEYSIZE> key;
+  StreamHash               hasher {key, hashsize, blocksize};
   
   std::istringstream istr(plaintext);
   
@@ -82,8 +82,8 @@ falsify_key(const std::string &plaintext)
   BOOST_CHECK_EQUAL(hash1.size(), hashsize);
 
   // to simulate falsification of key, just hash with a different key.
-  Key        key_falsified    (keysize);
-  StreamHash hasher_falsified {key_falsified, hashsize, blocksize};
+  Key<StreamHash::KEYSIZE> key_falsified;
+  StreamHash               hasher_falsified {key_falsified, hashsize, blocksize};
 
   std::istringstream istr_copy(plaintext);
 
@@ -100,8 +100,8 @@ falsify_key(const std::string &plaintext)
 bool
 compare_both_hashes(const std::string &plaintext)
 {
-  Key        key    (keysize);
-  StreamHash hasher {key, hashsize, blocksize};
+  Key<StreamHash::KEYSIZE> key;
+  StreamHash               hasher {key, hashsize, blocksize};
   
   std::istringstream istr(plaintext);
   std::istringstream istr_copy(plaintext);

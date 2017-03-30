@@ -34,8 +34,8 @@ namespace Sodium {
 class StreamSignorPK {
  public:
 
-  static constexpr std::size_t  KEYSIZE_PRIVKEY  = Key::KEYSIZE_PRIVKEY_SIGN;
-  static constexpr std::size_t  SIGNATURE_SIZE   = crypto_sign_BYTES;
+  static constexpr std::size_t KEYSIZE_PRIVKEY  = Sodium::KEYSIZE_PRIVKEY_SIGN;
+  static constexpr std::size_t SIGNATURE_SIZE   = crypto_sign_BYTES;
 
   /**
    * A StreamSignorPK will sign streams of potentially unlimited length
@@ -45,15 +45,12 @@ class StreamSignorPK {
    * of size at most blocksize bytes.
    * 
    * The constructor takes a private _signing_ Key of size
-   * KEYSIZE_PRIVKEY bytes. It will throw a std::runtime_error if the
-   * key size isn't corect.
+   * KEYSIZE_PRIVKEY bytes.
    **/
 
-  StreamSignorPK(const Key         &privkey,
-		 const std::size_t blocksize) :
+  StreamSignorPK(const Key<KEYSIZE_PRIVKEY> &privkey,
+		 const std::size_t          blocksize) :
     privkey_ {privkey}, blocksize_ {blocksize} {
-      if (privkey.size() != KEYSIZE_PRIVKEY)
-	throw std::runtime_error {"Sodium::StreamSignorPK() wrong key size"};
       if (blocksize < 1)
 	throw std::runtime_error {"Sodium::StreamSignorPK() wrong blocksize"};
 
@@ -95,9 +92,9 @@ class StreamSignorPK {
   data_t sign(std::istream &istr);
   
  private:
-  Key                   privkey_;
-  crypto_sign_state     state_;
-  std::size_t           blocksize_;
+  Key<KEYSIZE_PRIVKEY> privkey_;
+  crypto_sign_state    state_;
+  std::size_t          blocksize_;
 };
 
 } // namespace Sodium
