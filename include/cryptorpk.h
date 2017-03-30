@@ -41,12 +41,13 @@ class CryptorPK {
    * MAC as well. Return (MAC || ciphertext); i.e. ciphertext prepended
    * by MAC.
    *
-   * Any modification of the returned MAC+ciphertext will render
+   * Any modification of the returned (MAC || ciphertext) will render
    * decryption impossible.
    * 
-   * The nonce is public and can be sent along the MAC+ciphertext. The
-   * private key is private and MUST NOT be sent over the channel. The
-   * public key is intended to be widely known, even by attackers.
+   * The nonce is public and can be sent along the (MAC ||
+   * ciphertext). The private key is private and MUST NOT be sent over
+   * the channel. The public key is intended to be widely known, even
+   * by attackers.
    *
    * To thwart Man-in-the-Middle attacks, it is the responsibility of
    * the recipient to verify (by other means, like certificates, web
@@ -60,9 +61,8 @@ class CryptorPK {
    * 
    * The public  key must be KEYSIZE_PUBKEY  bytes long
    * The private key must be KEYSIZE_PRIVKEY bytes long
-   * The nonce       must be NSZPK           bytes long
    * 
-   * The MAC+ciphertext size is 
+   * The (MAC || ciphertext) size is 
    *    MACSIZE + plaintext.size()
    * bytes long.
    **/
@@ -98,8 +98,8 @@ class CryptorPK {
    * the one who she claims to be), decryption will fail and
    * this function with throw a std::runtime_error.
    *
-   * This function will also throw a std::runtime_error if the sizes of
-   * the keys, nonce and ciphertexts don't make sense.
+   * This function will also throw a std::runtime_error if the sizes
+   * of the keys or of the ciphertext don't make sense.
    **/
 
   data_t decrypt(const data_t       &ciphertext_with_mac,

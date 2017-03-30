@@ -49,11 +49,10 @@ class CryptorAEAD
    * Limits: Up to 2^64 messages with the same key,
    *         Up to 2^70 bytes per message.
    *
-   * The key   must be Sodium::Key::KEYSIZE_AEAD bytes long
-   * The nonce must be Sodium::NONCESIZE_AEAD    bytes long
+   * The key must be Sodium::Key::KEYSIZE_AEAD bytes long
    *
-   * The MAC+ciphertext size is 
-   *    plaintext.size() + Sodium::CryptorAEAD::MACSIZE.
+   * The (MAC || ciphertext) size is 
+   *    Sodium::CryptorAEAD::MACSIZE + plaintext.size()
    **/
 
   data_t encrypt(const data_t      &header,
@@ -71,12 +70,11 @@ class CryptorAEAD
    * or, in general, if the decryption doesn't succeed, throw a
    * std::runtime_error.
    * 
-   * The key   must be Sodium::Key::KEYSIZE_AEAD bytes long
-   * The nonce must be Sodium::NONCESIZE_AEAD    bytes long
+   * The key must be Sodium::Key::KEYSIZE_AEAD bytes long
    * 
-   * The nonce can be public, the key must remain private. To successfully
-   * decrypt a message, both the key and nonce must be the same as those
-   * used when encrypting.
+   * The nonce can be public, the key must remain private. To
+   * successfully decrypt a message, both the key and nonce must be
+   * the same value as those used when encrypting.
    **/
 
   data_t decrypt(const data_t      &header,

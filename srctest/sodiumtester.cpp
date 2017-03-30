@@ -297,7 +297,7 @@ SodiumTester::test3()
  * This function tests Sodium::CryptorAEAD.
  *
  * - We encrypt a plain header and plaintext with a random key and nonce,
- *   resulting in a MAC+ciphertext, which we display in hex format.
+ *   resulting in a (MAC || ciphertext), which we display in hex format.
  * - Then we decrypt the result (and auto-check against the generated MAC)
  * - We test the MAC by intentionally corrupting the header and decrypting
  *   again. This should fail.
@@ -305,9 +305,9 @@ SodiumTester::test3()
  *   again. This should fail.
  * - To show that we ought to always use different nonces with the same key,
  *   we first re-encrypt with the same key/nonce (and show that we got the
- *   same MAC+ciphertext as before, which is bad), and then we increment
- *   the nonce and re-encrypt, to get a different MAC+ciphertext.
- * - We manually check that the decrypted text = plaintext; even though
+ *   same (MAC || ciphertext) as before, which is bad), and then we increment
+ *   the nonce and re-encrypt, to get a different (MAC || ciphertext).
+ * - We manually check that the decrypted text == plaintext; even though
  *   if we decrypted successfully, they should be equaly anyway.
  * - Finally, we encrypt / decrypt an empty plaintext with empty header
  *   to test a valid boundary condition.

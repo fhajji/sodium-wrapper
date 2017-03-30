@@ -36,9 +36,9 @@ class StreamCryptor {
  public:
 
   /**
-   * Each block of plaintext will be encrypted to a block of the
-   * same size of ciphertext, combined with a MAC of size MACSIZE.
-   * Note that the total blocksize of the mac+ciphertext will be
+   * Each block of plaintext will be encrypted to a block of the same
+   * size of ciphertext, combined with a MAC of size MACSIZE.  Note
+   * that the total blocksize of the (MAC || ciphertext)s will be
    * MACSIZE + plaintext.size() for each block.
    **/
   constexpr static std::size_t MACSIZE = CryptorAEAD::MACSIZE;
@@ -76,7 +76,7 @@ class StreamCryptor {
 
   /**
    * Encrypt data read from input stream istr in a blockwise fashion,
-   * writing the ciphertext along with the MACs to the output stream ostr.
+   * writing (MAC || ciphertext) blocks to the output stream ostr.
    *
    * The input stream istr is read blockwise in chunks of size blocksize,
    * where blocksize has been passed in the constructor. The final block
@@ -95,7 +95,7 @@ class StreamCryptor {
    * of size MACSIZE, computed from both the ciphertext, as well as
    * from an empty plaintext header.  This additional MAC occurs every
    * chunk, and helps the decrypt() function verify the integrity of
-   * the chunk (and MAC), should it has been tampered with.
+   * the chunk (and MAC), should it have been tampered with.
    *
    * The saved nonce is not affected by the incrementing of the
    * running nonce. It can thus be reused to decrypt() a stream
@@ -114,11 +114,12 @@ class StreamCryptor {
    * using the same key, (initial) nonce, and blocksize. Otherweise,
    * decryption will fail and a std::runtime_error will the thrown.
    *
-   * The input stream istr is read blockwise in chunks of size
-   * MACSIZE + blocksize, because each chunk in the encrypted stream
-   * is assumed to have been combined with an authenticating MAC.
-   * The final block may have less than MACSIZE + blocksize bytes,
-   * that should have at least MACSIZE bytes left..
+   * The input stream istr is read blockwise in chunks of size MACSIZE
+   * + blocksize, because each chunk in the encrypted stream is
+   * assumed to have been combined with an authenticating MAC, i.e. to
+   * be of the form (MAC || ciphertext).  The final block may have
+   * less than MACSIZE + blocksize bytes, but should have at least
+   * MACSIZE bytes left.
    *
    * The decryption is attempted by the CryptorAEAD crypto engine, using
    * the saved key, and a running nonce that starts with the initial
@@ -133,9 +134,9 @@ class StreamCryptor {
    *   - the initial nonce was wrong
    *   - the blocksize was wrong
    *   - the input stream wasn't encrypted with encrypt()
-   *   - one or more mac+ciphertext chunks have been tampered with
+   *   - one or more (MAC || ciphertext) chunks have been tampered with
    * In that case, throw a std::runtime_error and stop writing to ostr.
-   * No strong guarantee.
+   * No strong guarantee w.r.t. ostr.
    *
    * The saved nonce is unaffected by the incrementing of the running
    * nonce during decryption.

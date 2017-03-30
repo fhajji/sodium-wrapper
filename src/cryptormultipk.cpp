@@ -57,12 +57,10 @@ CryptorMultiPK::encrypt(const data_t       &plaintext,
 			const Nonce<NSZPK> &nonce)
 {
   // some sanity checks before we start
-  if (nonce.size() != NSZPK)
-    throw std::runtime_error {"CryptorMultiPK::encrypt() wrong nonce size"};
   if (! shared_key_ready_)
     throw std::runtime_error {"CryptorMultiPK::encrypt() shared key not ready"};
 
-  // make space for MAC + ciphertext
+  // make space for ciphertext, i.e. for (MAC || encrypted)
   data_t ciphertext(plaintext.size() + MACSIZE);
 
   // and now, encrypt!
@@ -80,8 +78,6 @@ CryptorMultiPK::decrypt(const data_t       &ciphertext_with_mac,
 			const Nonce<NSZPK> &nonce)
 {
   // some sanity checks before we start
-  if (nonce.size() != NSZPK)
-    throw std::runtime_error {"CryptorMultiPK::decrypt() wrong nonce size"};
   if (ciphertext_with_mac.size() < MACSIZE)
     throw std::runtime_error {"CryptorMultiPK::decrypt() ciphertext too small for even for MAC"};
   if (! shared_key_ready_)

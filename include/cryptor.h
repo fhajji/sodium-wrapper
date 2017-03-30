@@ -42,8 +42,8 @@ class Cryptor {
    * helps detect tampering of the ciphertext and will also prevent
    * decryption.
    *
-   * This function will throw a std::runtime_error if the sizes of
-   * the key and nonce don't make sense.
+   * This function will throw a std::runtime_error if the size of
+   * the key doesn't make sense.
    *
    * To safely use this function, it is recommended that
    *   - NO value of nonce is EVER reused again with the same key
@@ -72,7 +72,7 @@ class Cryptor {
    * and will also prevent decryption.
    *
    * This function will throw a std::runtime_error if the sizes of
-   * the key, nonce, and mac don't make sense.
+   * the key or mac don't make sense.
    *
    * To safely use this function, it is recommended that
    *   - NO value of nonce is EVER reused again with the same key
@@ -102,7 +102,7 @@ class Cryptor {
    * this function with throw a std::runtime_error.
    *
    * This function will also throw a std::runtime_error if the sizes of
-   * the key, nonce and ciphertext don't make sense.
+   * the key or ciphertext don't make sense.
    **/
 
   data_t decrypt(const data_t     &ciphertext,
@@ -120,7 +120,7 @@ class Cryptor {
    * this function with throw a std::runtime_error.
    *
    * This function will also throw a std::runtime_error if the sizes of
-   * the key, nonce and mac don't make sense.
+   * the key or mac don't make sense.
    **/
   
   data_t decrypt(const data_t     &ciphertext,

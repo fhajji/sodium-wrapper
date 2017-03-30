@@ -124,10 +124,10 @@ class CryptorMultiPK {
    * Any modification of the returned MAC+ciphertext will render
    * decryption impossible.
    *
-   * The nonce is public and can be sent along the MAC+ciphertext. The
-   * private key / shared key are private and MUST NOT be sent over
-   * the channel. The public key is intended to be widely known, even
-   * by attackers.
+   * The nonce is public and can be sent along the (MAC ||
+   * ciphertext). The private key / shared key are private and MUST
+   * NOT be sent over the channel. The public key is intended to be
+   * widely known, even by attackers.
    *
    * To thwart Man-in-the-Middle attacks, it is the responsibility of
    * the recipient to verify (by other means, like certificates, web
@@ -141,14 +141,11 @@ class CryptorMultiPK {
    * same nonce. The easiest way to achieve this is to increment nonce
    * after or prior to each encrypt() invocation.
    * 
-   * The nonce       must be NSZPK           bytes long
-   * 
-   * The MAC+ciphertext size is 
+   * The (MAC || ciphertext) size is 
    *    MACSIZE + plaintext.size()
    * bytes long.
    *
    * encrypt() will throw a std::runtime_error if
-   *  - the size of the nonce is wrong
    *  - the shared key is not ready
    **/
 
@@ -172,7 +169,6 @@ class CryptorMultiPK {
    * the same sender.
    *
    * This function will also throw a std::runtime_error if, among others:
-   *  - the size of the nonce is not NSZPK
    *  - the size of the ciphertext_with_mac is not at least MACSIZE
    *  - decryption failed (e.g. because the shared key doesn't match)
    *  - the shared key isn't ready

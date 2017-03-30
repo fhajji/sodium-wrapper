@@ -41,11 +41,9 @@ CryptorPK::encrypt (const data_t       &plaintext,
     throw std::runtime_error {"Sodium::CryptorPK::encrypt() wrong pubkey size"};
   if (privkey.size() != CryptorPK::KEYSIZE_PRIVKEY)
     throw std::runtime_error {"Sodium::CryptorPK::encrypt() wrong privkey size"};
-  if (nonce.size() != CryptorPK::NSZPK)
-    throw std::runtime_error {"Sodium::CryptorPK::encrypt() wrong nonce size"};
 
-  // make space for MAC and encrypted message
-  data_t ciphertext_with_mac(plaintext.size() + CryptorPK::MACSIZE);
+  // make space for MAC and encrypted message, i.e. for (MAC || encrypted)
+  data_t ciphertext_with_mac(CryptorPK::MACSIZE + plaintext.size());
 
   // let's encrypt now! (combined mode, no precalculation of shared key)
   if (crypto_box_easy(ciphertext_with_mac.data(),
@@ -63,12 +61,10 @@ CryptorPK::encrypt (const data_t       &plaintext,
 		    const KeyPair      &keypair,
 		    const Nonce<NSZPK> &nonce)
 {
-  // some sanity checks before we get started
-  if (nonce.size() != CryptorPK::NSZPK)
-    throw std::runtime_error {"CryptorPK::encrypt(keypair...) wrong nonce size"};
+  // no sanity checks remaining before we get started
 
-  // make space for MAC and encrypted message
-  data_t ciphertext_with_mac(plaintext.size() + CryptorPK::MACSIZE);
+  // make space for MAC and encrypted message, i.e. for (MAC || encrypted)
+  data_t ciphertext_with_mac(CryptorPK::MACSIZE + plaintext.size());
 
   // let's encrypt now! (combined mode, no precalculation of shared key)
   if (crypto_box_easy(ciphertext_with_mac.data(),
@@ -94,8 +90,6 @@ CryptorPK::decrypt (const data_t       &ciphertext_with_mac,
     throw std::runtime_error {"CryptorPK::decrypt() privkey wrong size"};
   if (pubkey.size()  != KEYSIZE_PUBKEY)
     throw std::runtime_error {"CryptorPK::decrypt() pubkey wrong size"};
-  if (nonce.size()   != NSZPK)
-    throw std::runtime_error {"CryptorPK::decrypt() wrong nonce size"};
 
   // make room for decrypted text
   data_t decrypted(ciphertext_with_mac.size() - CryptorPK::MACSIZE);
@@ -119,8 +113,6 @@ CryptorPK::decrypt (const data_t       &ciphertext_with_mac,
   // some sanity checks before we get started
   if (ciphertext_with_mac.size() < CryptorPK::MACSIZE)
     throw std::runtime_error {"CryptorPK::decrypt() ciphertext too small for MAC"};
-  if (nonce.size()   != NSZPK)
-    throw std::runtime_error {"CryptorPK::decrypt() wrong nonce size"};
 
   // make room for decrypted text
   data_t decrypted(ciphertext_with_mac.size() - CryptorPK::MACSIZE);

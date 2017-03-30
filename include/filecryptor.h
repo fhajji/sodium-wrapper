@@ -31,15 +31,15 @@ class FileCryptor {
  public:
 
   /**
-   * Each block of plaintext will be encrypted to a block of the
-   * same size of ciphertext, combined with a MAC of size MACSIZE.
-   * Note that the total blocksize of the mac+ciphertext will be
+   * Each block of plaintext will be encrypted to a block of the same
+   * size of ciphertext, combined with a MAC of size MACSIZE.  Note
+   * that the total blocksize of the (MAC || ciphertext) will be
    * MACSIZE + plaintext.size() for each block.
    **/
   constexpr static std::size_t MACSIZE = CryptorAEAD::MACSIZE;
 
   /**
-   * We can compute the hash of the (MAC+)ciphertext of the whole
+   * We can compute the hash of the (MAC || ciphertext) of the whole
    * file using a key of so many bytes:
    *   - HASHKEYSIZE is the recommended number of key bytes
    *   - HASHKEYSIZE_MIN is the minimum number of key bytes
@@ -74,8 +74,8 @@ class FileCryptor {
    * (and to further detect tampering in the midst of the file),
    * generic hashing with a hashing key (preferably HASHSIZE bytes,
    * but no less than HASHSIZE_MIN and no more than HASHSIZE_MAX
-   * bytes) is applied to the whole ciphertext+MACs, and that hash is
-   * appended to the end of the file.
+   * bytes) is applied to the whole (MAC || ciphertext)s, and that
+   * hash is appended to the end of the file.
    *
    * The size of the hash can be selected by the user. It is perferably
    * HASHSIZE bytes, but should be no less than HASHSIZE_MIN and no
@@ -121,7 +121,7 @@ class FileCryptor {
    * in output _stream_ OSTR.
    *
    * At the same time, compute a generic authenticated hash of
-   * HASHSIZE (bytes) over the input ciphertexts and MACs, using the
+   * HASHSIZE (bytes) over the input (MAC || ciphertext)s, using the
    * key HASHKEY. Compare that hash with the HASHSIZE bytes stored at
    * the end of IFS.
    *
