@@ -27,9 +27,9 @@ namespace Sodium {
 // Typical values for number of bytes of Nonces (from <sodium.h>):
 static constexpr std::size_t NONCESIZE_SECRETBOX = crypto_secretbox_NONCEBYTES;
 static constexpr std::size_t NONCESIZE_AEAD      = crypto_aead_chacha20poly1305_NPUBBYTES;
-static constexpr std::size_t NONCESIZE_PK       = crypto_box_NONCEBYTES;
+static constexpr std::size_t NONCESIZE_PK        = crypto_box_NONCEBYTES;
 
-template <unsigned int N=NONCESIZE_SECRETBOX>
+template <std::size_t N=NONCESIZE_SECRETBOX>
 class Nonce
 {
   /**
@@ -138,44 +138,44 @@ class Nonce
 /**
  * Compare two Nonces in constant time.
  **/
-template <unsigned int N>
-  int compare(const Sodium::Nonce<N> &a, const Sodium::Nonce<N> &b)
+template <std::size_t N>
+  int compare(const Nonce<N> &a, const Nonce<N> &b)
 {
   return sodium_compare(a.data(), b.data(), a.size());
 }
 
-template<unsigned int N>
-  bool operator==(const Sodium::Nonce<N> &a, const Sodium::Nonce<N> &b)
+template<std::size_t N>
+  bool operator==(const Nonce<N> &a, const Nonce<N> &b)
 {
   return compare<N>(a, b) == 0;
 }
 
-template<unsigned int N>
-  bool operator!=(const Sodium::Nonce<N> &a, const Sodium::Nonce<N> &b)
+template<std::size_t N>
+  bool operator!=(const Nonce<N> &a, const Nonce<N> &b)
 {
   return compare<N>(a, b) != 0;
 }
 
-template<unsigned int N>
-  bool operator<(const Sodium::Nonce<N> &a, const Sodium::Nonce<N> &b)
+template<std::size_t N>
+  bool operator<(const Nonce<N> &a, const Nonce<N> &b)
 {
   return compare<N>(a, b) < 0;
 }
 
-template<unsigned int N>
-  bool operator>(const Sodium::Nonce<N> &a, const Sodium::Nonce<N> &b)
+template<std::size_t N>
+  bool operator>(const Nonce<N> &a, const Nonce<N> &b)
 {
   return compare<N>(a, b) > 0;
 }
 
-template<unsigned int N>
-  bool operator <=(const Sodium::Nonce<N> &a, const Sodium::Nonce<N> &b)
+template<std::size_t N>
+  bool operator <=(const Nonce<N> &a, const Nonce<N> &b)
 {
   return compare<N>(a, b) <= 0;
 }
 
-template<unsigned int N>
-  bool operator >=(const Sodium::Nonce<N> &a, const Sodium::Nonce<N> &b)
+template<std::size_t N>
+  bool operator >=(const Nonce<N> &a, const Nonce<N> &b)
 {
   return compare<N>(a, b) >= 0;
 }

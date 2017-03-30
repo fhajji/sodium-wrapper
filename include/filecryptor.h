@@ -90,16 +90,15 @@ class FileCryptor {
 	      const std::size_t hashsize) :
   key_ {key}, nonce_ {nonce}, header_ {}, blocksize_ {blocksize},
   hashkey_ {hashkey}, hashsize_ {hashsize} {
-      // some sanity checks, before we start
-      if (key.size() != Key::KEYSIZE_AEAD)
-	throw std::runtime_error {"Sodium::FileCryptor(): wrong key size"};
-      if (blocksize < 1)
-	throw std::runtime_error {"Sodium::FileCryptor(): wrong blocksize"};
-      if (hashkey.size() < HASHKEYSIZE_MIN)
-	throw std::runtime_error {"Sodium::FileCryptor(): hash key too small"};
-      if (hashkey.size() > HASHKEYSIZE_MAX)
-	throw std::runtime_error {"Sodium::FileCryptor(): hash key too big"};
-
+    // some sanity checks, before we start
+    if (key.size() != Key::KEYSIZE_AEAD)
+      throw std::runtime_error {"Sodium::FileCryptor::FileCryptor(): wrong key size"};
+    if (blocksize < 1)
+      throw std::runtime_error {"Sodium::FileCryptor::FileCryptor(): wrong blocksize"};
+    if (hashkey.size() < HASHKEYSIZE_MIN)
+      throw std::runtime_error {"Sodium::FileCryptor::FileCryptor(): hash key too small"};
+    if (hashkey.size() > HASHKEYSIZE_MAX)
+      throw std::runtime_error {"Sodium::FileCryptor::FileCryptor(): hash key too big"};
   }
 
   /**

@@ -61,7 +61,7 @@ CryptorPK::encrypt (const data_t       &plaintext,
 		    const KeyPair      &keypair,
 		    const Nonce<NSZPK> &nonce)
 {
-  // no sanity checks remaining before we get started
+  // no sanity checks necessary before we get started
 
   // make space for MAC and encrypted message, i.e. for (MAC || encrypted)
   data_t ciphertext_with_mac(CryptorPK::MACSIZE + plaintext.size());

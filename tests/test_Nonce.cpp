@@ -43,9 +43,16 @@ BOOST_AUTO_TEST_CASE( sodium_test_nonce_defaultsize )
 
 BOOST_AUTO_TEST_CASE( sodium_test_nonce_size )
 {
-  Sodium::Nonce<64> a {};
+  Sodium::Nonce<64>  a {};
+  Sodium::Nonce<128> b {};
 
   BOOST_CHECK_EQUAL(a.size(), 64);
+  BOOST_CHECK_EQUAL(b.size(), 128);
+
+  static_assert(a.size() == 64,
+		"a is not 64 bytes long");
+  static_assert(b.size() == 128,
+		"b is not 128 bytes long");
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_nonce_copy )

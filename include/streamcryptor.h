@@ -68,9 +68,9 @@ class StreamCryptor {
   key_ {key}, nonce_ {nonce}, header_ {}, blocksize_ {blocksize} {
     // some sanity checks, before we start
     if (key.size() != Key::KEYSIZE_AEAD)
-      throw std::runtime_error {"Sodium::StreamCryptor(): wrong key size"};
+      throw std::runtime_error {"Sodium::StreamCryptor::StreamCryptor(): wrong key size"};
     if (blocksize < 1)
-      throw std::runtime_error {"Sodium::StreamCryptor(): wrong blocksize"};
+      throw std::runtime_error {"Sodium::StreamCryptor::StreamCryptor(): wrong blocksize"};
     key_.readonly();
   }
 

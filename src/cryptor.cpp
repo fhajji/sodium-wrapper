@@ -28,9 +28,9 @@ using Sodium::Key;
 using Sodium::Nonce;
 
 data_t
-Cryptor::encrypt (const data_t     &plaintext,
-		  const Key        &key,
-		  const Nonce<NSZ> &nonce)
+Cryptor::encrypt (const data_t           &plaintext,
+		  const Key              &key,
+		  const Nonce<NONCESIZE> &nonce)
 {
   // get the sizes
   const std::size_t ciphertext_size = MACSIZE + plaintext.size();
@@ -54,10 +54,10 @@ Cryptor::encrypt (const data_t     &plaintext,
 }
 
 data_t
-Cryptor::encrypt (const data_t     &plaintext,
-		  const Key        &key,
-		  const Nonce<NSZ> &nonce,
-		  data_t           &mac)
+Cryptor::encrypt (const data_t           &plaintext,
+		  const Key              &key,
+		  const Nonce<NONCESIZE> &nonce,
+		  data_t                 &mac)
 {
   // some sanity checks before we get started
   if (key.size() != KEYSIZE)
@@ -81,9 +81,9 @@ Cryptor::encrypt (const data_t     &plaintext,
 }
 
 data_t
-Cryptor::decrypt (const data_t     &ciphertext,
-		  const Key        &key,
-		  const Nonce<NSZ> &nonce)
+Cryptor::decrypt (const data_t           &ciphertext,
+		  const Key              &key,
+		  const Nonce<NONCESIZE> &nonce)
 {
   // get the sizes
   const std::size_t ciphertext_size = ciphertext.size();
@@ -109,10 +109,10 @@ Cryptor::decrypt (const data_t     &ciphertext,
 }
 
 data_t
-Cryptor::decrypt (const data_t     &ciphertext,
-		  const data_t     &mac,
-		  const Key        &key,
-		  const Nonce<NSZ> &nonce)
+Cryptor::decrypt (const data_t           &ciphertext,
+		  const data_t           &mac,
+		  const Key              &key,
+		  const Nonce<NONCESIZE> &nonce)
 {
   // some sanity checks before we get started
   if (mac.size() != MACSIZE)

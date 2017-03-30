@@ -34,6 +34,14 @@
 #include <fstream>
 #include <utility>
 
+using Sodium::Key;
+using Sodium::Nonce;
+using Sodium::Cryptor;
+using Sodium::CryptorAEAD;
+using Sodium::Auth;
+using Sodium::StreamCryptor;
+using Sodium::FileCryptor;
+
 #define NDEBUG
 
 #ifndef NDEBUG
@@ -73,9 +81,9 @@ SodiumTester::SodiumTester()
 std::string
 SodiumTester::test0(const std::string &plaintext)
 {  
-  Sodium::Cryptor sc {}; // encryptor, decryptor, hexifior.
-  Sodium::Key     key(Sodium::Key::KEYSIZE_SECRETBOX); // create random key
-  Sodium::Nonce<> nonce {};                            // create random nonce;
+  Cryptor sc {};                       // encryptor, decryptor.
+  Key     key(Key::KEYSIZE_SECRETBOX); // create random key
+  Nonce<> nonce {};                    // create random nonce;
   
   // transfer plaintext into a binary blob
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -93,10 +101,10 @@ SodiumTester::test0(const std::string &plaintext)
   // test of correctness (sanity check): the ciphertext must be
   // equal to the plaintext.
   // 
-  // Note that Sodium::Cryptor::decrypt() will also have performed
+  // Note that Cryptor::decrypt() will also have performed
   // a check and thrown a std::runtime_error, should the decryption
   // fail. It can detect corruption of the ciphertext, because
-  // Sodium::Cryptor::encrypt() encrypts both the plaintext and a MAC
+  // Cryptor::encrypt() encrypts both the plaintext and a MAC
   // that was generated out of the plaintext and of the key/nonce before.
   //
   // We're just double-checking here.
@@ -124,8 +132,8 @@ SodiumTester::test0(const std::string &plaintext)
 bool
 SodiumTester::test1(const std::string &plaintext)
 {
-  Sodium::Auth sa {}; // Secret Key Authenticator/Verifier
-  Sodium::Key  key(Sodium::Auth::KEYSIZE_AUTH); // Create a random key
+  Auth sa {};                   // Secret Key Authenticator/Verifier
+  Key  key(Auth::KEYSIZE_AUTH); // Create a random key
   
   // transfer plaintext into a binary blob
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -175,32 +183,32 @@ SodiumTester::test2(const std::string &plaintext,
 		    const std::string &pw1,
 		    const std::string &pw2)
 {
-  Sodium::Cryptor sc {}; // encryptor, decryptor, hexifior.
-  Sodium::Key     key(Sodium::Key::KEYSIZE_SECRETBOX,
-		      false); // uninitialized, read-write for now
+  Cryptor         sc {};                       // encryptor, decryptor.
+  Key             key(Key::KEYSIZE_SECRETBOX,
+		      false);                  // uninitialized, r/w for now
   Sodium::Nonce<> nonce {};
 
   // random salt, needed by the key derivation function.
-  // NOTE: can't move this into Sodium::Key::setpass(),
+  // NOTE: can't move this into Key::setpass(),
   // because we need the salt AND the password to be able
   // to deterministically recreate a key. If we generated
   // the salt in setpass() randomly, users would have no
   // way to recreate the key -- that would be throw-away
   // use-once keys.
-  data_t salt(Sodium::Key::KEYSIZE_SALT);
+  data_t salt(Key::KEYSIZE_SALT);
   randombytes_buf(salt.data(), salt.size());
 
   // transfer plaintext into a binary blob
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // try the first key
-  key.setpass(pw1, salt, Sodium::Key::strength_t::medium);
+  key.setpass(pw1, salt, Key::strength_t::medium);
   
   // now encrypt with that key
   data_t ciphertext = sc.encrypt(plainblob, key, nonce);
 
   // try the second key
-  key.setpass(pw2, salt, Sodium::Key::strength_t::medium);
+  key.setpass(pw2, salt, Key::strength_t::medium);
   
   // now decrypt with that new key.
   // if the key/password was different, we will throw right here and now
@@ -253,17 +261,18 @@ SodiumTester::test3()
   std::ostringstream os; // to collect output
   os << "starting Nonce test... -------" << std::endl;
 
-  Sodium::Nonce<> a {}; // a random nonce
+  Nonce<> a {}; // a random nonce
   
   // Check at compile time that we got the default size of the Nonce:
   static_assert(a.size() == Sodium::NONCESIZE_SECRETBOX,
 		"SodiumTester::test3() wrong nonce size");
+  // when static_assert() isn't possible in some conditions, dynamic assert:
   // if (a.size() != Sodium::NONCESIZE_SECRETBOX)
   //   throw std::runtime_error {"SodiumTester::test3() wrong nonce size"};
 
   os << "a+0: " << Sodium::tohex(a.as_data_t()) << std::endl;
   
-  Sodium::Nonce<> a_copy {a};
+  Nonce<> a_copy {a};
   if (a != a_copy)
     throw std::runtime_error {"SodiumTester::test3() a != a_copy"};
   
@@ -275,7 +284,7 @@ SodiumTester::test3()
   if (a_copy > a)
     throw std::runtime_error {"SodiumTester::test3() a+5 > a"};
   
-  Sodium::Nonce<> b(false); // uninitialized, zeroed?
+  Nonce<> b(false); // uninitialized, zeroed?
   os << "b+0: " << Sodium::tohex(b.as_data_t()) << std::endl;
   if (! b.is_zero())
     throw std::runtime_error {"SodiumTester::test3() not initialized to zero"};
@@ -317,9 +326,9 @@ std::string
 SodiumTester::test4(const std::string &plaintext,
 		    const std::string &header)
 {
-  Sodium::CryptorAEAD                   sc_aead {};
-  Sodium::Key                           key(Sodium::Key::KEYSIZE_AEAD);
-  Sodium::Nonce<Sodium::NONCESIZE_AEAD> nonce {};
+  CryptorAEAD                   sc_aead {};
+  Key                           key(Key::KEYSIZE_AEAD);
+  Nonce<Sodium::NONCESIZE_AEAD> nonce {};
 
   std::ostringstream os; // to collect output
   os << "starting AEAD test... ---------" << std::endl;
@@ -457,8 +466,8 @@ SodiumTester::test4(const std::string &plaintext,
 /**
  * This function tests Sodium::StreamCryptor:
  *
- * We will test the stream cryptors Sodium::StreamCryptor::encrypt() and
- * Sodium::StreamCryptor::decrypt() on std::ifstream and std::ofstream,
+ * We will test the stream cryptors StreamCryptor::encrypt() and
+ * StreamCryptor::decrypt() on std::ifstream and std::ofstream,
  * i.e. on regular binary files.
  *
  * The preparations consist in intantiating a Sodium::StreamCryptor object.
@@ -505,11 +514,11 @@ SodiumTester::test4(const std::string &plaintext,
 bool
 SodiumTester::test5(const std::string &filename)
 {
-  std::size_t                           MYBLKSIZE = 1024;
+  std::size_t                              MYBLKSIZE = 1024;
   
-  Sodium::Key                           key   (Sodium::Key::KEYSIZE_AEAD);
-  Sodium::Nonce<Sodium::NONCESIZE_AEAD> nonce {};
-  Sodium::StreamCryptor                 strm_crypt (key, nonce, MYBLKSIZE);
+  Key                           key        (Key::KEYSIZE_AEAD);
+  Nonce<Sodium::NONCESIZE_AEAD> nonce      {};
+  StreamCryptor                 strm_crypt (key, nonce, MYBLKSIZE);
 
   key.noaccess();
   
@@ -550,13 +559,13 @@ SodiumTester::test5(const std::string &filename)
 bool
 SodiumTester::test6(const std::string &filename)
 {
-  std::size_t                           MYBLKSIZE = 1024;
+  std::size_t                   MYBLKSIZE  = 1024;
   
-  Sodium::Key                           key     (Sodium::Key::KEYSIZE_AEAD);
-  Sodium::Key                           hashkey (Sodium::FileCryptor::HASHKEYSIZE);
-  Sodium::Nonce<Sodium::NONCESIZE_AEAD> nonce {};
-  Sodium::FileCryptor                   file_crypt (key, nonce, MYBLKSIZE,
-						    hashkey, Sodium::FileCryptor::HASHSIZE);
+  Key                           key        (Key::KEYSIZE_AEAD);
+  Key                           hashkey    (FileCryptor::HASHKEYSIZE);
+  Nonce<Sodium::NONCESIZE_AEAD> nonce      {};
+  FileCryptor                   file_crypt (key, nonce, MYBLKSIZE,
+					    hashkey, FileCryptor::HASHSIZE);
 
   key.noaccess();
   hashkey.noaccess();

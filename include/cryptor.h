@@ -30,9 +30,9 @@ namespace Sodium {
 class Cryptor {
 
  public:
-  static constexpr unsigned int NSZ     = Sodium::NONCESIZE_SECRETBOX;
-  static constexpr std::size_t  KEYSIZE = Key::KEYSIZE_SECRETBOX;
-  static constexpr std::size_t  MACSIZE = crypto_secretbox_MACBYTES;
+  static constexpr std::size_t NONCESIZE = Sodium::NONCESIZE_SECRETBOX;
+  static constexpr std::size_t KEYSIZE   = Key::KEYSIZE_SECRETBOX;
+  static constexpr std::size_t MACSIZE   = crypto_secretbox_MACBYTES;
   
   /**
    * Encrypt plaintext using key and nonce, returning ciphertext.
@@ -59,9 +59,9 @@ class Cryptor {
    * and it too won't be stored in protected key_t memory.
    **/
 
-  data_t encrypt(const data_t     &plaintext,
-		 const Key        &key,
-		 const Nonce<NSZ> &nonce);
+  data_t encrypt(const data_t           &plaintext,
+		 const Key              &key,
+		 const Nonce<NONCESIZE> &nonce);
 
   /**
    * Encrypt plaintext using key and nonce, returning ciphertext.
@@ -88,10 +88,10 @@ class Cryptor {
    * channel, and they too won't be stored in protected key_t memory.
    **/
   
-  data_t encrypt(const data_t     &plaintext,
-		 const Key        &key,
-		 const Nonce<NSZ> &nonce,
-		 data_t           &mac);
+  data_t encrypt(const data_t           &plaintext,
+		 const Key              &key,
+		 const Nonce<NONCESIZE> &nonce,
+		 data_t                 &mac);
   
   /**
    * Decrypt ciphertext using key and nonce, returing decrypted plaintext.
@@ -105,9 +105,9 @@ class Cryptor {
    * the key or ciphertext don't make sense.
    **/
 
-  data_t decrypt(const data_t     &ciphertext,
-		 const Key        &key,
-		 const Nonce<NSZ> &nonce);
+  data_t decrypt(const data_t           &ciphertext,
+		 const Key              &key,
+		 const Nonce<NONCESIZE> &nonce);
 
   /**
    * Decrypt ciphertext using key and nonce, returing decrypted plaintext.
@@ -123,10 +123,10 @@ class Cryptor {
    * the key or mac don't make sense.
    **/
   
-  data_t decrypt(const data_t     &ciphertext,
-		 const data_t     &mac,
-		 const Key        &key,
-		 const Nonce<NSZ> &nonce);
+  data_t decrypt(const data_t           &ciphertext,
+		 const data_t           &mac,
+		 const Key              &key,
+		 const Nonce<NONCESIZE> &nonce);
 
 };
 
