@@ -20,6 +20,7 @@
 #define _S_FILECRYPTOR_H_
 
 #include "key.h"
+#include "keyvar.h"
 #include "nonce.h"
 #include "cryptoraead.h"
 
@@ -50,7 +51,6 @@ class FileCryptor {
    *   - HASHKEYSIZE is the recommended number of key bytes
    *   - HASHKEYSIZE_MIN is the minimum number of key bytes
    *   - HASHKEYSIZE_MAX is the maximum number of key bytes
-   * CAVEAT: for now, only HASHKEYSIZE is allowed.
    **/
   constexpr static std::size_t HASHKEYSIZE     = Sodium::KEYSIZE_HASHKEY;
   constexpr static std::size_t HASHKEYSIZE_MIN = Sodium::KEYSIZE_HASHKEY_MIN;
@@ -90,21 +90,20 @@ class FileCryptor {
    * the hash MUST be the same as the one given here.
    **/
 
-  FileCryptor(const Key<KEYSIZE> &key,
+  FileCryptor(const Key<KEYSIZE>          &key,
 	      const Nonce<NONCESIZE_AEAD> &nonce,
-	      const std::size_t blocksize,
-	      const Key<HASHKEYSIZE> &hashkey,
-	      const std::size_t hashsize) :
+	      const std::size_t           blocksize,
+	      const KeyVar                &hashkey,
+	      const std::size_t           hashsize) :
   key_ {key}, nonce_ {nonce}, header_ {}, blocksize_ {blocksize},
   hashkey_ {hashkey}, hashsize_ {hashsize} {
     // some sanity checks, before we start
     if (blocksize < 1)
       throw std::runtime_error {"Sodium::FileCryptor::FileCryptor(): wrong blocksize"};
-    // !!! --->>> hashkey.size() is currently pegged at HASHKEYSIZE <<<--- !!!
-    // if (hashkey.size() < HASHKEYSIZE_MIN)
-    //   throw std::runtime_error {"Sodium::FileCryptor::FileCryptor(): hash key too small"};
-    // if (hashkey.size() > HASHKEYSIZE_MAX)
-    //   throw std::runtime_error {"Sodium::FileCryptor::FileCryptor(): hash key too big"};
+    if (hashkey.size() < HASHKEYSIZE_MIN)
+      throw std::runtime_error {"Sodium::FileCryptor::FileCryptor(): hash key too small"};
+    if (hashkey.size() > HASHKEYSIZE_MAX)
+      throw std::runtime_error {"Sodium::FileCryptor::FileCryptor(): hash key too big"};
   }
 
   /**
@@ -151,14 +150,14 @@ class FileCryptor {
 
  private:
   Key<KEYSIZE>          key_;
-  Key<HASHKEYSIZE>      hashkey_;
+  KeyVar                hashkey_;
   Nonce<NONCESIZE_AEAD> nonce_;
   data_t                header_;
   std::size_t           blocksize_, hashsize_;
   
   CryptorAEAD           sc_aead_;
 };
-  
+
 } // namespace Sodium
 
 #endif // _S_FILECRYPTOR_H_

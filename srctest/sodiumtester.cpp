@@ -21,6 +21,7 @@
 #include "common.h"
 #include "nonce.h"
 #include "key.h"
+#include "keyvar.h"
 #include "cryptor.h"
 #include "auth.h"
 #include "cryptoraead.h"
@@ -35,6 +36,7 @@
 #include <utility>
 
 using Sodium::Key;
+using Sodium::KeyVar;
 using Sodium::Nonce;
 using Sodium::Cryptor;
 using Sodium::CryptorAEAD;
@@ -561,7 +563,7 @@ SodiumTester::test6(const std::string &filename)
   std::size_t                   MYBLKSIZE  = 1024;
   
   Key<Sodium::KEYSIZE_AEAD>     key;
-  Key<FileCryptor::HASHKEYSIZE> hashkey;
+  KeyVar                        hashkey    (FileCryptor::HASHKEYSIZE);
   Nonce<Sodium::NONCESIZE_AEAD> nonce      {};
   FileCryptor                   file_crypt (key, nonce, MYBLKSIZE,
 					    hashkey, FileCryptor::HASHSIZE);
@@ -569,7 +571,7 @@ SodiumTester::test6(const std::string &filename)
   key.noaccess();
   hashkey.noaccess();
   
-  std::ifstream ifs(filename,          std::ios_base::binary);
+  std::ifstream ifs(filename,           std::ios_base::binary);
   std::ofstream ofs(filename + ".enc2", std::ios_base::binary);
 
   if (!ifs || !ofs)
