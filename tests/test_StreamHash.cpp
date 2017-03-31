@@ -22,12 +22,12 @@
 
 #include <sodium.h>
 #include "streamhash.h"
-#include "key.h"
+#include "keyvar.h"
 #include <string>
 #include <algorithm>
 #include <sstream>
 
-using Sodium::Key;
+using Sodium::KeyVar;
 using Sodium::StreamHash;
 using data_t = Sodium::data_t;
 
@@ -43,8 +43,8 @@ falsify_plaintext(const std::string &plaintext)
   BOOST_CHECK_MESSAGE(! plaintext.empty(),
 		      "Nothing to falsify, empty plaintext");
 
-  Key<StreamHash::KEYSIZE> key;
-  StreamHash               hasher {key, hashsize, blocksize};
+  KeyVar     key    (StreamHash::KEYSIZE);
+  StreamHash hasher {key, hashsize, blocksize};
   
   std::istringstream istr(plaintext);
   
@@ -71,8 +71,8 @@ falsify_plaintext(const std::string &plaintext)
 bool
 falsify_key(const std::string &plaintext)
 {
-  Key<StreamHash::KEYSIZE> key;
-  StreamHash               hasher {key, hashsize, blocksize};
+  KeyVar     key    (StreamHash::KEYSIZE);
+  StreamHash hasher {key, hashsize, blocksize};
   
   std::istringstream istr(plaintext);
   
@@ -82,8 +82,8 @@ falsify_key(const std::string &plaintext)
   BOOST_CHECK_EQUAL(hash1.size(), hashsize);
 
   // to simulate falsification of key, just hash with a different key.
-  Key<StreamHash::KEYSIZE> key_falsified;
-  StreamHash               hasher_falsified {key_falsified, hashsize, blocksize};
+  KeyVar     key_falsified(StreamHash::KEYSIZE);
+  StreamHash hasher_falsified {key_falsified, hashsize, blocksize};
 
   std::istringstream istr_copy(plaintext);
 
@@ -100,8 +100,8 @@ falsify_key(const std::string &plaintext)
 bool
 compare_both_hashes(const std::string &plaintext)
 {
-  Key<StreamHash::KEYSIZE> key;
-  StreamHash               hasher {key, hashsize, blocksize};
+  KeyVar     key    (StreamHash::KEYSIZE);
+  StreamHash hasher {key, hashsize, blocksize};
   
   std::istringstream istr(plaintext);
   std::istringstream istr_copy(plaintext);

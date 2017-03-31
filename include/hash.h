@@ -20,7 +20,8 @@
 #define _S_HASH_H_
 
 #include "common.h"
-#include "key.h"
+#include "key.h"     // keysize constants
+#include "keyvar.h"
 
 #include <sodium.h>
 
@@ -51,13 +52,11 @@ class Hash {
    * the key will very likely result in a different hash.
    *
    * The computed and returned hash will be hashsize bytes long.
-   *
-   * CAUTION: Currently, key size is pegged at KEYSIZE.
    **/
   
-  data_t hash(const data_t       &plaintext,
-	      const Key<KEYSIZE> &key,
-	      const std::size_t  hashsize=HASHSIZE);
+  data_t hash(const data_t      &plaintext,
+	      const KeyVar      &key,
+	      const std::size_t hashsize=HASHSIZE);
 
   /**
    * Hash a plaintext into a hash of the desired size of hashsize
@@ -89,13 +88,11 @@ class Hash {
    * The same plaintext with the same key and same desired hashsize
    * will always result in same hash. All things being equal, changing
    * the key will very likely result in a different hash.
-   * 
-   * CAUTION: Currently, key size is pegged at KEYSIZE.
    **/
 
-  void   hash(const data_t       &plaintext,
-	      const Key<KEYSIZE> &key,
-	      data_t             &outHash);
+  void   hash(const data_t &plaintext,
+	      const KeyVar &key,
+	      data_t       &outHash);
 
   /**
    * Hash a plaintext into a hash of the size outHash.size().

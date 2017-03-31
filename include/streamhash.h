@@ -22,7 +22,8 @@
 #include <sodium.h>
 
 #include "common.h"
-#include "key.h"
+#include "key.h"     // key sizes
+#include "keyvar.h"
 #include "hash.h"
 
 #include <stdexcept>
@@ -56,28 +57,25 @@ class StreamHash {
    *
    *   KEYSIZE_MIN   <= key.size() <= KEYSIZE_MAX,  KEYSIZE  recommended.
    *   HASHSIZE_MIN  <= hashsize   <= HASHSIZE_MAX, HASHSIZE recommended.
-   *
-   * CAUTION: The key size is currently pegged at KEYSIZE.
    **/
 
-  StreamHash(const Key<KEYSIZE> &key,
-	     const std::size_t  hashsize,
-	     const std::size_t  blocksize) :
-    key_ {key}, isKeyless_ {false},
+  StreamHash(const KeyVar      &key,
+	     const std::size_t hashsize,
+	     const std::size_t blocksize) :
+    key_ {key},
     hashsize_ {hashsize}, blocksize_ {blocksize} {
 
-      // we keep the key size checks commented out here for now...
-      // if (key.size() < KEYSIZE_MIN)
-      // throw std::runtime_error {"Sodium::StreamHash() key too small"};
-      // if (key.size() > KEYSIZE_MAX)
-      // 	throw std::runtime_error {"Sodium::StreamHash() key too big"};
+      if (key.size() < KEYSIZE_MIN)
+	throw std::runtime_error {"Sodium::StreamHash::StreamHash() key too small"};
+      if (key.size() > KEYSIZE_MAX)
+       	throw std::runtime_error {"Sodium::StreamHash::StreamHash() key too big"};
       
       if (hashsize < HASHSIZE_MIN)
-	throw std::runtime_error {"Sodium::StreamHash() hash size too small"};
+	throw std::runtime_error {"Sodium::StreamHash::StreamHash() hash size too small"};
       if (hashsize > HASHSIZE_MAX)
-	throw std::runtime_error {"Sodium::StreamHash() hash size too big"};
+	throw std::runtime_error {"Sodium::StreamHash::StreamHash() hash size too big"};
       if (blocksize < 1)
-	throw std::runtime_error {"Sodium::StreamHash() wrong blocksize"};
+	throw std::runtime_error {"Sodium::StreamHash::StreamHash() wrong blocksize"};
 
       crypto_generichash_init(&state_, key.data(), key.size(), hashsize);
   }
@@ -90,14 +88,14 @@ class StreamHash {
 
   StreamHash(const std::size_t hashsize,
 	     const std::size_t blocksize) :
-    key_ {false}, isKeyless_ {true},
+    key_ {0, false},
     hashsize_ {hashsize}, blocksize_ {blocksize} {
       if (hashsize < HASHSIZE_MIN)
-	throw std::runtime_error {"Sodium::StreamHash() hash size too small"};
+	throw std::runtime_error {"Sodium::StreamHash::StreamHash() hash size too small"};
       if (hashsize > HASHSIZE_MAX)
-	throw std::runtime_error {"Sodium::StreamHash() hash size too big"};
+	throw std::runtime_error {"Sodium::StreamHash::StreamHash() hash size too big"};
       if (blocksize < 1)
-	throw std::runtime_error {"Sodium::StreamHash() wrong blocksize"};
+	throw std::runtime_error {"Sodium::StreamHash::StreamHash() wrong blocksize"};
 
       crypto_generichash_init(&state_, NULL, 0, hashsize);
   }
@@ -135,9 +133,7 @@ class StreamHash {
 	      data_t       &outHash);
   
  private:
-  Key<KEYSIZE> key_;
-  bool         isKeyless_;
-
+  KeyVar       key_;
   std::size_t  hashsize_;
   std::size_t  blocksize_;
 

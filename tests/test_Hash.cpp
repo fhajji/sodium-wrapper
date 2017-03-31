@@ -22,12 +22,12 @@
 
 #include <sodium.h>
 #include "hash.h"
-#include "key.h"
+#include "keyvar.h"
 #include <string>
 #include <stdexcept>
 
 using Sodium::Hash;
-using Sodium::Key;
+using Sodium::KeyVar;
 
 using data_t = Sodium::data_t;
 
@@ -39,8 +39,8 @@ bool
 test_hash_size(const std::string &plaintext,
 	       const std::size_t hashsize)
 {
-  Key<Hash::KEYSIZE> key;
-  Hash               hasher {};
+  KeyVar key(hashsize);
+  Hash   hasher {};
   
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -63,12 +63,8 @@ test_key_size(const std::string &plaintext,
 	      const std::size_t keysize,
 	      bool  return_hash_as_value=true)
 {
-  // short-circuit/fail this test for now, because all hash keys are
-  // currently pegged at Hash::KEYSIZE.
-  BOOST_CHECK(keysize == Hash::KEYSIZE);
-  
-  Key<Hash::KEYSIZE> key;
-  Hash               hasher {};
+  KeyVar key    (keysize);
+  Hash   hasher {};
 
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -95,10 +91,10 @@ test_key_size(const std::string &plaintext,
 bool
 test_different_keys(const std::string &plaintext)
 {
-  Key<Hash::KEYSIZE> key1;
-  Key<Hash::KEYSIZE> key2;
-  Hash               hasher {};
-
+  KeyVar key1(Hash::KEYSIZE);
+  KeyVar key2(Hash::KEYSIZE);
+  Hash   hasher {};
+  
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
 
   try {
@@ -258,8 +254,8 @@ BOOST_AUTO_TEST_CASE( sodium_hash_test_key_size_too_big_outHash )
 
 BOOST_AUTO_TEST_CASE( sodium_hash_test_falsify_plaintext )
 {
-  Key<Hash::KEYSIZE> key;
-  Hash               hasher {};
+  KeyVar key(Hash::KEYSIZE);
+  Hash   hasher {};
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   data_t      plainblob { plaintext.cbegin(), plaintext.cend() };

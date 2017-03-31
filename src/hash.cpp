@@ -18,28 +18,27 @@
 
 #include "common.h"
 #include "key.h"
+#include "keyvar.h"
 #include "hash.h"
 
 #include <sodium.h>
 
 using data_t = Sodium::data_t;
 
-using Sodium::Key;
+using Sodium::KeyVar;
 using Sodium::Hash;
 
 data_t
-Hash::hash (const data_t       &plaintext,
-	    const Key<KEYSIZE> &key,
+Hash::hash (const data_t      &plaintext,
+	    const KeyVar      &key,
 	    const std::size_t hashsize)
 {
   // some sanity checks before we start
 
-  // we keep the key size checks in, but commented out, even though
-  // they're currently pegged at KEYSIZE.
-  // if (key.size() < Hash::KEYSIZE_MIN)
-  //   throw std::runtime_error {"Sodium::Hash::hash() key size too small"};
-  // if (key.size() > Hash::KEYSIZE_MAX)
-  //   throw std::runtime_error {"Sodium::Hash::hash() key size too big"};
+  if (key.size() < Hash::KEYSIZE_MIN)
+    throw std::runtime_error {"Sodium::Hash::hash() key size too small"};
+  if (key.size() > Hash::KEYSIZE_MAX)
+    throw std::runtime_error {"Sodium::Hash::hash() key size too big"};
 
   if (hashsize < Hash::HASHSIZE_MIN)
     throw std::runtime_error {"Sodium::Hash::hash() hash size too small"};
@@ -81,18 +80,16 @@ Hash::hash (const data_t      &plaintext,
 }
 
 void
-Hash::hash (const data_t       &plaintext,
-	    const Key<KEYSIZE> &key,
-	    data_t             &outHash)
+Hash::hash (const data_t &plaintext,
+	    const KeyVar &key,
+	    data_t       &outHash)
 {
   // some sanity checks before we start
   
-  // we keep the key size checks in, but commented out, even though
-  // they're currently pegged at KEYSIZE.
-  // if (key.size() < Hash::KEYSIZE_MIN)
-  //   throw std::runtime_error {"Sodium::Hash::hash() key size too small"};
-  // if (key.size() > Hash::KEYSIZE_MAX)
-  //   throw std::runtime_error {"Sodium::Hash::hash() key size too big"};
+  if (key.size() < Hash::KEYSIZE_MIN)
+    throw std::runtime_error {"Sodium::Hash::hash() key size too small"};
+  if (key.size() > Hash::KEYSIZE_MAX)
+    throw std::runtime_error {"Sodium::Hash::hash() key size too big"};
   
   if (outHash.size() < Hash::HASHSIZE_MIN)
     throw std::runtime_error {"Sodium::Hash::hash() hash size too small"};
