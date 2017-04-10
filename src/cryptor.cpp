@@ -17,20 +17,16 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #include "cryptor.h"
-#include "nonce.h"
-#include "key.h"
 
 #include <stdexcept>
 
 using Sodium::data_t;
 using Sodium::Cryptor;
-using Sodium::Key;
-using Sodium::Nonce;
 
 data_t
-Cryptor::encrypt (const data_t           &plaintext,
-		  const Key<KEYSIZE>     &key,
-		  const Nonce<NONCESIZE> &nonce)
+Cryptor::encrypt (const data_t     &plaintext,
+		  const key_type   &key,
+		  const nonce_type &nonce)
 {
   // make space for MAC and encrypted message,
   // combined form, i.e. (MAC || encrypted)
@@ -47,10 +43,10 @@ Cryptor::encrypt (const data_t           &plaintext,
 }
 
 data_t
-Cryptor::encrypt (const data_t           &plaintext,
-		  const Key<KEYSIZE>     &key,
-		  const Nonce<NONCESIZE> &nonce,
-		  data_t                 &mac)
+Cryptor::encrypt (const data_t     &plaintext,
+		  const key_type   &key,
+		  const nonce_type &nonce,
+		  data_t           &mac)
 {
   // some sanity checks before we get started
   if (mac.size() != MACSIZE)
@@ -72,9 +68,9 @@ Cryptor::encrypt (const data_t           &plaintext,
 }
 
 data_t
-Cryptor::decrypt (const data_t           &ciphertext,
-		  const Key<KEYSIZE>     &key,
-		  const Nonce<NONCESIZE> &nonce)
+Cryptor::decrypt (const data_t     &ciphertext,
+		  const key_type   &key,
+		  const nonce_type &nonce)
 {
   // some sanity checks before we get started
   if (ciphertext.size() < MACSIZE)
@@ -94,10 +90,10 @@ Cryptor::decrypt (const data_t           &ciphertext,
 }
 
 data_t
-Cryptor::decrypt (const data_t           &ciphertext,
-		  const data_t           &mac,
-		  const Key<KEYSIZE>     &key,
-		  const Nonce<NONCESIZE> &nonce)
+Cryptor::decrypt (const data_t     &ciphertext,
+		  const data_t     &mac,
+		  const key_type   &key,
+		  const nonce_type &nonce)
 {
   // some sanity checks before we get started
   if (mac.size() != MACSIZE)

@@ -83,9 +83,9 @@ SodiumTester::SodiumTester()
 std::string
 SodiumTester::test0(const std::string &plaintext)
 {  
-  Cryptor sc {};                       // encryptor, decryptor.
-  Key<Sodium::KEYSIZE_SECRETBOX> key;  // create random key
-  Nonce<> nonce {};                    // create random nonce;
+  Cryptor             sc {};    // encryptor, decryptor.
+  Cryptor::key_type   key;      // create random key
+  Cryptor::nonce_type nonce {}; // create random nonce;
   
   // transfer plaintext into a binary blob
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -185,9 +185,9 @@ SodiumTester::test2(const std::string &plaintext,
 		    const std::string &pw1,
 		    const std::string &pw2)
 {
-  Cryptor                        sc {};      // encryptor, decryptor.
-  Key<Sodium::KEYSIZE_SECRETBOX> key(false); // uninitialized, r/w for now
-  Sodium::Nonce<>                nonce {};
+  Cryptor             sc {};      // encryptor, decryptor.
+  Cryptor::key_type   key(false); // uninitialized, r/w for now
+  Cryptor::nonce_type nonce {};
 
   // random salt, needed by the key derivation function.
   // NOTE: can't move this into Key::setpass(),

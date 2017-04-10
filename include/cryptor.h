@@ -33,6 +33,9 @@ class Cryptor {
   static constexpr std::size_t NONCESIZE = Sodium::NONCESIZE_SECRETBOX;
   static constexpr std::size_t KEYSIZE   = Sodium::KEYSIZE_SECRETBOX;
   static constexpr std::size_t MACSIZE   = crypto_secretbox_MACBYTES;
+
+  using nonce_type = Nonce<NONCESIZE>;
+  using key_type   = Key<KEYSIZE>;
   
   /**
    * Encrypt plaintext using key and nonce, returning ciphertext.
@@ -56,9 +59,9 @@ class Cryptor {
    * and it too won't be stored in protected key_t memory.
    **/
 
-  data_t encrypt(const data_t           &plaintext,
-		 const Key<KEYSIZE>     &key,
-		 const Nonce<NONCESIZE> &nonce);
+  data_t encrypt(const data_t     &plaintext,
+		 const key_type   &key,
+		 const nonce_type &nonce);
 
   /**
    * Encrypt plaintext using key and nonce, returning ciphertext.
@@ -85,10 +88,10 @@ class Cryptor {
    * channel, and they too won't be stored in protected key_t memory.
    **/
   
-  data_t encrypt(const data_t           &plaintext,
-		 const Key<KEYSIZE>     &key,
-		 const Nonce<NONCESIZE> &nonce,
-		 data_t                 &mac);
+  data_t encrypt(const data_t     &plaintext,
+		 const key_type   &key,
+		 const nonce_type &nonce,
+		 data_t           &mac);
   
   /**
    * Decrypt ciphertext using key and nonce, returing decrypted plaintext.
@@ -102,9 +105,9 @@ class Cryptor {
    * the ciphertext is too small to even contain the MAC (MACSIZE bytes).
    **/
 
-  data_t decrypt(const data_t           &ciphertext,
-		 const Key<KEYSIZE>     &key,
-		 const Nonce<NONCESIZE> &nonce);
+  data_t decrypt(const data_t     &ciphertext,
+		 const key_type   &key,
+		 const nonce_type &nonce);
 
   /**
    * Decrypt ciphertext using key and nonce, returing decrypted plaintext.
@@ -120,10 +123,10 @@ class Cryptor {
    * the mac isn't MACSIZE.
    **/
   
-  data_t decrypt(const data_t           &ciphertext,
-		 const data_t           &mac,
-		 const Key<KEYSIZE>     &key,
-		 const Nonce<NONCESIZE> &nonce);
+  data_t decrypt(const data_t     &ciphertext,
+		 const data_t     &mac,
+		 const key_type   &key,
+		 const nonce_type &nonce);
 
 };
 

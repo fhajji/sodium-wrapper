@@ -22,13 +22,9 @@
 
 #include <sodium.h>
 #include "cryptor.h"
-#include "key.h"
-#include "nonce.h"
 #include <string>
 
 using Sodium::Cryptor;
-using Sodium::Key;
-using Sodium::Nonce;
 
 using data_t = Sodium::data_t;
 
@@ -37,9 +33,9 @@ test_of_correctness(const std::string &plaintext,
 		    bool falsify_ciphertext=false,
 		    bool falsify_mac=false)
 {
-  Cryptor               sc    {};
-  Key<Cryptor::KEYSIZE> key;
-  Nonce<>               nonce {};
+  Cryptor             sc    {};
+  Cryptor::key_type   key;
+  Cryptor::nonce_type nonce {};
 
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -85,9 +81,9 @@ test_of_correctness_detached(const std::string &plaintext,
 			     bool falsify_ciphertext=false,
 			     bool falsify_mac=false)
 {
-  Cryptor               sc    {};
-  Key<Cryptor::KEYSIZE> key;
-  Nonce<>               nonce {};
+  Cryptor             sc    {};
+  Cryptor::key_type   key;
+  Cryptor::nonce_type nonce {};
 
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
   data_t mac(Cryptor::MACSIZE);
