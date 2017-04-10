@@ -18,13 +18,11 @@
 
 #include <stdexcept>
 #include "common.h"
-#include "key.h"
 #include "sealedbox.h"
 
 using data_t = Sodium::data_t;
 
 using Sodium::SealedBox;
-using Sodium::Key;
 
 data_t
 SealedBox::encrypt(const data_t &plaintext,
@@ -43,9 +41,9 @@ SealedBox::encrypt(const data_t &plaintext,
 }
 
 data_t
-SealedBox::decrypt(const data_t               &ciphertext_with_seal,
-		   const Key<KEYSIZE_PRIVKEY> &privkey,
-		   const data_t               &pubkey) {
+SealedBox::decrypt(const data_t       &ciphertext_with_seal,
+		   const privkey_type &privkey,
+		   const data_t       &pubkey) {
   // some sanity checks before we get started
   if (pubkey.size() != KEYSIZE_PUBKEY)
     throw std::runtime_error {"Sodium::SealedBox::decrypt() wrong pubkey size"};

@@ -32,11 +32,11 @@ using data_t = Sodium::data_t;
 bool
 test_of_correctness(const std::string &plaintext)
 {
-  SealedBox               sb            {};
-  KeyPair                 keypair_alice {};
-  KeyPair                 keypair_bob   {};
+  SealedBox sb            {};
+  KeyPair   keypair_alice {};
+  KeyPair   keypair_bob   {};
 
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  data_t    plainblob     {plaintext.cbegin(), plaintext.cend()};
 
   // 1. alice gets the public key from bob, and sends him a message
   
@@ -81,10 +81,10 @@ test_of_correctness(const std::string &plaintext)
 bool
 falsify_seal(const std::string &plaintext)
 {
-  SealedBox               sb            {};
-  KeyPair                 keypair_alice {};
+  SealedBox sb            {};
+  KeyPair   keypair_alice {};
 
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  data_t    plainblob     {plaintext.cbegin(), plaintext.cend()};
 
   // encrypt to self
   data_t ciphertext = sb.encrypt(plainblob,
@@ -118,10 +118,10 @@ falsify_ciphertext(const std::string &plaintext)
   BOOST_CHECK_MESSAGE(! plaintext.empty(),
 		      "Nothing to falsify, empty plaintext");
   
-  SealedBox               sb            {};
-  KeyPair                 keypair_alice {};
+  SealedBox sb            {};
+  KeyPair   keypair_alice {};
 
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  data_t    plainblob     {plaintext.cbegin(), plaintext.cend()};
 
   // encrypt to self
   data_t ciphertext = sb.encrypt(plainblob,
@@ -150,12 +150,12 @@ falsify_ciphertext(const std::string &plaintext)
 bool
 falsify_recipient(const std::string &plaintext)
 {
-  SealedBox               sb            {};
-  KeyPair                 keypair_alice {}; // sender
-  KeyPair                 keypair_bob   {}; // intended recipient
-  KeyPair                 keypair_oscar {}; // real recipient
+  SealedBox sb            {};
+  KeyPair   keypair_alice {}; // sender
+  KeyPair   keypair_bob   {}; // intended recipient
+  KeyPair   keypair_oscar {}; // real recipient
 
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  data_t    plainblob     {plaintext.cbegin(), plaintext.cend()};
 
   // 1. Alice encrypts a plaintext intended to be sent to bob,
   // with bob's public key.
@@ -216,8 +216,8 @@ BOOST_AUTO_TEST_CASE( sodium_sealedbox_test_empty_plaintext )
 
 BOOST_AUTO_TEST_CASE( sodium_sealedbox_test_encrypt_to_self )
 {
-  SealedBox               sb            {};
-  KeyPair                 keypair_alice {};
+  SealedBox sb            {};
+  KeyPair   keypair_alice {};
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
