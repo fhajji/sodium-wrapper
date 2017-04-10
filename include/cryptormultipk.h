@@ -40,6 +40,9 @@ class CryptorMultiPK {
   static constexpr std::size_t  KEYSIZE_SHAREDKEY = Sodium::KEYSIZE_SHAREDKEY;
   static constexpr std::size_t  MACSIZE           = crypto_box_MACBYTES;
 
+  using privkey_type = Key<KEYSIZE_PRIVKEY>;
+  using nonce_type   = Nonce<NSZPK>;
+  
   /**
    * Create and store an internal shared key built out of a
    * private key and a public key.
@@ -65,8 +68,8 @@ class CryptorMultiPK {
    * will throw a std::runtime_error.
    **/
   
-  CryptorMultiPK(const Key<KEYSIZE_PRIVKEY> &privkey,
-		 const data_t               &pubkey)
+  CryptorMultiPK(const privkey_type &privkey,
+		 const data_t       &pubkey)
     : shared_key_(false),
       shared_key_ready_(false)
   {
@@ -95,8 +98,8 @@ class CryptorMultiPK {
    * of the shared key is undefined. 
    **/
   
-  void set_shared_key(const Key<KEYSIZE_PRIVKEY> &privkey,
-		      const data_t               &pubkey);
+  void set_shared_key(const privkey_type &privkey,
+		      const data_t       &pubkey);
 
   /**
    * Destroy the shared key by zeroing its contents after it is no
@@ -149,8 +152,8 @@ class CryptorMultiPK {
    *  - the shared key is not ready
    **/
 
-  data_t encrypt(const data_t       &plaintext,
-		 const Nonce<NSZPK> &nonce);
+  data_t encrypt(const data_t     &plaintext,
+		 const nonce_type &nonce);
   
   /**
    * Decrypt and verify the signature of the ciphertext using the
@@ -174,8 +177,8 @@ class CryptorMultiPK {
    *  - the shared key isn't ready
    **/
 
-  data_t decrypt(const data_t       &ciphertext_with_mac,
-		 const Nonce<NSZPK> &nonce);
+  data_t decrypt(const data_t     &ciphertext_with_mac,
+		 const nonce_type &nonce);
 
  private:
   Key<KEYSIZE_SHAREDKEY> shared_key_;

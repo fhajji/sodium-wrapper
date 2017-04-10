@@ -17,8 +17,6 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #include "cryptormultipk.h"
-#include "key.h"
-#include "nonce.h"
 #include "common.h"
 
 #include <stdexcept>
@@ -26,12 +24,10 @@
 
 using Sodium::data_t;
 using Sodium::CryptorMultiPK;
-using Sodium::Key;
-using Sodium::Nonce;
 
 void
-CryptorMultiPK::set_shared_key (const Key<KEYSIZE_PRIVKEY> &privkey,
-				const data_t               &pubkey)
+CryptorMultiPK::set_shared_key (const privkey_type &privkey,
+				const data_t       &pubkey)
 {
   // some sanity checks before we get started
   if (pubkey.size() != KEYSIZE_PUBKEY)
@@ -50,8 +46,8 @@ CryptorMultiPK::set_shared_key (const Key<KEYSIZE_PRIVKEY> &privkey,
 }
 
 data_t
-CryptorMultiPK::encrypt(const data_t       &plaintext,
-			const Nonce<NSZPK> &nonce)
+CryptorMultiPK::encrypt(const data_t     &plaintext,
+			const nonce_type &nonce)
 {
   // some sanity checks before we start
   if (! shared_key_ready_)
@@ -71,8 +67,8 @@ CryptorMultiPK::encrypt(const data_t       &plaintext,
 }
 
 data_t
-CryptorMultiPK::decrypt(const data_t       &ciphertext_with_mac,
-			const Nonce<NSZPK> &nonce)
+CryptorMultiPK::decrypt(const data_t     &ciphertext_with_mac,
+			const nonce_type &nonce)
 {
   // some sanity checks before we start
   if (ciphertext_with_mac.size() < MACSIZE)

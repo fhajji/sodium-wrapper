@@ -36,18 +36,18 @@
 using namespace std::chrono;
 
 using Sodium::KeyPair;
-using Sodium::Nonce;
 using Sodium::CryptorPK;
 using Sodium::CryptorMultiPK;
+using Sodium::Nonce;
 
 using data_t = Sodium::data_t;
 
 bool
 test_of_correctness(const std::string &plaintext)
 {
-  KeyPair                      keypair_alice {};
-  KeyPair                      keypair_bob   {};
-  Nonce<CryptorMultiPK::NSZPK> nonce         {};
+  KeyPair                    keypair_alice {};
+  KeyPair                    keypair_bob   {};
+  CryptorMultiPK::nonce_type nonce         {};
 
   CryptorMultiPK          sc_alice(keypair_alice.privkey(),
 				   keypair_bob.pubkey());
@@ -96,9 +96,9 @@ test_of_correctness(const std::string &plaintext)
 bool
 falsify_mac(const std::string &plaintext)
 {
-  KeyPair                      keypair_alice {};
-  Nonce<CryptorMultiPK::NSZPK> nonce         {};
-  CryptorMultiPK               sc(keypair_alice);
+  KeyPair                    keypair_alice {};
+  CryptorMultiPK::nonce_type nonce         {};
+  CryptorMultiPK             sc(keypair_alice);
   
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -131,9 +131,9 @@ falsify_ciphertext(const std::string &plaintext)
   BOOST_CHECK_MESSAGE(! plaintext.empty(),
 		      "Nothing to falsify, empty plaintext");
   
-  KeyPair                      keypair_alice {};
-  Nonce<CryptorMultiPK::NSZPK> nonce         {};
-  CryptorMultiPK               sc(keypair_alice);
+  KeyPair                    keypair_alice {};
+  CryptorMultiPK::nonce_type nonce         {};
+  CryptorMultiPK             sc(keypair_alice);
   
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -162,17 +162,17 @@ falsify_ciphertext(const std::string &plaintext)
 bool
 falsify_sender(const std::string &plaintext)
 {
-  KeyPair                 keypair_alice {}; // recipient
-  KeyPair                 keypair_bob   {}; // impersonated sender
-  KeyPair                 keypair_oscar {}; // real sender
-  Nonce<CryptorMultiPK::NSZPK> nonce    {};
+  KeyPair                    keypair_alice {}; // recipient
+  KeyPair                    keypair_bob   {}; // impersonated sender
+  KeyPair                    keypair_oscar {}; // real sender
+  CryptorMultiPK::nonce_type nonce    {};
 
-  CryptorMultiPK          sc_alice(keypair_alice.privkey(),
-				   keypair_bob.pubkey());
-  CryptorMultiPK          sc_bob  (keypair_bob.privkey(),
-				   keypair_alice.pubkey());
-  CryptorMultiPK          sc_oscar(keypair_oscar.privkey(),
-				   keypair_alice.pubkey());
+  CryptorMultiPK             sc_alice(keypair_alice.privkey(),
+				      keypair_bob.pubkey());
+  CryptorMultiPK             sc_bob  (keypair_bob.privkey(),
+				      keypair_alice.pubkey());
+  CryptorMultiPK             sc_oscar(keypair_oscar.privkey(),
+				      keypair_alice.pubkey());
 
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -217,9 +217,9 @@ falsify_sender(const std::string &plaintext)
 bool
 destroy_shared_key_then_encrypt(const data_t &plaintext)
 {
-  KeyPair                      keypair_alice {};
-  Nonce<CryptorMultiPK::NSZPK> nonce         {};
-  CryptorMultiPK               sc_alice(keypair_alice);
+  KeyPair                    keypair_alice {};
+  CryptorMultiPK::nonce_type nonce         {};
+  CryptorMultiPK             sc_alice(keypair_alice);
   
   // 1. alice panics and destroys the shared key:
   sc_alice.destroy_shared_key();
@@ -242,11 +242,11 @@ destroy_shared_key_then_encrypt(const data_t &plaintext)
 }
 
 bool
-destroy_shared_key_then_decrypt(const data_t                       &ciphertext,
-				const KeyPair                      &keypair,
-				const Nonce<CryptorMultiPK::NSZPK> &nonce)
+destroy_shared_key_then_decrypt(const data_t                     &ciphertext,
+				const KeyPair                    &keypair,
+				const CryptorMultiPK::nonce_type &nonce)
 {
-  CryptorMultiPK               sc_alice(keypair);
+  CryptorMultiPK sc_alice(keypair);
   
   // 1. alice panics and destroys the shared key:
   sc_alice.destroy_shared_key();
@@ -271,11 +271,11 @@ destroy_shared_key_then_decrypt(const data_t                       &ciphertext,
 void
 time_encrypt(const unsigned long nr_of_messages)
 {
-  KeyPair                      keypair_alice   {};
-  Nonce<CryptorMultiPK::NSZPK> nonce_single    {};
-  Nonce<CryptorPK::NSZPK>      nonce_multi     {};
-  CryptorPK                    sc_single_alice {};
-  CryptorMultiPK               sc_multi_alice  (keypair_alice);
+  KeyPair                    keypair_alice   {};
+  CryptorMultiPK::nonce_type nonce_multi     {};
+  Nonce<CryptorPK::NSZPK>    nonce_single    {};
+  CryptorPK                  sc_single_alice {};
+  CryptorMultiPK             sc_multi_alice  (keypair_alice);
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -320,11 +320,11 @@ time_encrypt(const unsigned long nr_of_messages)
 void
 time_decrypt(const unsigned long nr_of_messages)
 {
-  KeyPair                      keypair_alice   {};
-  Nonce<CryptorPK::NSZPK>      nonce_single    {};
-  Nonce<CryptorMultiPK::NSZPK> nonce_multi     {};
-  CryptorPK                    sc_single_alice {};
-  CryptorMultiPK               sc_multi_alice  (keypair_alice);
+  KeyPair                    keypair_alice   {};
+  Nonce<CryptorPK::NSZPK>    nonce_single    {};
+  CryptorMultiPK::nonce_type nonce_multi     {};
+  CryptorPK                  sc_single_alice {};
+  CryptorMultiPK             sc_multi_alice  (keypair_alice);
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -400,9 +400,9 @@ BOOST_AUTO_TEST_CASE( sodium_cryptormultipk_test_empty_plaintext )
 
 BOOST_AUTO_TEST_CASE( sodium_cryptomultipk_test_encrypt_to_self )
 {
-  KeyPair                      keypair_alice {};
-  Nonce<CryptorMultiPK::NSZPK> nonce         {};
-  CryptorMultiPK               sc_alice(keypair_alice);
+  KeyPair                    keypair_alice {};
+  CryptorMultiPK::nonce_type nonce         {};
+  CryptorMultiPK             sc_alice(keypair_alice);
   
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -465,9 +465,9 @@ BOOST_AUTO_TEST_CASE( sodium_cryptormultipk_test_destroysharedkey_encrypt )
 
 BOOST_AUTO_TEST_CASE( sodium_cryptormultipk_test_destroysharedkey_decrypt )
 {
-  KeyPair                      keypair_alice {};
-  Nonce<CryptorMultiPK::NSZPK> nonce         {};
-  CryptorMultiPK               sc_alice(keypair_alice);
+  KeyPair                    keypair_alice {};
+  CryptorMultiPK::nonce_type nonce         {};
+  CryptorMultiPK             sc_alice(keypair_alice);
   
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
