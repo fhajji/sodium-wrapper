@@ -106,4 +106,3 @@ StreamHash::hash(std::istream &istr,
     
   // returning outHash implicitely by reference.
 }
-
