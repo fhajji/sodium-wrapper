@@ -25,7 +25,7 @@
 #include "streamverifierpk.h"
 #include "keypairsign.h"
 #include <string>
-#include <algorithm>
+// #include <algorithm>
 #include <sstream>
 
 using Sodium::KeyPairSign;
@@ -39,12 +39,12 @@ constexpr static std::size_t blocksize = 8;
 bool
 test_of_correctness(const std::string &plaintext)
 {
-  KeyPairSign             keypair_alice  {};
-  KeyPairSign             keypair_bob    {};
-  StreamSignorPK          sc_signor_alice(keypair_alice.privkey(), blocksize);
-  StreamVerifierPK        sc_verifier_alice(keypair_alice.pubkey(), blocksize);
-  StreamSignorPK          sc_signor_bob  (keypair_bob.privkey(), blocksize);
-  StreamVerifierPK        sc_verifier_bob(keypair_bob.pubkey(), blocksize);
+  KeyPairSign       keypair_alice     {};
+  KeyPairSign       keypair_bob       {};
+  StreamSignorPK    sc_signor_alice   (keypair_alice.privkey(), blocksize);
+  StreamVerifierPK  sc_verifier_alice (keypair_alice.pubkey(), blocksize);
+  StreamSignorPK    sc_signor_bob     (keypair_bob.privkey(), blocksize);
+  StreamVerifierPK  sc_verifier_bob   (keypair_bob.pubkey(), blocksize);
   
   // 1. alice signs a message with her private key and sends it to bob
   std::istringstream istr_plaintext_alice_to_bob(plaintext);
@@ -87,9 +87,9 @@ test_of_correctness(const std::string &plaintext)
 bool
 falsify_signature(const std::string &plaintext)
 {
-  KeyPairSign            keypair_alice {};
-  StreamSignorPK         sc_signor     {keypair_alice, blocksize};
-  StreamVerifierPK       sc_verifier   {keypair_alice, blocksize};
+  KeyPairSign      keypair_alice {};
+  StreamSignorPK   sc_signor     {keypair_alice, blocksize};
+  StreamVerifierPK sc_verifier   {keypair_alice, blocksize};
 
   std::istringstream istr(plaintext);
   data_t signature = sc_signor.sign(istr);
@@ -115,9 +115,9 @@ falsify_plaintext(const std::string &plaintext)
   BOOST_CHECK_MESSAGE(! plaintext.empty(),
 		      "Nothing to falsify, empty plaintext");
 
-  KeyPairSign            keypair_alice {};
-  StreamSignorPK         sc_signor     {keypair_alice.privkey(), blocksize};
-  StreamVerifierPK       sc_verifier   {keypair_alice.pubkey(),  blocksize};
+  KeyPairSign        keypair_alice {};
+  StreamSignorPK     sc_signor     {keypair_alice.privkey(), blocksize};
+  StreamVerifierPK   sc_verifier   {keypair_alice.pubkey(),  blocksize};
   
   std::istringstream istr(plaintext);
   
@@ -141,12 +141,12 @@ falsify_plaintext(const std::string &plaintext)
 bool
 falsify_sender(const std::string &plaintext)
 {
-  KeyPairSign             keypair_alice {}; // recipient
-  KeyPairSign             keypair_bob   {}; // impersonated sender
-  KeyPairSign             keypair_oscar {}; // real sender
+  KeyPairSign        keypair_alice {}; // recipient
+  KeyPairSign        keypair_bob   {}; // impersonated sender
+  KeyPairSign        keypair_oscar {}; // real sender
 
-  StreamSignorPK          sc_oscar      {keypair_oscar.privkey(), blocksize};
-  StreamVerifierPK        sc_bob        {keypair_bob.pubkey(), blocksize};
+  StreamSignorPK     sc_oscar      {keypair_oscar.privkey(), blocksize};
+  StreamVerifierPK   sc_bob        {keypair_bob.pubkey(), blocksize};
 
   std::istringstream istr(plaintext);
   
@@ -197,11 +197,11 @@ BOOST_AUTO_TEST_CASE( sodium_streamsignorpk_test_empty_plaintext )
 
 BOOST_AUTO_TEST_CASE( sodium_streamsignorpk_test_sign_to_self )
 {
-  KeyPairSign             keypair_alice {};
-  StreamSignorPK          sc_signor     {keypair_alice.privkey(), blocksize};
-  StreamVerifierPK        sc_verifier   {keypair_alice.pubkey(),  blocksize};
+  KeyPairSign        keypair_alice {};
+  StreamSignorPK     sc_signor     {keypair_alice.privkey(), blocksize};
+  StreamVerifierPK   sc_verifier   {keypair_alice.pubkey(),  blocksize};
 
-  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+  std::string        plaintext {"the quick brown fox jumps over the lazy dog"};
   std::istringstream istr(plaintext);
 
   data_t signature = sc_signor.sign(istr);
