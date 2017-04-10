@@ -22,7 +22,6 @@
 
 #include <sodium.h>
 #include "hash.h"
-#include "keyvar.h"
 #include <string>
 #include <stdexcept>
 
@@ -31,16 +30,12 @@ using Sodium::KeyVar;
 
 using data_t = Sodium::data_t;
 
-// static constexpr std::size_t hashsiz     = Hash::HASHSIZE;
-// static constexpr std::size_t hashsiz_min = Hash::HASHSIZE_MIN;
-// static constexpr std::size_t hashsiz_max = Hash::HASHSIZE_MAX;
-
 bool
 test_hash_size(const std::string &plaintext,
 	       const std::size_t hashsize)
 {
-  KeyVar key(hashsize);
-  Hash   hasher {};
+  Hash::key_type key(hashsize);
+  Hash           hasher {};
   
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -63,8 +58,8 @@ test_key_size(const std::string &plaintext,
 	      const std::size_t keysize,
 	      bool  return_hash_as_value=true)
 {
-  KeyVar key    (keysize);
-  Hash   hasher {};
+  Hash::key_type key    (keysize);
+  Hash           hasher {};
 
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -91,9 +86,9 @@ test_key_size(const std::string &plaintext,
 bool
 test_different_keys(const std::string &plaintext)
 {
-  KeyVar key1(Hash::KEYSIZE);
-  KeyVar key2(Hash::KEYSIZE);
-  Hash   hasher {};
+  Hash::key_type key1(Hash::KEYSIZE);
+  Hash::key_type key2(Hash::KEYSIZE);
+  Hash           hasher {};
   
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -254,8 +249,8 @@ BOOST_AUTO_TEST_CASE( sodium_hash_test_key_size_too_big_outHash )
 
 BOOST_AUTO_TEST_CASE( sodium_hash_test_falsify_plaintext )
 {
-  KeyVar key(Hash::KEYSIZE);
-  Hash   hasher {};
+  Hash::key_type key(Hash::KEYSIZE);
+  Hash           hasher {};
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   data_t      plainblob { plaintext.cbegin(), plaintext.cend() };

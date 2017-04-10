@@ -18,7 +18,6 @@
 
 #include "common.h"
 #include "key.h"
-#include "keyvar.h"
 #include "hash.h"
 
 #include <sodium.h>
@@ -30,7 +29,7 @@ using Sodium::Hash;
 
 data_t
 Hash::hash (const data_t      &plaintext,
-	    const KeyVar      &key,
+	    const key_type    &key,
 	    const std::size_t hashsize)
 {
   // some sanity checks before we start
@@ -80,9 +79,9 @@ Hash::hash (const data_t      &plaintext,
 }
 
 void
-Hash::hash (const data_t &plaintext,
-	    const KeyVar &key,
-	    data_t       &outHash)
+Hash::hash (const data_t   &plaintext,
+	    const key_type &key,
+	    data_t         &outHash)
 {
   // some sanity checks before we start
   

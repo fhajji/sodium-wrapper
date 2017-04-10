@@ -37,6 +37,8 @@ class Hash {
   static constexpr std::size_t HASHSIZE_MIN = crypto_generichash_BYTES_MIN;
   static constexpr std::size_t HASHSIZE_MAX = crypto_generichash_BYTES_MAX;
 
+  using key_type = KeyVar;
+  
   /**
    * Hash a plaintext, using the provided key, into a hash of the desired
    * size of hashsize bytes. Return the generated hash.
@@ -55,7 +57,7 @@ class Hash {
    **/
   
   data_t hash(const data_t      &plaintext,
-	      const KeyVar      &key,
+	      const key_type    &key,
 	      const std::size_t hashsize=HASHSIZE);
 
   /**
@@ -90,9 +92,9 @@ class Hash {
    * the key will very likely result in a different hash.
    **/
 
-  void   hash(const data_t &plaintext,
-	      const KeyVar &key,
-	      data_t       &outHash);
+  void   hash(const data_t   &plaintext,
+	      const key_type &key,
+	      data_t         &outHash);
 
   /**
    * Hash a plaintext into a hash of the size outHash.size().
