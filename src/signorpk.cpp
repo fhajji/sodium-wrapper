@@ -26,12 +26,11 @@
 
 using Sodium::data_t;
 using Sodium::SignorPK;
-using Sodium::Key;
 using Sodium::KeyPairSign;
 
 data_t
-SignorPK::sign (const data_t               &plaintext,
-		const Key<KEYSIZE_PRIVKEY> &privkey)
+SignorPK::sign (const data_t       &plaintext,
+		const privkey_type &privkey)
 {
   data_t plaintext_signed(SIGNATURE_SIZE + plaintext.size());
   if (crypto_sign(plaintext_signed.data(), NULL,
@@ -43,8 +42,8 @@ SignorPK::sign (const data_t               &plaintext,
 }
 
 data_t
-SignorPK::sign_detached (const data_t               &plaintext,
-			 const Key<KEYSIZE_PRIVKEY> &privkey)
+SignorPK::sign_detached (const data_t       &plaintext,
+			 const privkey_type &privkey)
 {
   data_t signature(SIGNATURE_SIZE);
   unsigned long long signature_size;

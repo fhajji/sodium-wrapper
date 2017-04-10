@@ -68,14 +68,16 @@ class SignorPK {
   static constexpr std::size_t  KEYSIZE_PRIVKEY = Sodium::KEYSIZE_PRIVKEY_SIGN;
   static constexpr std::size_t  SIGNATURE_SIZE  = crypto_sign_BYTES;
 
+  using privkey_type = Key<KEYSIZE_PRIVKEY>;
+  
   /**
    * Sign the plaintext with the private key privkey.  Return
    * (signature || plaintext), where signature is SIGNATURE_SIZE bytes
    * long.
    **/
 
-  data_t sign(const data_t               &plaintext,
-	      const Key<KEYSIZE_PRIVKEY> &privkey);
+  data_t sign(const data_t       &plaintext,
+	      const privkey_type &privkey);
 
   /**
    * Sign the plaintext with the private key part of the keypair.
@@ -91,8 +93,8 @@ class SignorPK {
    * Sign the plaintext with the private key privkey. Return the
    * signature, which is SIGNATURE_SIZE bytes long.
    **/
-  data_t sign_detached(const data_t               &plaintext,
-		       const Key<KEYSIZE_PRIVKEY> &privkey);
+  data_t sign_detached(const data_t       &plaintext,
+		       const privkey_type &privkey);
   
   /**
    * Sign the plaintext with the private key part of the keypair.
