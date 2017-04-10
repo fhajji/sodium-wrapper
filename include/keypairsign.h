@@ -51,6 +51,8 @@ class KeyPairSign
   static constexpr std::size_t KEYSIZE_PRIVKEY   = Sodium::KEYSIZE_PRIVKEY_SIGN;
   static constexpr std::size_t KEYSIZE_SEEDBYTES = Sodium::KEYSIZE_SEEDBYTES_SIGN;
 
+  using privkey_type = Key<KEYSIZE_PRIVKEY>;
+  
   /**
    * Generate a new (random) key pair of public/private signing keys.
    *
@@ -160,7 +162,7 @@ class KeyPairSign
    *   <SOME_KEYPAIR>.privkey().data(), <SOME_KEYPAIR>.privkey().size()
    **/
 
-  const Key<KEYSIZE_PRIVKEY> privkey() const { return privkey_; }
+  const privkey_type privkey() const { return privkey_; }
 
   /**
    * Give const access to the stored public key as a data_t object.
@@ -173,8 +175,8 @@ class KeyPairSign
   const data_t pubkey() const { return pubkey_; }
   
  private:
-  data_t               pubkey_;
-  Key<KEYSIZE_PRIVKEY> privkey_;
+  data_t       pubkey_;
+  privkey_type privkey_;
 };
 
 } // namespace Sodium

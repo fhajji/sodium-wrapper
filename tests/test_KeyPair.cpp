@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypair_nonzero_ctor_seed )
 BOOST_AUTO_TEST_CASE( sodium_test_keypair_nonzero_ctor_privkey )
 {
   KeyPair keypair1 {};
-  KeyPair keypair2(keypair1.privkey().data(), keypair1.privkey().size());
+  KeyPair keypair2 (keypair1.privkey().data(), keypair1.privkey().size());
 
   BOOST_CHECK(! isAllZero(keypair2.pubkey().data(), keypair2.pubkey().size()));
   BOOST_CHECK(! isAllZero(keypair2.privkey().data(), keypair2.privkey().size()));

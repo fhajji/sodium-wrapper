@@ -51,6 +51,8 @@ class KeyPair
   static constexpr std::size_t KEYSIZE_PRIVKEY     = Sodium::KEYSIZE_PRIVKEY;
   static constexpr std::size_t KEYSIZE_SEEDBYTES   = Sodium::KEYSIZE_SEEDBYTES;
 
+  using privkey_type = Key<KEYSIZE_PRIVKEY>;
+  
   /**
    * Generate a new (random) key pair of public/private keys.
    *
@@ -120,7 +122,7 @@ class KeyPair
     if (privkey_size != KEYSIZE_PRIVKEY)
       throw std::runtime_error {"Sodium::KeyPair::KeyPair(privkey_data, privkey_size) wrong privkey_size"};
     std::copy(privkey_data, privkey_data+privkey_size,
-	      privkey_.setdata());
+	      privkey_.setdata()); // constant time
     
     // public key can be reconstructed from private key
     // previously computed by crypto_box_[seed_]keypair()!
@@ -137,7 +139,7 @@ class KeyPair
    *   <SOME_KEYPAIR>.privkey().data(), <SOME_KEYPAIR>.privkey().size()
    **/
 
-  const Key<KEYSIZE_PRIVKEY> privkey() const { return privkey_; }
+  const privkey_type privkey() const { return privkey_; }
 
   /**
    * Give const access to the stored public key as a data_t object.
@@ -150,8 +152,8 @@ class KeyPair
   const data_t pubkey() const { return pubkey_; }
   
  private:
-  data_t               pubkey_;
-  Key<KEYSIZE_PRIVKEY> privkey_;
+  data_t       pubkey_;
+  privkey_type privkey_;
 };
 
 } // namespace Sodium

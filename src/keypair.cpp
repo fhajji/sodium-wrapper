@@ -23,12 +23,7 @@ using Sodium::KeyPair;
 
 bool operator== (const KeyPair &kp1, const KeyPair &kp2)
 {
-  // Don't do this (side channel attack):
-  // return (kp1.pubkey() == kp2.pubkey()     // std::vector::operator==()
-  // 	  &&
-  //   kp1.privkey() == kp2.privkey()); // Sodium::Key<KEYSIZE_PRIVKEY>::operator==()
-
-  // Compare pubkeys in constant time instead
+  // Compare pubkeys in constant time
   // (privkeys are also compared in constant time
   // using Sodium::Key<KEYSIZE_PRIVKEY>::operator==()):
   return (kp1.pubkey().size() == kp2.pubkey().size()
