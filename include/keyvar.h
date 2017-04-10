@@ -21,7 +21,6 @@
 
 #include <vector>
 #include <string>
-#include <algorithm>
 #include <utility>
 #include "common.h"
 #include "alloc.h"

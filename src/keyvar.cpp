@@ -16,16 +16,23 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+#include <sodium.h>
 #include "keyvar.h"
 
 using Sodium::KeyVar;
 
 bool operator== (const KeyVar &k1, const KeyVar &k2)
 {
+  // Don't do this (side channel attack):
+  // return (k1.size() == k2.size())
+  //     &&
+  //   std::equal(k1.data(), k1.data() + k1.size(),
+  // 	     k2.data());
+
+  // Compare in constant time instead:
   return (k1.size() == k2.size())
-    &&
-  std::equal(k1.data(), k1.data() + k1.size(),
-	     k2.data());
+	  &&
+    (sodium_memcmp(k1.data(), k2.data(), k1.size()) == 0);
 }
 
 bool operator!= (const KeyVar &k1, const KeyVar &k2)

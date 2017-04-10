@@ -16,15 +16,27 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+#include <sodium.h>
 #include "keypair.h"
 
 using Sodium::KeyPair;
 
 bool operator== (const KeyPair &kp1, const KeyPair &kp2)
 {
-  return (kp1.pubkey() == kp2.pubkey()     // std::vector::operator==()
+  // Don't do this (side channel attack):
+  // return (kp1.pubkey() == kp2.pubkey()     // std::vector::operator==()
+  // 	  &&
+  //   kp1.privkey() == kp2.privkey()); // Sodium::Key<KEYSIZE_PRIVKEY>::operator==()
+
+  // Compare pubkeys in constant time instead
+  // (privkeys are also compared in constant time
+  // using Sodium::Key<KEYSIZE_PRIVKEY>::operator==()):
+  return (kp1.pubkey().size() == kp2.pubkey().size()
 	  &&
-	  kp1.privkey() == kp2.privkey()); // Sodium::Key<KEYSIZE_PRIVKEY>::operator==()
+	  (sodium_memcmp(kp1.pubkey().data(), kp2.pubkey().data(),
+			 kp1.pubkey().size()) == 0)
+	  &&
+	  kp1.privkey() == kp2.privkey());
 }
 
 bool operator!= (const KeyPair &kp1, const KeyPair &kp2)

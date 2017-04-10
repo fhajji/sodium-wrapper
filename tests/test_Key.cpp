@@ -33,7 +33,6 @@
 #define BOOST_TEST_MODULE Sodium::Key Test
 #include <boost/test/included/unit_test.hpp>
 
-#include <algorithm>
 #include <utility>
 #include <stdexcept>
 #include <string>
@@ -56,8 +55,12 @@ static constexpr std::size_t ks_seed = Sodium::KEYSIZE_SEEDBYTES;
 
 bool isAllZero(const unsigned char *bytes, const std::size_t &size)
 {
-  return std::all_of(bytes, bytes+size,
-		     [](unsigned char byte){return byte == '\0';});
+  // Don't do this (side channel attack):
+  // return std::all_of(bytes, bytes+size,
+  // 		     [](unsigned char byte){return byte == '\0';});
+
+  // Compare in constant time instead:
+  return sodium_is_zero(bytes, size);
 }
 
 bool isSameBytes(const unsigned char *bytes1, const std::size_t &size1,
@@ -66,8 +69,12 @@ bool isSameBytes(const unsigned char *bytes1, const std::size_t &size1,
   if (size1 != size2)
     throw std::runtime_error {"isSameBytes(): not same size"};
 
-  return std::equal(bytes1, bytes1+size1,
-		    bytes2);
+  // Don't do this (side channel attack):
+  // return std::equal(bytes1, bytes1+size1,
+  // 		    bytes2);
+
+  // Compare in constant time instead:
+  return (sodium_memcmp(bytes1, bytes2, size1) == 0);
 }
 
 template <std::size_t KEYSIZE>

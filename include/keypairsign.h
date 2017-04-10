@@ -19,8 +19,6 @@
 #ifndef _S_KEYPAIRSIGN_H_
 #define _S_KEYPAIRSIGN_H_
 
-#include <algorithm>
-
 #include "key.h"
 
 namespace Sodium {

@@ -21,7 +21,6 @@
 
 #include <vector>
 #include <string>
-#include <algorithm>
 #include <utility>
 #include "common.h"
 #include "alloc.h"
@@ -337,10 +336,14 @@ template <std::size_t KEYSIZE1, std::size_t KEYSIZE2>
   bool operator== (const Sodium::Key<KEYSIZE1> &k1,
 		   const Sodium::Key<KEYSIZE2> &k2)
 {
+  // Don't do this (side channel attack):
+  // std::equal(k1.data(), k1.data() + k1.size(),
+  //            k2.data());
+  
+  // compare two keys in constant time instead:
   return (k1.size() == k2.size())
     &&
-  std::equal(k1.data(), k1.data() + k1.size(),
-	     k2.data());
+  (sodium_memcmp(k1.data(), k2.data(), k1.size()) == 0);
 }
 
 template <std::size_t KEYSIZE1, std::size_t KEYSIZE2>
