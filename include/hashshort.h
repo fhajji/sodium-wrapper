@@ -32,6 +32,8 @@ class HashShort {
   static constexpr std::size_t KEYSIZE      = Sodium::KEYSIZE_HASHSHORTKEY;
   static constexpr std::size_t HASHSIZE     = crypto_shorthash_BYTES;
 
+  using key_type = Key<KEYSIZE>;
+  
   /**
    * Hash a (typically short) plaintext, using the provided key, into
    * a hash. Return the generated hash.
@@ -46,8 +48,8 @@ class HashShort {
    * The computed and returned hash will be HASHSIZE bytes long.
    **/
   
-  data_t hash(const data_t       &plaintext,
-	      const Key<KEYSIZE> &key) {
+  data_t hash(const data_t   &plaintext,
+	      const key_type &key) {
     data_t outHash(HASHSIZE);
     crypto_shorthash(outHash.data(),
 		     plaintext.data(), plaintext.size(),
@@ -76,9 +78,9 @@ class HashShort {
    * the same hash.
    **/
 
-  void   hash(const data_t       &plaintext,
-	      const Key<KEYSIZE> &key,
-	      data_t             &outHash) {
+  void   hash(const data_t   &plaintext,
+	      const key_type &key,
+	      data_t         &outHash) {
     if (outHash.size() != HASHSIZE)
       throw std::runtime_error {"Sodium::HashShort::hash() outHash wrong size"};
     crypto_shorthash(outHash.data(),

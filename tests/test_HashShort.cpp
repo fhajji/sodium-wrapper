@@ -22,20 +22,18 @@
 
 #include <sodium.h>
 #include "hashshort.h"
-#include "key.h"
 #include <string>
 #include <stdexcept>
 
 using Sodium::HashShort;
-using Sodium::Key;
 
 using data_t = Sodium::data_t;
 
 bool
 test_hash_default_size(const std::string &plaintext)
 {
-  Key<HashShort::KEYSIZE> key;
-  HashShort               hasher {};
+  HashShort::key_type key;
+  HashShort           hasher {};
   
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -58,8 +56,8 @@ test_hash_default_size(const std::string &plaintext)
 bool
 test_same_hashes(const std::string &plaintext)
 {
-  Key<HashShort::KEYSIZE> key;
-  HashShort               hasher {};
+  HashShort::key_type key;
+  HashShort           hasher {};
 
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -75,10 +73,10 @@ bool
 test_hash_size(const std::string &plaintext,
 	       const std::size_t hashsize)
 {
-  Key<HashShort::KEYSIZE> key;
-  HashShort               hasher {};
+  HashShort::key_type key;
+  HashShort           hasher {};
 
-  data_t      plainblob { plaintext.cbegin(), plaintext.cend() };
+  data_t plainblob { plaintext.cbegin(), plaintext.cend() };
 
   data_t outHash(hashsize); // make it too big
 
@@ -100,9 +98,9 @@ test_hash_size(const std::string &plaintext,
 bool
 test_different_keys(const std::string &plaintext)
 {
-  Key<HashShort::KEYSIZE> key1;
-  Key<HashShort::KEYSIZE> key2;
-  HashShort               hasher {};
+  HashShort::key_type key1;
+  HashShort::key_type key2;
+  HashShort           hasher {};
   
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -165,8 +163,8 @@ BOOST_AUTO_TEST_CASE( sodium_hashshort_test_same_hashes_empty )
 
 BOOST_AUTO_TEST_CASE( sodium_hashshort_test_falsify_plaintext )
 {
-  Key<HashShort::KEYSIZE> key;
-  HashShort               hasher {};
+  HashShort::key_type key;
+  HashShort           hasher {};
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   data_t      plainblob { plaintext.cbegin(), plaintext.cend() };
