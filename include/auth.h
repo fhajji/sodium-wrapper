@@ -33,6 +33,9 @@ class Auth
   static constexpr std::size_t KEYSIZE_AUTH = Sodium::KEYSIZE_AUTH;
   static constexpr std::size_t MACSIZE      = crypto_auth_BYTES;
 
+  // Member type aliases
+  using key_type = Key<KEYSIZE_AUTH>;
+  
   /**
    * Create and return a Message Authentication Code (MAC) for the supplied
    * plaintext and secret key.
@@ -40,8 +43,8 @@ class Auth
    * The returned MAC is MACSIZE bytes long.
    **/
 
-  data_t auth(const data_t            &plaintext,
-	      const Key<KEYSIZE_AUTH> &key);
+  data_t auth(const data_t   &plaintext,
+	      const key_type &key);
 
   /**
    * Verify MAC of plaintext using supplied secret key, returing true
@@ -53,9 +56,9 @@ class Auth
    * of the mac don't make sense.
    **/
 
-  bool verify(const data_t            &plaintext,
-	      const data_t            &mac,
-	      const Key<KEYSIZE_AUTH> &key);
+  bool verify(const data_t   &plaintext,
+	      const data_t   &mac,
+	      const key_type &key);
 };
 
 } // namespace Sodium

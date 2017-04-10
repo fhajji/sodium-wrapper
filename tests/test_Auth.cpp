@@ -21,13 +21,11 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include "auth.h"
-#include "key.h"
 #include "common.h"
 
 #include <string>
 
 using Sodium::Auth;
-using Sodium::Key;
 using data_t = Sodium::data_t;
 
 static constexpr std::size_t macsize = Auth::MACSIZE;
@@ -46,8 +44,8 @@ BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture );
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_size )
 {
-  Auth                    sa {}; // Secret Key Authenticator/Verifier
-  Key<Auth::KEYSIZE_AUTH> key;   // Create a random key
+  Auth           sa {}; // Secret Key Authenticator/Verifier
+  Auth::key_type key;   // Create a random key
   
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -60,8 +58,8 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_size )
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_full )
 {
-  Auth                    sa {};
-  Key<Auth::KEYSIZE_AUTH> key;
+  Auth           sa {};
+  Auth::key_type key;
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -75,8 +73,8 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_full )
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_empty )
 {
-  Auth                    sa {};
-  Key<Auth::KEYSIZE_AUTH> key;
+  Auth           sa {};
+  Auth::key_type key;
 
   std::string plaintext {};
   data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -90,8 +88,8 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_empty )
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_falsify_plaintext )
 {
-  Auth sa {};
-  Key<Auth::KEYSIZE_AUTH> key;
+  Auth           sa {};
+  Auth::key_type key;
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -109,8 +107,8 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_falsify_plaintext )
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_full_falsify_mac )
 {
-  Auth sa {};
-  Key<Auth::KEYSIZE_AUTH> key;
+  Auth           sa {};
+  Auth::key_type key;
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -128,8 +126,8 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_full_falsify_mac )
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_empty_falsify_mac )
 {
-  Auth sa {};
-  Key<Auth::KEYSIZE_AUTH> key;
+  Auth           sa {};
+  Auth::key_type key;
 
   std::string plaintext {};
   data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -148,8 +146,8 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_empty_falsify_mac )
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_full_falsify_key )
 {
-  Auth sa {};
-  Key<Auth::KEYSIZE_AUTH> key;
+  Auth           sa {};
+  Auth::key_type key;
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -158,7 +156,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_full_falsify_key )
   data_t      mac { sa.auth(plainblob, key) };
 
   // create another key
-  Key<Auth::KEYSIZE_AUTH> key2;
+  Auth::key_type key2;
   BOOST_CHECK(key != key2); // very unlikely that they are equal!
   
   // the MAC must NOT verify with key2
@@ -167,8 +165,8 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_full_falsify_key )
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_empty_falsify_key )
 {
-  Auth sa {};
-  Key<Auth::KEYSIZE_AUTH> key;
+  Auth           sa {};
+  Auth::key_type key;
 
   std::string plaintext {};
   data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -177,7 +175,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_empty_falsify_key )
   data_t      mac { sa.auth(plainblob, key) };
 
   // create another key
-  Key<Auth::KEYSIZE_AUTH> key2;
+  Auth::key_type key2;
   BOOST_CHECK(key != key2); // very unlikely that they are equal!
   
   // the MAC must NOT verify with key2

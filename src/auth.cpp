@@ -26,8 +26,8 @@ using Sodium::Auth;
 using Sodium::Key;
 
 data_t
-Auth::auth (const data_t            &plaintext,
-	    const Key<KEYSIZE_AUTH> &key)
+Auth::auth (const data_t   &plaintext,
+	    const key_type &key)
 {
   // make space for MAC
   data_t mac(Auth::MACSIZE);
@@ -42,9 +42,9 @@ Auth::auth (const data_t            &plaintext,
 }
 
 bool
-Auth::verify (const data_t            &plaintext,
-	      const data_t            &mac,
-	      const Key<KEYSIZE_AUTH> &key)
+Auth::verify (const data_t   &plaintext,
+	      const data_t   &mac,
+	      const key_type &key)
 {
   // some sanity checks before we get started
   if (mac.size() != Auth::MACSIZE)
