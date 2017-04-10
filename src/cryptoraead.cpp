@@ -17,21 +17,17 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #include "cryptoraead.h"
-#include "key.h"
-#include "nonce.h"
 
 #include <stdexcept>
 
 using Sodium::data_t;
 using Sodium::CryptorAEAD;
-using Sodium::Key;
-using Sodium::Nonce;
 
 data_t
-CryptorAEAD::encrypt (const data_t       &header,
-		      const data_t       &plaintext,
-		      const Key<KEYSIZE> &key,
-		      const Nonce<NSZA>  &nonce)
+CryptorAEAD::encrypt (const data_t     &header,
+		      const data_t     &plaintext,
+		      const key_type   &key,
+		      const nonce_type &nonce)
 {
   // make space for MAC and encrypted message, i.e. (MAC || encrypted)
   data_t ciphertext(MACSIZE + plaintext.size());
@@ -52,10 +48,10 @@ CryptorAEAD::encrypt (const data_t       &header,
 }
 
 data_t
-CryptorAEAD::decrypt (const data_t       &header,
-		      const data_t       &ciphertext_with_mac,
-		      const Key<KEYSIZE> &key,
-		      const Nonce<NSZA>  &nonce)
+CryptorAEAD::decrypt (const data_t     &header,
+		      const data_t     &ciphertext_with_mac,
+		      const key_type   &key,
+		      const nonce_type &nonce)
 {
   // some sanity checks before we get started
   if (ciphertext_with_mac.size() < MACSIZE)

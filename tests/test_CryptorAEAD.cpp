@@ -22,12 +22,8 @@
 
 #include <sodium.h>
 #include "cryptoraead.h"
-#include "key.h"
-#include "nonce.h"
 #include <string>
 
-using Sodium::Key;
-using Sodium::Nonce;
 using Sodium::CryptorAEAD;
 
 using data_t = Sodium::data_t;
@@ -39,9 +35,9 @@ test_of_correctness(const std::string &header,
 		    bool falsify_header = false,
 		    bool falsify_ciphertext = false)
 {
-  CryptorAEAD                   sc {};
-  Key<CryptorAEAD::KEYSIZE>     key;
-  Nonce<Sodium::NONCESIZE_AEAD> nonce {};
+  CryptorAEAD             sc {};
+  CryptorAEAD::key_type   key;
+  CryptorAEAD::nonce_type nonce {};
 
   data_t plainblob    {plaintext.cbegin(), plaintext.cend()};
   data_t headerblob   {header.cbegin(), header.cend()};

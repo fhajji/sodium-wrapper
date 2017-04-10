@@ -58,17 +58,18 @@ class StreamCryptor {
    * data is for each block an empty header. Each block is encrypted
    * with the same key, but with a monotonically incremented nonce.
    * 
-   * The constructor saves a copy of the key of KEYSIZE bytes,
-   * and a copy of a Nonce<NONCESIZE_AEAD> for later use in its internal
-   * state. Furthermore, it also saves the desired blocksize that will
-   * be used for both encryption and decryption of the streams.
+   * The constructor saves a copy of the key of KEYSIZE bytes, and a
+   * copy of a CryptorAEAD::nonce_type nonce for later use in its
+   * internal state. Furthermore, it also saves the desired blocksize
+   * that will be used for both encryption and decryption of the
+   * streams.
    *
    * If the key size isn't correct, or the blocksize doesn't make sense,
    * the constructor throws a std::runtime_error.
    **/
   
- StreamCryptor(const Key<KEYSIZE> &key,
-	       const Nonce<NONCESIZE_AEAD> &nonce,
+ StreamCryptor(const CryptorAEAD::key_type   &key,
+	       const CryptorAEAD::nonce_type &nonce,
 	       const std::size_t blocksize) :
   key_ {key}, nonce_ {nonce}, header_ {}, blocksize_ {blocksize} {
     // some sanity checks, before we start
@@ -148,12 +149,12 @@ class StreamCryptor {
   void decrypt(std::istream &istr, std::ostream &ostr);
   
  private:
-  Key<KEYSIZE>          key_;
-  Nonce<NONCESIZE_AEAD> nonce_;
-  data_t                header_;
-  std::size_t           blocksize_;
+  CryptorAEAD::key_type   key_;
+  CryptorAEAD::nonce_type nonce_;
+  data_t                  header_;
+  std::size_t             blocksize_;
   
-  CryptorAEAD           sc_aead_;
+  CryptorAEAD             sc_aead_;
 };
 
 } // namespace Sodium

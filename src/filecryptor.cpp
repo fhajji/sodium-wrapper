@@ -22,6 +22,7 @@
 #include "filecryptor.h"
 
 using Sodium::FileCryptor;
+using Sodium::CryptorAEAD;
 
 void
 FileCryptor::encrypt(std::istream &istr, std::ostream &ostr)
@@ -35,7 +36,7 @@ FileCryptor::encrypt(std::istream &istr, std::ostream &ostr)
 
   // the encryption API
   data_t plaintext(blocksize_, '\0');
-  Nonce<NONCESIZE_AEAD> running_nonce {nonce_};
+  CryptorAEAD::nonce_type running_nonce {nonce_};
 
   // for each full block...
   while (istr.read(reinterpret_cast<char *>(plaintext.data()), blocksize_)) {
@@ -89,7 +90,7 @@ FileCryptor::decrypt(std::ifstream &ifs, std::ostream &ostr)
 
   // the decryption API
   data_t ciphertext(MACSIZE + blocksize_, '\0');
-  Nonce<NONCESIZE_AEAD> running_nonce {nonce_}; // restart with saved nonce_
+  CryptorAEAD::nonce_type running_nonce {nonce_}; // restart with saved nonce_
 
   // before we start decrypting, fetch the hash block at the end of the file.
   // It should be exactly hashsize_ bytes long.

@@ -90,11 +90,11 @@ class FileCryptor {
    * the hash MUST be the same as the one given here.
    **/
 
-  FileCryptor(const Key<KEYSIZE>          &key,
-	      const Nonce<NONCESIZE_AEAD> &nonce,
-	      const std::size_t           blocksize,
-	      const KeyVar                &hashkey,
-	      const std::size_t           hashsize) :
+  FileCryptor(const CryptorAEAD::key_type   &key,
+	      const CryptorAEAD::nonce_type &nonce,
+	      const std::size_t             blocksize,
+	      const KeyVar                  &hashkey,
+	      const std::size_t             hashsize) :
   key_ {key}, nonce_ {nonce}, header_ {}, blocksize_ {blocksize},
   hashkey_ {hashkey}, hashsize_ {hashsize} {
     // some sanity checks, before we start
@@ -149,13 +149,13 @@ class FileCryptor {
   void decrypt(std::ifstream &ifs, std::ostream &ostr);
 
  private:
-  Key<KEYSIZE>          key_;
-  KeyVar                hashkey_;
-  Nonce<NONCESIZE_AEAD> nonce_;
-  data_t                header_;
-  std::size_t           blocksize_, hashsize_;
+  CryptorAEAD::key_type   key_;
+  KeyVar                  hashkey_;
+  CryptorAEAD::nonce_type nonce_;
+  data_t                  header_;
+  std::size_t             blocksize_, hashsize_;
   
-  CryptorAEAD           sc_aead_;
+  CryptorAEAD             sc_aead_;
 };
 
 } // namespace Sodium

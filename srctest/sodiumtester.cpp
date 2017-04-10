@@ -327,9 +327,9 @@ std::string
 SodiumTester::test4(const std::string &plaintext,
 		    const std::string &header)
 {
-  CryptorAEAD                   sc_aead {};
-  Key<Sodium::KEYSIZE_AEAD>     key;
-  Nonce<Sodium::NONCESIZE_AEAD> nonce {};
+  CryptorAEAD             sc_aead {};
+  CryptorAEAD::key_type   key;
+  CryptorAEAD::nonce_type nonce {};
 
   std::ostringstream os; // to collect output
   os << "starting AEAD test... ---------" << std::endl;
@@ -517,9 +517,9 @@ SodiumTester::test5(const std::string &filename)
 {
   std::size_t                   MYBLKSIZE = 1024;
   
-  Key<Sodium::KEYSIZE_AEAD>     key;
-  Nonce<Sodium::NONCESIZE_AEAD> nonce      {};
-  StreamCryptor                 strm_crypt (key, nonce, MYBLKSIZE);
+  CryptorAEAD::key_type   key;
+  CryptorAEAD::nonce_type nonce      {};
+  StreamCryptor           strm_crypt (key, nonce, MYBLKSIZE);
 
   key.noaccess();
   
@@ -560,13 +560,13 @@ SodiumTester::test5(const std::string &filename)
 bool
 SodiumTester::test6(const std::string &filename)
 {
-  std::size_t                   MYBLKSIZE  = 1024;
+  std::size_t             MYBLKSIZE  = 1024;
   
-  Key<Sodium::KEYSIZE_AEAD>     key;
-  KeyVar                        hashkey    (FileCryptor::HASHKEYSIZE);
-  Nonce<Sodium::NONCESIZE_AEAD> nonce      {};
-  FileCryptor                   file_crypt (key, nonce, MYBLKSIZE,
-					    hashkey, FileCryptor::HASHSIZE);
+  CryptorAEAD::key_type   key;
+  KeyVar                  hashkey    (FileCryptor::HASHKEYSIZE);
+  CryptorAEAD::nonce_type nonce      {};
+  FileCryptor             file_crypt (key, nonce, MYBLKSIZE,
+				      hashkey, FileCryptor::HASHSIZE);
 
   key.noaccess();
   hashkey.noaccess();

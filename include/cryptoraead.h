@@ -31,6 +31,9 @@ class CryptorAEAD
   static constexpr unsigned int NSZA    = Sodium::NONCESIZE_AEAD;
   static constexpr std::size_t  KEYSIZE = Sodium::KEYSIZE_AEAD;
   static constexpr std::size_t  MACSIZE = crypto_aead_chacha20poly1305_ABYTES;
+
+  using key_type   = Key<KEYSIZE>;
+  using nonce_type = Nonce<NSZA>;
   
   /**
    * Encrypt plaintext using key and nonce. Compute a MAC from the
@@ -58,10 +61,10 @@ class CryptorAEAD
    * bytes.
    **/
 
-  data_t encrypt(const data_t       &header,
-		 const data_t       &plaintext,
-		 const Key<KEYSIZE> &key,
-		 const Nonce<NSZA>  &nonce);
+  data_t encrypt(const data_t     &header,
+		 const data_t     &plaintext,
+		 const key_type   &key,
+		 const nonce_type &nonce);
 
   /**
    * Decrypt ciphertext_with_mac returned by encrypt() along with
@@ -78,10 +81,10 @@ class CryptorAEAD
    * the same value as those used when encrypting.
    **/
 
-  data_t decrypt(const data_t       &header,
-		 const data_t       &ciphertext_with_mac,
-		 const Key<KEYSIZE> &key,
-		 const Nonce<NSZA>  &nonce);
+  data_t decrypt(const data_t     &header,
+		 const data_t     &ciphertext_with_mac,
+		 const key_type   &key,
+		 const nonce_type &nonce);
 
 };
 
