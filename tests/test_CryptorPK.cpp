@@ -23,21 +23,19 @@
 #include <sodium.h>
 #include "cryptorpk.h"
 #include "keypair.h"
-#include "nonce.h"
 #include <string>
 
 using Sodium::KeyPair;
-using Sodium::Nonce;
 using Sodium::CryptorPK;
 using data_t = Sodium::data_t;
 
 bool
 test_of_correctness(const std::string &plaintext)
 {
-  CryptorPK               sc            {};
-  KeyPair                 keypair_alice {};
-  KeyPair                 keypair_bob   {};
-  Nonce<CryptorPK::NSZPK> nonce         {};
+  CryptorPK             sc            {};
+  KeyPair               keypair_alice {};
+  KeyPair               keypair_bob   {};
+  CryptorPK::nonce_type nonce         {};
 
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -91,9 +89,9 @@ test_of_correctness(const std::string &plaintext)
 bool
 falsify_mac(const std::string &plaintext)
 {
-  CryptorPK               sc            {};
-  KeyPair                 keypair_alice {};
-  Nonce<CryptorPK::NSZPK> nonce         {};
+  CryptorPK             sc            {};
+  KeyPair               keypair_alice {};
+  CryptorPK::nonce_type nonce         {};
 
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -131,9 +129,9 @@ falsify_ciphertext(const std::string &plaintext)
   BOOST_CHECK_MESSAGE(! plaintext.empty(),
 		      "Nothing to falsify, empty plaintext");
   
-  CryptorPK               sc            {};
-  KeyPair                 keypair_alice {};
-  Nonce<CryptorPK::NSZPK> nonce         {};
+  CryptorPK             sc            {};
+  KeyPair               keypair_alice {};
+  CryptorPK::nonce_type nonce         {};
 
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -166,11 +164,11 @@ falsify_ciphertext(const std::string &plaintext)
 bool
 falsify_sender(const std::string &plaintext)
 {
-  CryptorPK               sc            {};
-  KeyPair                 keypair_alice {}; // recipient
-  KeyPair                 keypair_bob   {}; // impersonated sender
-  KeyPair                 keypair_oscar {}; // real sender
-  Nonce<CryptorPK::NSZPK> nonce         {};
+  CryptorPK             sc            {};
+  KeyPair               keypair_alice {}; // recipient
+  KeyPair               keypair_bob   {}; // impersonated sender
+  KeyPair               keypair_oscar {}; // real sender
+  CryptorPK::nonce_type nonce         {};
 
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -244,9 +242,9 @@ BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_empty_plaintext )
 
 BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_encrypt_to_self )
 {
-  CryptorPK               sc            {};
-  KeyPair                 keypair_alice {};
-  Nonce<CryptorPK::NSZPK> nonce         {};
+  CryptorPK             sc            {};
+  KeyPair               keypair_alice {};
+  CryptorPK::nonce_type nonce         {};
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};

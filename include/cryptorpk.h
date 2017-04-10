@@ -20,9 +20,9 @@
 #define _S_CRYPTORPK_H_
 
 #include "common.h"
+#include "nonce.h"
 #include "key.h"
 #include "keypair.h"
-#include "nonce.h"
 
 namespace Sodium {
 
@@ -35,6 +35,9 @@ class CryptorPK {
   static constexpr std::size_t  KEYSIZE_PRIVKEY     = Sodium::KEYSIZE_PRIVKEY;
   static constexpr std::size_t  MACSIZE             = crypto_box_MACBYTES;
 
+  using privkey_type = Key<KEYSIZE_PRIVKEY>;
+  using nonce_type   = Nonce<NSZPK>;
+  
   /**
    * Encrypt plaintext using recipient's public key, sign it using
    * sender's private key, and a nonce. Compute an authentication tag
@@ -66,10 +69,10 @@ class CryptorPK {
    * bytes long.
    **/
 
-  data_t encrypt(const data_t               &plaintext,
-		 const data_t               &pubkey,
-		 const Key<KEYSIZE_PRIVKEY> &privkey,
-		 const Nonce<NSZPK>         &nonce);
+  data_t encrypt(const data_t       &plaintext,
+		 const data_t       &pubkey,
+		 const privkey_type &privkey,
+		 const nonce_type   &nonce);
 
   /**
    * Encrypt plaintext using recipient's public key, sign it using
@@ -83,9 +86,9 @@ class CryptorPK {
    *
    * Otherwise, see encrypt() above.
    **/
-  data_t encrypt(const data_t       &plaintext,
-		 const KeyPair      &keypair,
-		 const Nonce<NSZPK> &nonce);
+  data_t encrypt(const data_t     &plaintext,
+		 const KeyPair    &keypair,
+		 const nonce_type &nonce);
   
   /**
    * Decrypt ciphertext using recipient's private key and nonce, and
@@ -102,10 +105,10 @@ class CryptorPK {
    * is even too small to hold the MAC (i.e. less than MACSIZE).
    **/
 
-  data_t decrypt(const data_t               &ciphertext_with_mac,
-		 const Key<KEYSIZE_PRIVKEY> &privkey,
-		 const data_t               &pubkey,
-		 const Nonce<NSZPK>         &nonce);
+  data_t decrypt(const data_t       &ciphertext_with_mac,
+		 const privkey_type &privkey,
+		 const data_t       &pubkey,
+		 const nonce_type   &nonce);
 
   /**
    * Decrypt ciphertext using recipient's private key and nonce,
@@ -119,9 +122,9 @@ class CryptorPK {
    * Otherwise, see decrypt() above.
    **/
   
-  data_t decrypt(const data_t       &ciphertext_with_mac,
-		 const KeyPair      &keypair,
-		 const Nonce<NSZPK> &nonce);
+  data_t decrypt(const data_t     &ciphertext_with_mac,
+		 const KeyPair    &keypair,
+		 const nonce_type &nonce);
 };
 
 } // namespace Sodium

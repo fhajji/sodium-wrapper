@@ -27,7 +27,6 @@
 #include "cryptorpk.h"
 #include "cryptormultipk.h"
 #include "keypair.h"
-#include "nonce.h"
 
 #include <string>
 #include <sstream>
@@ -38,7 +37,6 @@ using namespace std::chrono;
 using Sodium::KeyPair;
 using Sodium::CryptorPK;
 using Sodium::CryptorMultiPK;
-using Sodium::Nonce;
 
 using data_t = Sodium::data_t;
 
@@ -273,7 +271,7 @@ time_encrypt(const unsigned long nr_of_messages)
 {
   KeyPair                    keypair_alice   {};
   CryptorMultiPK::nonce_type nonce_multi     {};
-  Nonce<CryptorPK::NSZPK>    nonce_single    {};
+  CryptorPK::nonce_type      nonce_single    {};
   CryptorPK                  sc_single_alice {};
   CryptorMultiPK             sc_multi_alice  (keypair_alice);
 
@@ -321,7 +319,7 @@ void
 time_decrypt(const unsigned long nr_of_messages)
 {
   KeyPair                    keypair_alice   {};
-  Nonce<CryptorPK::NSZPK>    nonce_single    {};
+  CryptorPK::nonce_type      nonce_single    {};
   CryptorMultiPK::nonce_type nonce_multi     {};
   CryptorPK                  sc_single_alice {};
   CryptorMultiPK             sc_multi_alice  (keypair_alice);

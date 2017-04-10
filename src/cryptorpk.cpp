@@ -17,8 +17,6 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #include "cryptorpk.h"
-#include "key.h"
-#include "nonce.h"
 #include "common.h"
 
 #include <stdexcept>
@@ -26,15 +24,13 @@
 
 using Sodium::data_t;
 using Sodium::CryptorPK;
-using Sodium::Key;
 using Sodium::KeyPair;
-using Sodium::Nonce;
 
 data_t
-CryptorPK::encrypt (const data_t               &plaintext,
-		    const data_t               &pubkey,
-		    const Key<KEYSIZE_PRIVKEY> &privkey,
-		    const Nonce<NSZPK>         &nonce)
+CryptorPK::encrypt (const data_t       &plaintext,
+		    const data_t       &pubkey,
+		    const privkey_type &privkey,
+		    const nonce_type   &nonce)
 {
   // some sanity checks before we get started
   if (pubkey.size() != CryptorPK::KEYSIZE_PUBKEY)
@@ -55,9 +51,9 @@ CryptorPK::encrypt (const data_t               &plaintext,
 }
 
 data_t
-CryptorPK::encrypt (const data_t       &plaintext,
-		    const KeyPair      &keypair,
-		    const Nonce<NSZPK> &nonce)
+CryptorPK::encrypt (const data_t     &plaintext,
+		    const KeyPair    &keypair,
+		    const nonce_type &nonce)
 {
   // no sanity checks necessary before we get started
 
@@ -76,10 +72,10 @@ CryptorPK::encrypt (const data_t       &plaintext,
 }
 
 data_t
-CryptorPK::decrypt (const data_t               &ciphertext_with_mac,
-		    const Key<KEYSIZE_PRIVKEY> &privkey,
-		    const data_t               &pubkey,
-		    const Nonce<NSZPK>         &nonce)
+CryptorPK::decrypt (const data_t       &ciphertext_with_mac,
+		    const privkey_type &privkey,
+		    const data_t       &pubkey,
+		    const nonce_type   &nonce)
 {
   // some sanity checks before we get started
   if (ciphertext_with_mac.size() < CryptorPK::MACSIZE)
@@ -102,9 +98,9 @@ CryptorPK::decrypt (const data_t               &ciphertext_with_mac,
 }
 
 data_t
-CryptorPK::decrypt (const data_t       &ciphertext_with_mac,
-		    const KeyPair      &keypair,
-		    const Nonce<NSZPK> &nonce)
+CryptorPK::decrypt (const data_t     &ciphertext_with_mac,
+		    const KeyPair    &keypair,
+		    const nonce_type &nonce)
 {
   // some sanity checks before we get started
   if (ciphertext_with_mac.size() < CryptorPK::MACSIZE)
