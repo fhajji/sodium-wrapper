@@ -15,7 +15,9 @@ Criticism and pull requests welcome, of course.
 
 Dependencies:
   - libsodium 1.0.12
-  - boost (Boost.Test for unit testing)
+  - Boost
+      * Boost.Test for unit testing
+      * Boost.Iostreams for streaming APIs.
 
 Build dependencies:
   - a C++11 compliant compiler
