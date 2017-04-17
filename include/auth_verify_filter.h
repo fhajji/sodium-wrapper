@@ -96,7 +96,7 @@ class auth_verify_filter : public io::aggregate_filter<unsigned char> {
     typedef typename base_type::vector_type vector_type; // data_t
 
     static constexpr std::size_t MACSIZE = Auth::MACSIZE;
-    using key_type = Key<Auth::KEYSIZE_AUTH>;
+    using key_type = Auth::key_type;
   
     auth_verify_filter(const key_type &key, const data_t &mac) :
       key_ {key}, mac_ {mac}, sa_ {}
