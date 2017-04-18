@@ -43,7 +43,8 @@ namespace Sodium {
   static constexpr std::size_t KEYSIZE_PUBKEY_SIGN    = crypto_sign_PUBLICKEYBYTES;
   static constexpr std::size_t KEYSIZE_PRIVKEY_SIGN   = crypto_sign_SECRETKEYBYTES;
   static constexpr std::size_t KEYSIZE_SEEDBYTES_SIGN = crypto_sign_SEEDBYTES;
-
+  static constexpr std::size_t KEYSIZE_CHACHA20       = crypto_stream_chacha20_KEYBYTES;
+  
 template <std::size_t KEYSIZE=0>
 class Key
 {

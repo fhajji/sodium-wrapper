@@ -28,7 +28,8 @@ namespace Sodium {
 static constexpr std::size_t NONCESIZE_SECRETBOX = crypto_secretbox_NONCEBYTES;
 static constexpr std::size_t NONCESIZE_AEAD      = crypto_aead_chacha20poly1305_NPUBBYTES;
 static constexpr std::size_t NONCESIZE_PK        = crypto_box_NONCEBYTES;
-
+static constexpr std::size_t NONCESIZE_CHACHA20  = crypto_stream_chacha20_NONCEBYTES;
+ 
 template <std::size_t N=NONCESIZE_SECRETBOX>
 class Nonce
 {
