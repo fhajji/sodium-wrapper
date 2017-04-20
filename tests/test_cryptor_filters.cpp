@@ -113,7 +113,7 @@ test_of_correctness_combined_input_filter(const std::string &plaintext)
   data_t plainblob { plaintext.cbegin(), plaintext.cend() };
   data_t plainblob2 {plainblob};
   std::copy(plainblob.cbegin(), plainblob.cend(),
-	    std::back_inserter(plainblob2)); // plainblob2 = plainblob + plainblob
+	    std::back_inserter(plainblob2)); // plainblob2 = (plainblob || plainblob)
   
   cryptor_encrypt_filter::key_type   key;   // Create a random key
   cryptor_encrypt_filter::nonce_type nonce; // Create a random nonce
@@ -121,7 +121,7 @@ test_of_correctness_combined_input_filter(const std::string &plaintext)
   cryptor_encrypt_filter encrypt_filter {key, nonce};
   cryptor_decrypt_filter decrypt_filter {key, nonce};
   
-  data_t decrypted (2 * plaintext.size()); // because of both writes below
+  data_t decrypted (2 * plaintext.size()); // because of plainblob2 above
 
   bytes_array_source      source {plainblob2.data(), plainblob2.size()};
   bytes_filtering_istream is   {};
