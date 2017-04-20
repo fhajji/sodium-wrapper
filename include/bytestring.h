@@ -85,7 +85,7 @@ struct std::char_traits<unsigned char> : public std::char_traits<char>
     return 0;
   }
   
-  static size_t length(const char_type * s) {
+  static std::size_t length(const char_type * s) {
     std::size_t len = 0;
     for (; !eq(*s, char_type(0)); ++s)
       ++len;
@@ -238,9 +238,9 @@ class std::ctype<unsigned char> :
   static std::locale::id id;
 
 #ifdef _CACHED_RUNES
-  static const size_t table_size = _CACHED_RUNES;
+  static const std::size_t table_size = _CACHED_RUNES;
 #else
-  static const size_t table_size = 256;  // FIXME: Don't hardcode this.
+  static const std::size_t table_size = 256;  // FIXME: Don't hardcode this.
 #endif
   _LIBCPP_ALWAYS_INLINE const mask* table() const /* noexcept */ {return tab;}
   static const mask* classic_table()  noexcept;
@@ -273,8 +273,8 @@ class std::ctype_byname<unsigned char>
   locale_t __l;
 
 public:
-  explicit ctype_byname(const char*, size_t = 0); // NOT unsigned char here!
-  explicit ctype_byname(const string&, size_t = 0);
+  explicit ctype_byname(const char*, std::size_t = 0); // NOT unsigned char here!
+  explicit ctype_byname(const string&, std::size_t = 0);
 
 protected:
   ~ctype_byname();
