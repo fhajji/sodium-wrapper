@@ -42,13 +42,19 @@ namespace Sodium {
 class cryptor_encrypt_filter : public io::aggregate_filter<unsigned char> {
 
   /**
-   * Use cryptor_encrypt_filter like this:
+   * Use cryptor_encrypt_filter as a DualUse filter like this:
    * 
    *     #include <boost/iostreams/device/array.hpp>
    *     #include <boost/iostreams/filtering_stream.hpp>
+   *     #include "bytestring.h"
    * 
    *     using Sodium::cryptor_encrypt_filter;
    *     using data_t = Sodium::data_t;
+   * 
+   *     std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+   *     data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
+   *
+   * <---- If using as an OutputFilter:
    * 
    *     namespace io = boost::iostreams;
    *     typedef io::basic_array_sink<unsigned char>             bytes_array_sink;
@@ -58,26 +64,44 @@ class cryptor_encrypt_filter : public io::aggregate_filter<unsigned char> {
    *     cryptor_encrypt_filter::nonce_type    nonce;    // create random nonce
    *     cryptor_encrypt_filter cryptor_filter {key, nonce};  // create a cryptor filter
    * 
-   *     std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-   *     data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
-   * 
    *     data_t ciphertext(encryptor_encrypt_filter::MACSIZE + plainblob.size());
    * 
-   *     bytes_array_sink        sink1 {ciphertext.data(), ciphertext.size()};
-   *     bytes_filtering_ostream os1 {};
-   *     os1.push(cryptor_filter);
-   *     os1.push(sink1);
+   *     bytes_array_sink        sink {ciphertext.data(), ciphertext.size()};
+   *     bytes_filtering_ostream os   {};
+   *     os.push(cryptor_filter);
+   *     os.push(sink);
    * 
-   *     os1.write(plainblob.data(), plainblob.size());
-   *     os1.flush();
+   *     os.write(plainblob.data(), plainblob.size());
+   *     os.flush();
    * 
-   *     os1.pop();
+   *     os.pop();
    * 
-   *     // sink1 (i.e. ciphertext) has been filled with (MAC || ciphertext)
+   *     // sink (i.e. ciphertext) has been filled with (MAC || ciphertext)
    *     // extract ciphertext from variable ciphertext.
    *
-   * CAUTION: Computing the ciphertext of an empty stream DOESN'T work!
-   *          At least one 'unsigned char' byte must be sent to the filter.
+   * ----> If using as an InputFilter:
+   *
+   *     namespace io = boost::iostreams;
+   *     typedef io::basic_array_source<unsigned char>          bytes_array_source;
+   *     typedef io::filtering_stream<io::input, unsigned char> bytes_filtering_istream;
+   * 
+   *     cryptor_encrypt_filter::key_type      key;      // Create a random key
+   *     cryptor_encrypt_filter::nonce_type    nonce;    // create random nonce
+   *     cryptor_encrypt_filter cryptor_filter {key, nonce};  // create a cryptor filter
+   * 
+   *     data_t ciphertext ( cryptor_encrypt_filter::MACSIZE + plaintext.size() );
+   *     bytes_array_source        source {plainblob.data(), plainblob.size()};
+   *     bytes_filtering_istream   is     {};
+   *     is.push(encrypt_filter); // encrypt data...
+   *     is.push(source);         // from source / plainblob.
+   * 
+   *     // fetch ciphertext by reading into variable ciphertext
+   *     is.read(ciphertext.data(), ciphertext.size());
+   *   
+   *     is.pop();
+   *
+   *     // source / ciphertext has been filled with (MAC || ciphertext)
+   *     // extract ciphertext from variable ciphertext
    **/
 
   private:

@@ -22,6 +22,7 @@
 #include <boost/iostreams/categories.hpp>       // tags
 #include <boost/iostreams/filter/aggregate.hpp> // aggregate_filter
 
+#include <ios>
 #include <stdexcept>
 
 #include <sodium.h>
@@ -35,6 +36,7 @@
 
 #ifndef NDEBUG
 #include <iostream>
+#include <string>
 #endif // ! NDEBUG
 
 namespace io = boost::iostreams;
@@ -44,44 +46,84 @@ namespace Sodium {
 class cryptor_decrypt_filter : public io::aggregate_filter<unsigned char> {
 
   /**
-   * Use cryptor_decrypt_filter like this:
+   * Use cryptor_decrypt_filter as a DualUse filter like this:
    * 
    *   #include <boost/iostreams/device/array.hpp>
    *   #include <boost/iostreams/filtering_stream.hpp>
+   *   #include "bytestring.h"
    * 
    *   using Sodium::cryptor_decrypt_filter;
    *   using data_t = Sodium::data_t;
+   * 
+   *   std::string ciphertext = ... // computed earlier...
+   *   data_t      cipherblob {ciphertext.cbegin(), ciphertext.cend()};
+   * 
+   * <---- If using as an OutputFilter:
    * 
    *   namespace io = boost::iostreams;
    *   typedef io::basic_array_sink<unsigned char>             bytes_array_sink;
    *   typedef io::filtering_stream<io::output, unsigned char> bytes_filtering_ostream;
    * 
-   *   data_t ciphertext = ...                           // computed earlier...
    *   cryptor_decrypt_filter::key_type   key { ... };   // ... with this key
    *   cryptor_decrypt_filter::nonce_type nonce { ... }; // ... and this nonce.
    *   cryptor_decrypt_filter             decrypt_filter {key, nonce}; // create a decryptor filter
    *   data_t decrypted (ciphertext.size() - cryptor_decrypt_filter::MACSIZE);
    * 
-   *   bytes_array_sink         sink2 {decrypted.data(), decrypted.size()};
-   *   bytes_filtering_ostream  os2 {};
-   *   os2.push(decrypt_filter);
-   *   os2.push(sink2);
+   *   try {
+   *     bytes_array_sink         sink {decrypted.data(), decrypted.size()};
+   *     bytes_filtering_ostream  os {};
+   *     os.push(decrypt_filter);
+   *     os.push(sink);
    * 
-   *   data_t      cipherblob {ciphertext.cbegin(), ciphertext.cend()};
+   *     os.write(cipherblob.data(), cipherblob.size());
+   *     os.flush();
    * 
-   *   os2.write(cipherblob.data(), cipherblob.size());
-   *   os2.flush();
+   *     os.pop();
    * 
-   *   os2.pop();
+   *     // the decrypted result is (hopefully) in sink, i.e. in decrypted.
+   *   }
+   *   catch (std::exception &e) {
+   *     // decryption failed. don't use variable decrypted.
+   *   }
    * 
-   *   // the decrypted result is (hopefully) in sink2, i.e. in decrypted.
-   *   // if decryption failed, os2.write() / os2.pop() would have raised
-   *   // a std::runtime_error.
+   * ----> If using as an InputFilter:
+   * 
+   *   namespace io = boost::iostreams;
+   *   typedef io::basic_array_source<unsigned char>          bytes_array_source;
+   *   typedef io::filtering_stream<io::input, unsigned char> bytes_filtering_istream;
+   * 
+   *   cryptor_decrypt_filter::key_type   key { ... };   // ... with this key
+   *   cryptor_decrypt_filter::nonce_type nonce { ... }; // ... and this nonce.
+   *   cryptor_decrypt_filter             decrypt_filter {key, nonce}; // create a decryptor filter
+   *   data_t decrypted (ciphertext.size() - cryptor_decrypt_filter::MACSIZE);
+   * 
+   *   bytes_array_source      source {ciphertext.data(), ciphertext.size()};
+   *   bytes_filtering_istream is     {};
+   *   std::streamsize n {};
+   * 
+   *   is.push(decrypt_filter); // (attempt do decrypt)
+   *   is.push(source);         // form source / ciphertext.
+   * 
+   *   // read decrypted result into decrypted variable
+   *   is.read(decrypted.data(), decrypted.size());
+   *   n = is.gcount();
+   *   is.pop();
    *
-   * CAUTION: Decrypting an empty stream DOESN'T work!
-   *          At least one 'unsigned char' byte must be sent to the filter.
+   *   if (is) {
+   *     // decrypted variable has been hopefully filled with decrypted text
+   *   }
+   *   else {
+   *     // decryption failed. don't use variable decrypted.
+   *   }
    **/
 
+  public:
+    class decrypt_error : public std::ios_base::failure {
+      public:
+        decrypt_error(const std::string &message)
+  	  : std::ios_base::failure(message) {}
+    };
+  
   private:
     typedef io::aggregate_filter<unsigned char> base_type;
   
@@ -108,14 +150,35 @@ class cryptor_decrypt_filter : public io::aggregate_filter<unsigned char> {
     virtual void do_filter(const vector_type& src, vector_type& dest) {
 
 #ifndef NDEBUG
-      std::cerr << "cryptor_decrypt_filter::do_filter() called" << std::endl;
+      std::string src_string { src.cbegin(), src.cend() };
+      std::cerr << "cryptor_decrypt_filter::do_filter("
+		<< src_string << ") called" << std::endl;
 #endif // ! NDEBUG
 
-      // Try to decrypt the (MAC || ciphertext) passed in src.
-      // If decryption fails, bubble up Cryptor's std::runtime_error.
-      data_t decrypted = sc_.decrypt(src, key_, nonce_);
+      try {
+	// Try to decrypt the (MAC || ciphertext) passed in src.
+	data_t decrypted = sc_.decrypt(src, key_, nonce_);
       
-      dest.swap(decrypted); // efficiently store result vector into dest
+	dest.swap(decrypted); // efficiently store result vector into dest
+      }
+      catch (std::runtime_error &e) {
+	std::string error_message {e.what()};
+
+#ifndef NDEBUG
+	std::cerr << "cryptor_decrypt_filter::do_filter() "
+		  << "throwing exception {" << error_message << "}"
+		  << std::endl;
+#endif // ! NDEBUG
+
+	// throw cryptor_decrypt_filter::decrypt_error(error_message);
+	throw std::ios_base::failure(error_message);
+      }
+
+#ifndef NDEBUG
+      std::string dest_string { dest.cbegin(), dest.cend() };
+      std::cerr << "cryptor_decrypt_filter::do_filter() returned {"
+		<< dest_string << "}" << std::endl;
+#endif // ! NDEBUG
     }
     
   private:

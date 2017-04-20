@@ -43,44 +43,70 @@ namespace Sodium {
 class auth_verify_filter : public io::aggregate_filter<unsigned char> {
 
   /**
-   * Use auth_verify_filter like this:
+   * Use auth_verify_filter as a DualUse filter like this:
    * 
-   *   #include <boost/iostreams/device/array.hpp>
-   *   #include <boost/iostreams/filtering_stream.hpp>
+   *     #include <boost/iostreams/device/array.hpp>
+   *     #include <boost/iostreams/filtering_stream.hpp>
+   *     #include "bytestring.h"
    * 
-   *   using Sodium::auth_verify_filter;
-   *   using data_t = Sodium::data_t;
+   *     using Sodium::auth_mac_filter;
+   *     using data_t = Sodium::data_t;
    * 
-   *   namespace io = boost::iostreams;
-   *   typedef io::basic_array_sink<unsigned char>             bytes_array_sink;
-   *   typedef io::filtering_stream<io::output, unsigned char> bytes_filtering_ostream;
+   *     std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+   *     data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
+   *     data_t      mac = ... // computed earlier
+   *     auth_verify_filter::key_type key { ... }; // same as key used earlier
    * 
-   *   data_t mac = ...                        // computed earlier...
-   *   auth_mac_filter::key_type  key { ... }; // ... with this key
-   *   auth_verify_filter verify_filter {key, mac}; // create a MAC verifier filter
-   *   data_t             result(1);           // result of verify
+   * <---- If using as an OutputFilter:
    * 
-   *   bytes_array_sink         sink2 {result.data(), result.size()};
-   *   bytes_filtering_ostream  os2 {};
-   *   os2.push(verify_filter);
-   *   os2.push(sink2);
+   *     namespace io = boost::iostreams;
+   *     typedef io::basic_array_sink<unsigned char>             bytes_array_sink;
+   *     typedef io::filtering_stream<io::output, unsigned char> bytes_filtering_ostream;
    * 
-   *   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-   *   data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
+   *     auth_verify_filter verify_filter {key, mac};   // create a MAC verifier filter
+   *    
+   *     data_t result(1); // where to store result
    * 
-   *   os2.write(plainblob.data(), plainblob.size());
-   *   os2.flush();
+   *     bytes_array_sink        sink {result.data(), result.size()};
+   *     bytes_filtering_ostream os   {};
+   *     os.push(verify_filter);
+   *     os.push(sink);
    * 
-   *   os2.pop();
+   *     os.write(plainblob.data(), plainblob.size());
+   *     os.flush();
    * 
-   *   // the result is in sink2, i.e. in result[0]:
+   *     os.pop();
    * 
-   *   if (result[0] == '1')
-   *      mac_verified_successfully();
-   *   else if (result[0] == '0')
-   *      mac_didn_t_verify_successfully();
-   *   else if (result[0] == 0)
-   *      mac_of_empty_input_not_verified();
+   *     // sink (i.e. result[0]) contains 0, '0', or '1'
+   *     //   * 0   if attempting to verify an empty stream
+   *     //   * '0' if mac doesn't match plainblob, authentified with key
+   *     //   * '1' if mac is the MAC of plainblob, using key (success) 
+   *
+   * CAUTION: Verifying the MAC of an empty stream DOESN'T work!
+   *          (we get result[0] == 0, not '0' nor '1' in that case)
+   *          At least one 'unsigned char' byte must be sent to the filter.
+   * 
+   * ----> If using as an InputFilter:
+   * 
+   *     namespace io = boost::iostreams;
+   *     typedef io::basic_array_source<unsigned char>          bytes_array_source;
+   *     typedef io::filtering_stream<io::input, unsigned char> bytes_filtering_istream;
+   * 
+   *     auth_verify_filter verify_filter {key, mac};     // create a MAC verifier filter
+   * 
+   *     bytes_array_source      source {plainblob.data(), plainblob.size()};
+   *     bytes_filtering_istream is   {};
+   *     is.push(verify_filter);
+   *     is.push(source);
+   * 
+   *     is.read(result.data(), result.size());
+   * 
+   *     is.pop();
+   * 
+   *     // result[0] has been filled with
+   *     //   0  : if source / plainblob was empty
+   *     //   '0': if mac didn't match source / plainblob and key
+   *     //   '1': if mac is the MAC of source / plainblob and key (success)
    *
    * CAUTION: Verifying the MAC of an empty stream DOESN'T work!
    *          (we get result[0] == 0, not '0' nor '1' in that case)

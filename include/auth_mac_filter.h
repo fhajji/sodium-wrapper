@@ -41,13 +41,19 @@ namespace Sodium {
 class auth_mac_filter : public io::aggregate_filter<unsigned char> {
 
   /**
-   * Use auth_mac_filter like this:
+   * Use auth_mac_filter as a DualUse filter like this:
    * 
    *     #include <boost/iostreams/device/array.hpp>
    *     #include <boost/iostreams/filtering_stream.hpp>
+   *     #include "bytestring.h"
    * 
    *     using Sodium::auth_mac_filter;
    *     using data_t = Sodium::data_t;
+   * 
+   *     std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+   *     data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
+   * 
+   * <---- If using as an OutputFilter:
    * 
    *     namespace io = boost::iostreams;
    *     typedef io::basic_array_sink<unsigned char>             bytes_array_sink;
@@ -58,20 +64,43 @@ class auth_mac_filter : public io::aggregate_filter<unsigned char> {
    * 
    *     data_t mac(auth_mac_filter::MACSIZE); // where to store MAC
    * 
-   *     bytes_array_sink        sink1 {mac.data(), mac.size()};
-   *     bytes_filtering_ostream os1 {};
-   *     os1.push(mac_filter);
-   *     os1.push(sink1);
+   *     bytes_array_sink        sink {mac.data(), mac.size()};
+   *     bytes_filtering_ostream os   {};
+   *     os.push(mac_filter);
+   *     os.push(sink1);
    * 
-   *     std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-   *     data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
+   *     os.write(plainblob.data(), plainblob.size());
+   *     os.flush();
    * 
-   *     os1.write(plainblob.data(), plainblob.size());
-   *     os1.flush();
+   *     os.pop();
    * 
-   *     os1.pop();
+   *     // sink (i.e. mac) has been filled with MAC.
+   *     // extract MAC from data_t mac.
+   *
+   * CAUTION: Computing the MAC of an empty stream DOESN'T work!
+   *          At least one 'unsigned char' byte must be sent to the filter.
    * 
-   *     // sink1 (i.e. mac) has been filled with MAC.
+   * ----> If using as an InputFilter:
+   * 
+   *     namespace io = boost::iostreams;
+   *     typedef io::basic_array_source<unsigned char>          bytes_array_source;
+   *     typedef io::filtering_stream<io::input, unsigned char> bytes_filtering_istream;
+   * 
+   *     auth_mac_filter::key_type  key;       // Create a random key
+   *     auth_mac_filter mac_filter {key};     // create a MAC creator filter
+   * 
+   *     data_t mac(auth_mac_filter::MACSIZE); // where to store MAC
+   * 
+   *     bytes_array_source      source {plainblob.data(), plainblob.size()};
+   *     bytes_filtering_istream is   {};
+   *     is.push(mac_filter);
+   *     is.push(source);
+   * 
+   *     is.read(mac.data(), mac.size());
+   * 
+   *     os.pop();
+   * 
+   *     // source (i.e. mac) has been filled with MAC.
    *     // extract MAC from data_t mac.
    *
    * CAUTION: Computing the MAC of an empty stream DOESN'T work!

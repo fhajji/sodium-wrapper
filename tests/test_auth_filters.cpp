@@ -23,6 +23,7 @@
 #include "auth_mac_filter.h"
 #include "auth_verify_filter.h"
 #include "common.h"
+#include "bytestring.h"
 
 #include <string>
 
@@ -35,7 +36,9 @@ using data_t = Sodium::data_t;
 
 namespace io = boost::iostreams;
 typedef io::basic_array_sink<unsigned char>             bytes_array_sink;
+typedef io::basic_array_source<unsigned char>           bytes_array_source;
 typedef io::filtering_stream<io::output, unsigned char> bytes_filtering_ostream;
+typedef io::filtering_stream<io::input,  unsigned char> bytes_filtering_istream;
 
 static constexpr std::size_t macsize = auth_verify_filter::MACSIZE;
 
@@ -50,7 +53,7 @@ struct SodiumFixture {
 };
 
 unsigned char
-mac_verify(const std::string &plaintext)
+mac_verify_output_filter(const std::string &plaintext)
 {
   // 1: compute a MAC with auth_mac_filter:
   auth_mac_filter::key_type  key;    // Create a random key
@@ -101,7 +104,57 @@ mac_verify(const std::string &plaintext)
 }
 
 unsigned char
-falsify_mac(const std::string &plaintext)
+mac_verify_input_filter(const std::string &plaintext)
+{
+  data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
+  data_t      plainblob2 {plainblob};
+  std::copy(plainblob.cbegin(), plainblob.cend(),
+	    std::back_inserter(plainblob2)); // plainblob2 = plainblob + plainblob
+  
+  // 1: compute a MAC with auth_mac_filter:
+  auth_mac_filter::key_type  key;    // Create a random key
+  auth_mac_filter mac_filter {key};  // create a MAC creator filter
+
+  data_t mac(macsize); // where to store MAC
+  
+  bytes_array_source      source1 {plainblob2.data(), plainblob2.size()};
+  bytes_filtering_istream is1 {};
+  is1.push(mac_filter);
+  is1.push(source1);
+
+  is1.read(mac.data(), mac.size());
+  
+  is1.pop();
+
+  // mac has been filled with MAC.
+  BOOST_CHECK_EQUAL(mac.size(), macsize);
+  
+  // 2: verify the MAC with auth_verify_filter:
+
+  auth_verify_filter verify_filter {key, mac};  // create a MAC verifier filter
+  data_t             result(1);                 // result of verify
+  
+  bytes_array_source       source2 {plainblob2.data(), plainblob2.size()};
+  bytes_filtering_istream  is2 {};
+  is2.push(verify_filter);
+  is2.push(source2);
+
+  is2.read(result.data(), result.size());
+  
+  is2.pop();
+
+  // the result is in result[0]:
+
+  BOOST_CHECK_EQUAL(result.size(), 1);
+  
+  // the MAC must verify
+  // BOOST_CHECK_EQUAL(result[0], '1');
+
+  return result[0];
+}
+
+unsigned char
+falsify_mac_output_filter(const std::string &plaintext)
 {
   // 1: compute a MAC with auth_mac_filter:
   auth_mac_filter::key_type  key;    // Create a random key
@@ -154,7 +207,58 @@ falsify_mac(const std::string &plaintext)
 }
 
 unsigned char
-falsify_key(const std::string &plaintext)
+falsify_mac_input_filter(const std::string &plaintext)
+{
+  data_t                  plainblob {plaintext.cbegin(), plaintext.cend()};
+
+  // 1: compute a MAC with auth_mac_filter:
+  auth_mac_filter::key_type  key;    // Create a random key
+  auth_mac_filter mac_filter {key};  // create a MAC creator filter
+
+  data_t mac(macsize); // where to store MAC
+  
+  bytes_array_source      source1 {plainblob.data(), plainblob.size()};
+  bytes_filtering_istream is1 {};
+  is1.push(mac_filter);
+  is1.push(source1);
+
+  is1.read(mac.data(), mac.size());
+
+  is1.pop();
+
+  // mac has been filled with MAC.
+  BOOST_CHECK_EQUAL(mac.size(), macsize);
+
+  // 2. falsify the MAC
+  if (mac.size() != 0)
+    ++mac[0];
+
+  // 3: verify the MAC with auth_verify_filter:
+
+  auth_verify_filter verify_filter {key, mac};  // create a MAC verifier filter
+  data_t             result(1);                 // result of verify
+  
+  bytes_array_source       source2 {plainblob.data(), plainblob.size()};
+  bytes_filtering_istream  is2 {};
+  is2.push(verify_filter);
+  is2.push(source2);
+
+  is2.read(result.data(), result.size());
+  
+  is2.pop();
+
+  // the result is in result[0]:
+
+  BOOST_CHECK_EQUAL(result.size(), 1);
+  
+  // the MAC must NOT verify
+  // BOOST_CHECK_EQUAL(result[0], '0');
+
+  return result[0];
+}
+
+unsigned char
+falsify_key_output_filter(const std::string &plaintext)
 {
   // 1: compute a MAC with auth_mac_filter:
   auth_mac_filter::key_type  key;    // Create a random key
@@ -206,9 +310,60 @@ falsify_key(const std::string &plaintext)
   return result[0];
 }
 
+unsigned char
+falsify_key_input_filter(const std::string &plaintext)
+{
+  data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
+  
+  // 1: compute a MAC with auth_mac_filter:
+  auth_mac_filter::key_type  key;    // Create a random key
+  auth_mac_filter mac_filter {key};  // create a MAC creator filter
+
+  data_t mac(macsize); // where to store MAC
+  
+  bytes_array_source      source1 {plainblob.data(), plainblob.size()};
+  bytes_filtering_istream is1 {};
+  is1.push(mac_filter);
+  is1.push(source1);
+
+  is1.read(mac.data(), mac.size());
+  
+  is1.pop();
+
+  // mac has been filled with MAC.
+  BOOST_CHECK_EQUAL(mac.size(), macsize);
+
+  // 2. falsify the key, i.e. create another key
+  auth_mac_filter::key_type  key2;    // Create another random key
+  BOOST_CHECK(key2 != key);           // very unlikely that they are equal
+
+  // 3: verify the MAC with auth_verify_filter and new key:
+
+  auth_verify_filter verify_filter {key2, mac}; // create a MAC verifier filter
+  data_t             result(1);                 // result of verify
+  
+  bytes_array_source       source2 {plainblob.data(), plainblob.size()};
+  bytes_filtering_istream  is2 {};
+  is2.push(verify_filter);
+  is2.push(source2);
+
+  is2.read(result.data(), result.size());
+  
+  is2.pop();
+
+  // the result is in result[0]:
+
+  BOOST_CHECK_EQUAL(result.size(), 1);
+  
+  // the MAC must NOT verify
+  // BOOST_CHECK_EQUAL(result[0], '0');
+
+  return result[0];
+}
+
 BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture );
 
-BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_mac_size )
+BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_mac_size_output_filter )
 {
   auth_mac_filter::key_type  key;    // Create a random key
   auth_mac_filter mac_filter {key};  // create a MAC creator filter
@@ -233,64 +388,145 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_mac_size )
   BOOST_CHECK_EQUAL(mac.size(), macsize);
 }
 
-BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_mac_verify_full )
+BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_mac_size_input_filter )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  auto        result    {mac_verify(plaintext)};
+  data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
+
+  auth_mac_filter::key_type  key;    // Create a random key
+  auth_mac_filter mac_filter {key};  // create a MAC creator filter
+
+  data_t mac(macsize); // where to store MAC
+  
+  bytes_array_source      source {plainblob.data(), plainblob.size()};
+  bytes_filtering_istream is {};
+  is.push(mac_filter);
+  is.push(source);
+
+  is.read(mac.data(), mac.size());
+  
+  is.pop();
+
+  // mac has been filled with MAC:
+
+  BOOST_CHECK_EQUAL(mac.size(), macsize);
+}
+
+BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_mac_verify_full_output_filter )
+{
+  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+  auto        result    {mac_verify_output_filter(plaintext)};
 
   // Test must succeed
   BOOST_CHECK_EQUAL(result, '1');
 }
 
-BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_mac_verify_empty )
+BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_mac_verify_empty_output_filter )
 {
   std::string plaintext {};
-  auto        result    {mac_verify(plaintext)};
+  auto        result    {mac_verify_output_filter(plaintext)};
 
   // Test must return 0 (not '1', nor '0') because
   // auth_verify_filter::do_filter() is never called for empty input!
   BOOST_CHECK_EQUAL(result, 0);
 }
 
-BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_falsify_mac_full )
+BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_mac_verify_full_input_filter )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  auto        result    {falsify_mac(plaintext)};
+  auto        result    {mac_verify_input_filter(plaintext)};
+
+  // Test must succeed
+  BOOST_CHECK_EQUAL(result, '1');
+}
+
+BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_mac_verify_empty_input_filter )
+{
+  std::string plaintext {};
+  auto        result    {mac_verify_input_filter(plaintext)};
+
+  // Test must return 0 (not '1', nor '0') because
+  // auth_verify_filter::do_filter() is never called for empty input!
+  BOOST_CHECK_EQUAL(result, 0);
+}
+
+BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_falsify_mac_full_output_filter )
+{
+  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+  auto        result    {falsify_mac_output_filter(plaintext)};
 
   // Test must return '0', i.e. the falsified mac doesn't verify
   BOOST_CHECK_EQUAL(result, '0');
 }
 
-BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_falsify_mac_empty )
+BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_falsify_mac_empty_output_filter )
 {
   std::string plaintext {};
-  auto        result    {falsify_mac(plaintext)};
+  auto        result    {falsify_mac_output_filter(plaintext)};
 
   // Test must return 0 (not '1', nor '0') because
   // auth_verify_filter::do_filter() is never called for empty input!
   BOOST_CHECK_EQUAL(result, 0);
 }
 
-BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_falsify_key_full )
+BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_falsify_mac_full_input_filter )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  auto        result    {falsify_key(plaintext)};
+  auto        result    {falsify_mac_input_filter(plaintext)};
+
+  // Test must return '0', i.e. the falsified mac doesn't verify
+  BOOST_CHECK_EQUAL(result, '0');
+}
+
+BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_falsify_mac_empty_input_filter )
+{
+  std::string plaintext {};
+  auto        result    {falsify_mac_input_filter(plaintext)};
+
+  // Test must return 0 (not '1', nor '0') because
+  // auth_verify_filter::do_filter() is never called for empty input!
+  BOOST_CHECK_EQUAL(result, 0);
+}
+
+BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_falsify_key_full_output_filter )
+{
+  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+  auto        result    {falsify_key_output_filter(plaintext)};
 
   // Test must return '0' because verifying with wrong key fails
   BOOST_CHECK_EQUAL(result, '0');
 }
 
-BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_falsify_key_empty )
+BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_falsify_key_empty_output_filter )
 {
   std::string plaintext {};
-  auto        result    {falsify_key(plaintext)};
+  auto        result    {falsify_key_output_filter(plaintext)};
 
   // Test must return 0 (not '0', nor '1') because
   // auth_verify_filter::do_filter() is never called for empty input!
   BOOST_CHECK_EQUAL(result, 0);
 }
 
-BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_falsify_plaintext )
+BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_falsify_key_full_input_filter )
+{
+  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+  auto        result    {falsify_key_input_filter(plaintext)};
+
+  // Test must return '0' because verifying with wrong key fails
+  BOOST_CHECK_EQUAL(result, '0');
+}
+
+BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_falsify_key_empty_input_filter )
+{
+  std::string plaintext {};
+  auto        result    {falsify_key_input_filter(plaintext)};
+
+  // Test must return 0 (not '0', nor '1') because
+  // auth_verify_filter::do_filter() is never called for empty input!
+  BOOST_CHECK_EQUAL(result, 0);
+}
+
+BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_falsify_plaintext_output_filter )
 {
   // 1: compute a MAC with auth_mac_filter:
   auth_mac_filter::key_type  key;    // Create a random key
@@ -314,7 +550,11 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_falsify_plaintext )
   // sink1 (i.e. mac) has been filled with MAC.
   BOOST_CHECK_EQUAL(mac.size(), macsize);
 
-  // 2: verify the MAC with auth_verify_filter:
+  // 2: falsify plaintext
+  if (!plaintext.empty())
+    ++plainblob[0]; // falsify plaintext if not empty
+
+  // 3: verify the MAC with auth_verify_filter:
 
   auth_verify_filter verify_filter {key, mac};  // create a MAC verifier filter
   data_t             result(1);                 // result of verify
@@ -333,8 +573,57 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_falsify_plaintext )
 
   BOOST_CHECK_EQUAL(result.size(), 1);
   
-  // the MAC must verify
-  BOOST_CHECK_EQUAL(result[0], '1');
+  // the MAC must NOT verify because we falsified plaintext
+  BOOST_CHECK_EQUAL(result[0], '0');
+}
+
+BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_falsify_plaintext_input_filter )
+{
+  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+  data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
+  
+  // 1: compute a MAC with auth_mac_filter:
+  auth_mac_filter::key_type  key;    // Create a random key
+  auth_mac_filter mac_filter {key};  // create a MAC creator filter
+
+  data_t mac(macsize); // where to store MAC
+  
+  bytes_array_source      source1 {plainblob.data(), plainblob.size()};
+  bytes_filtering_istream is1 {};
+  is1.push(mac_filter);
+  is1.push(source1);
+
+  is1.read(mac.data(), mac.size());
+  
+  is1.pop();
+
+  // mac has been filled with MAC.
+  BOOST_CHECK_EQUAL(mac.size(), macsize);
+
+  // 2: falsify plaintext
+  if (!plaintext.empty())
+    ++plainblob[0]; // falsify plaintext if not empty
+  
+  // 3: verify the MAC with auth_verify_filter:
+
+  auth_verify_filter verify_filter {key, mac};  // create a MAC verifier filter
+  data_t             result(1);                 // result of verify
+  
+  bytes_array_source       source2 {plainblob.data(), plainblob.size()};
+  bytes_filtering_istream  is2 {};
+  is2.push(verify_filter);
+  is2.push(source2);
+
+  is2.read(result.data(), result.size());
+  
+  is2.pop();
+
+  // the result is in result[0]:
+
+  BOOST_CHECK_EQUAL(result.size(), 1);
+  
+  // the MAC must NOT verify, because we falsified plaintext
+  BOOST_CHECK_EQUAL(result[0], '0');
 }
 
 BOOST_AUTO_TEST_SUITE_END ();
