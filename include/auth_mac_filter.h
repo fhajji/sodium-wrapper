@@ -67,7 +67,7 @@ class auth_mac_filter : public io::aggregate_filter<unsigned char> {
    *     bytes_array_sink        sink {mac.data(), mac.size()};
    *     bytes_filtering_ostream os   {};
    *     os.push(mac_filter);
-   *     os.push(sink1);
+   *     os.push(sink);
    * 
    *     os.write(plainblob.data(), plainblob.size());
    *     os.flush();

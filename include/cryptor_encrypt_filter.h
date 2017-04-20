@@ -62,13 +62,13 @@ class cryptor_encrypt_filter : public io::aggregate_filter<unsigned char> {
    * 
    *     cryptor_encrypt_filter::key_type      key;      // Create a random key
    *     cryptor_encrypt_filter::nonce_type    nonce;    // create random nonce
-   *     cryptor_encrypt_filter cryptor_filter {key, nonce};  // create a cryptor filter
+   *     cryptor_encrypt_filter encrypt_filter {key, nonce};  // create a cryptor filter
    * 
    *     data_t ciphertext(encryptor_encrypt_filter::MACSIZE + plainblob.size());
    * 
    *     bytes_array_sink        sink {ciphertext.data(), ciphertext.size()};
    *     bytes_filtering_ostream os   {};
-   *     os.push(cryptor_filter);
+   *     os.push(encrypt_filter);
    *     os.push(sink);
    * 
    *     os.write(plainblob.data(), plainblob.size());
@@ -87,7 +87,7 @@ class cryptor_encrypt_filter : public io::aggregate_filter<unsigned char> {
    * 
    *     cryptor_encrypt_filter::key_type      key;      // Create a random key
    *     cryptor_encrypt_filter::nonce_type    nonce;    // create random nonce
-   *     cryptor_encrypt_filter cryptor_filter {key, nonce};  // create a cryptor filter
+   *     cryptor_encrypt_filter encrypt_filter {key, nonce};  // create a cryptor filter
    * 
    *     data_t ciphertext ( cryptor_encrypt_filter::MACSIZE + plaintext.size() );
    *     bytes_array_source        source {plainblob.data(), plainblob.size()};
