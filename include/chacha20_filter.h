@@ -88,7 +88,7 @@ class chacha20_symmetric_filter
 
   /**
    * Filter the sequence [i1,i2) to [o1,o2) using the
-   * ChaCha20 algorithm.  Update i1 and o2 after filtering.
+   * ChaCha20 algorithm.  Update i1 and o1 after filtering.
    * 
    * At most min(i2-i1, o2-o1) bytes will be filtered, so as
    * not to overflow the input nor the output sequence.
