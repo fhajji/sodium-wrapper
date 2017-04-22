@@ -19,8 +19,8 @@
 # Usage:
 #   $ mkdir build
 #   $ cd build
-#   $ cmake ..
-#   $ make
+#   $ cmake ..                  (OR cmake -DCMAKE_CXX_COMPILER="g++" ..)
+#   $ make                      (OR make -k) (OR make [-k] VERBOSE=1)
 #   $ ./sodiumtester
 #   $ tests/test_{<YOURTEST>}
 #   $ cd ..
@@ -28,12 +28,24 @@
 
 cmake_minimum_required ( VERSION 2.8 )
 
-project ( sodiumwrapper )
+# only clang++ for now; g++ not supported yet. (must come before project line)
+IF (NOT DEFINED CMAKE_CXX_COMPILER)
+  set ( CMAKE_CXX_COMPILER "clang++" )
+ENDIF (NOT DEFINED CMAKE_CXX_COMPILER)
 
+# code is explicitely for C++11 and later
 set ( CMAKE_CXX_STANDARD 11 )
 set ( CMAKE_CXX_STANDARD_REQUIRED ON )
-set ( CMAKE_CXX_CFLAGS "${CMAKE_CXX_CFLAGS} -std=c++11 -stdlib=libc++ -Wall" )
 
+set ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++ -Wall" )
+# add_compile_options (-std=c++11 -stdlib=libc++ -Wall)
+
+# enable linker -v flag to show how it is invoked
+set ( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -v" )
+
+project ( sodiumwrapper )
+
+# Install libsodium-1.0.12+ in --prefix /usr/local...
 # We would like pkg-config --{cflags|libs} libsodium without -I or -L...
 set ( LOCAL_INCLUDE_DIR "/usr/local/include" )
 set ( LOCAL_LIB_DIR "/usr/local/lib" )
@@ -58,7 +70,6 @@ install (TARGETS wrapsodium DESTINATION lib/wrapsodium)
 file (GLOB SOURCES_TESTER srctest/*.cpp)
 
 find_library ( SODIUM_LIB sodium ${MY_LIB_DIR} )
-find_library ( WRAPSODIUM_LIB wrapsodium )
 
 add_executable (sodiumtester ${SOURCES_TESTER})
 target_link_libraries ( sodiumtester wrapsodium ${SODIUM_LIB} )

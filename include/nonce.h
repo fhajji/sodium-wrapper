@@ -91,8 +91,8 @@ class Nonce
   * this class.
   **/
 
-            const unsigned char *data() const { return noncedata.data(); }
-  constexpr const std::size_t    size() const { return N; }
+                   const unsigned char *data() const  { return noncedata.data(); }
+  static constexpr const std::size_t    size()        { return N; }
 
   /**
    * Expose noncedata as const data_t for Sodium::tohex().
