@@ -24,7 +24,7 @@
 #include <cstddef> // EOF etc.
 
 /**
- * UGLY HACK!
+ * UGLY HACK! DOESN'T WORK (YET) WITH g++. ONLY clang++ FOR NOW!
  * 
  * Skeleton implementation of
  *   std::char_traits<unsigned char>
@@ -53,6 +53,10 @@
  * std::char_traits<char> from LLVM39/CLANG39, and use it nearly
  * unchanged for unsigned char.
  **/
+
+#ifndef _LIBCPP_ALWAYS_INLINE
+#define _LIBCPP_ALWAYS_INLINE inline
+#endif // ! _LIBCPP_ALWAYS_INLINE
 
 template<>
 struct std::char_traits<unsigned char> : public std::char_traits<char>
