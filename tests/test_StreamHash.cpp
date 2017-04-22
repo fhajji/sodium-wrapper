@@ -32,7 +32,6 @@ using Sodium::StreamHash;
 using data_t = Sodium::data_t;
 
 constexpr static std::size_t hashsize  = StreamHash::HASHSIZE;
-constexpr static std::size_t keysize   = StreamHash::KEYSIZE;
 constexpr static std::size_t blocksize = 8;
 
 bool

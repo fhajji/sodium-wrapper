@@ -19,31 +19,75 @@
 # Usage:
 #   $ mkdir build
 #   $ cd build
-#   $ cmake ..                  (OR cmake -DCMAKE_CXX_COMPILER="g++" ..)
-#   $ make                      (OR make -k) (OR make [-k] VERBOSE=1)
+#   $ cmake -DBUILD_SYSTEM="FreeBSD-clang++" -DCMAKE_CXX_COMPILER="clang++" ..
+#   $ make                               (OR make -k) (OR make [-k] VERBOSE=1)
 #   $ ./sodiumtester
 #   $ tests/test_{<YOURTEST>}
 #   $ cd ..
 #   $ rm -rf build
+#
+# BUILD_SYSTEM can be one of
+#    FreeBSD-clang++, FreeBSD-g++
+#    Linux-clang++, Linux-g++
+#    something else
+#
+# CMAKE_CXX_COMPILER can be one of
+#    clang++ or g++
+# and must match BUILD_SYSTEM
 
-cmake_minimum_required ( VERSION 2.8 )
+cmake_minimum_required ( VERSION 3.1 )
 
 # only clang++ for now; g++ not supported yet. (must come before project line)
 IF (NOT DEFINED CMAKE_CXX_COMPILER)
   set ( CMAKE_CXX_COMPILER "clang++" )
 ENDIF (NOT DEFINED CMAKE_CXX_COMPILER)
 
+# only clang for now; gcc not supported yet. (must come before project line)
+# But C compiler not used yet...
+IF (NOT DEFINED CMAKE_C_COMPILER)
+  set ( CMAKE_C_COMPILER "clang" )
+ENDIF (NOT DEFINED CMAKE_C_COMPILER)
+
 # code is explicitely for C++11 and later
 set ( CMAKE_CXX_STANDARD 11 )
 set ( CMAKE_CXX_STANDARD_REQUIRED ON )
-
-set ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++ -Wall" )
-# add_compile_options (-std=c++11 -stdlib=libc++ -Wall)
+### use -std=c++11 instead of -std=gnu++11 on g++:
+set ( CMAKE_CXX_EXTENSIONS OFF )
 
 # enable linker -v flag to show how it is invoked
 set ( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -v" )
 
 project ( sodiumwrapper )
+
+### must check CMAKE_SYSTEM_NAME _after_ project()
+
+message ( "CMAKE_SYSTEM_NAME == ${CMAKE_SYSTEM_NAME}" )
+
+# This is better than extending CMAKE_CXX_FLAGS which doesn't work:
+
+message ("BUILD_SYSTEM == ${BUILD_SYSTEM}")
+
+if ( BUILD_SYSTEM STREQUAL "FreeBSD-clang++" )
+  # clang++ and libc++ on FreeBSD
+  add_compile_options ( -Wall -stdlib=libc++ )
+elseif ( BUILD_SYSTEM STREQUAL "FreeBSD-g++" )
+  # g++ and libc++ on FreeBSD
+  # See also: http://libcxx.llvm.org/docs/UsingLibcxx.html
+  add_compile_options ( -Wall -nostdinc++ -I/usr/include/c++/v1 )
+  set ( CMAKE_EXE_LINKER_FLAGS "-nodefaultlibs -lc++ -lm -lc -lgcc_s -lgcc" )
+elseif ( BUILD_SYSTEM STREQUAL "Linux-clang++" )
+  # clang++ and libc++ on Linux
+  add_compile_options ( -Wall -stdlib=libc++ )
+elseif ( BUILD_SYSTEM STREQUAL "Linux-g++" )
+  # g++ and libc++ on Linux
+  # See also: http://libcxx.llvm.org/docs/UsingLibcxx.html
+  add_compile_options ( -Wall -nostdinc++ -I/usr/include/c++/v1 )
+  set ( CMAKE_EXE_LINKER_FLAGS "-nodefaultlibs -lc++ -lm -lc -lc++abi -lgcc_s -lgcc" )
+else ()
+  # Any other combination of C++ compiler and platform
+  # most likely g++ and libstdc++ on Unix != FreeBSD...
+  add_compile_options ( -Wall )
+endif ()
 
 # Install libsodium-1.0.12+ in --prefix /usr/local...
 # We would like pkg-config --{cflags|libs} libsodium without -I or -L...

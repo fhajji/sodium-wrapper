@@ -71,7 +71,7 @@ class KeyPair
    **/
   
   KeyPair()
-    : privkey_(false), pubkey_(KEYSIZE_PUBKEY, '\0') {
+    : pubkey_(KEYSIZE_PUBKEY, '\0'), privkey_(false) {
     crypto_box_keypair(pubkey_.data(), privkey_.setdata());
     privkey_.readonly();
   }
@@ -89,7 +89,7 @@ class KeyPair
    **/
   
   KeyPair(const data_t &seed)
-    : privkey_(false), pubkey_(KEYSIZE_PUBKEY, '\0') {
+    : pubkey_(KEYSIZE_PUBKEY, '\0'), privkey_(false) {
     if (seed.size() != KEYSIZE_SEEDBYTES)
       throw std::runtime_error {"Sodium::KeyPair::KeyPair(seed) wrong seed size"};
     crypto_box_seed_keypair(pubkey_.data(), privkey_.setdata(),
@@ -118,7 +118,7 @@ class KeyPair
    **/
   
   KeyPair(const unsigned char *privkey_data, const std::size_t privkey_size)
-    : privkey_(false), pubkey_(KEYSIZE_PUBKEY, '\0') {
+    : pubkey_(KEYSIZE_PUBKEY, '\0'), privkey_(false) {
     if (privkey_size != KEYSIZE_PRIVKEY)
       throw std::runtime_error {"Sodium::KeyPair::KeyPair(privkey_data, privkey_size) wrong privkey_size"};
     std::copy(privkey_data, privkey_data+privkey_size,

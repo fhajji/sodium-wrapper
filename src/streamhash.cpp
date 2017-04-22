@@ -47,7 +47,7 @@ StreamHash::hash(std::istream &istr)
   // check to see if we've read a final partial chunk
   auto s = istr.gcount();
   if (s != 0) {
-    if (s != plaintext.size())
+    if (static_cast<std::size_t>(s) != plaintext.size())
       plaintext.resize(s);
 
     crypto_generichash_update(&state_, plaintext.data(), plaintext.size());
@@ -89,7 +89,7 @@ StreamHash::hash(std::istream &istr,
   // check to see if we've read a final partial chunk
   auto s = istr.gcount();
   if (s != 0) {
-    if (s != plaintext.size())
+    if (static_cast<std::size_t>(s) != plaintext.size())
       plaintext.resize(s);
 
     crypto_generichash_update(&state_, plaintext.data(), plaintext.size());

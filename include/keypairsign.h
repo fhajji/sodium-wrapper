@@ -71,7 +71,7 @@ class KeyPairSign
    **/
   
   KeyPairSign()
-    : privkey_(false), pubkey_(KEYSIZE_PUBKEY, '\0') {
+    : pubkey_(KEYSIZE_PUBKEY, '\0'), privkey_(false) {
     if (crypto_sign_keypair(pubkey_.data(), privkey_.setdata()) == -1)
       throw std::runtime_error {"Sodium::KeyPairSign::KeyPairSign() crypto_sign_keypair() -1"};
     
@@ -92,7 +92,7 @@ class KeyPairSign
    **/
   
   KeyPairSign(const data_t &seed)
-    : privkey_(false), pubkey_(KEYSIZE_PUBKEY, '\0') {
+    : pubkey_(KEYSIZE_PUBKEY, '\0'), privkey_(false) {
     if (seed.size() != KEYSIZE_SEEDBYTES)
       throw std::runtime_error {"Sodium::KeyPairSign::KeyPairSign(seed) wrong seed size"};
 
@@ -125,7 +125,7 @@ class KeyPairSign
   
   KeyPairSign(const unsigned char *privkey_data,
 	      const std::size_t privkey_size)
-    : privkey_(false), pubkey_(KEYSIZE_PUBKEY, '\0') {
+    : pubkey_(KEYSIZE_PUBKEY, '\0'), privkey_(false) {
     if (privkey_size != KEYSIZE_PRIVKEY)
       throw std::runtime_error {"Sodium::KeyPairSign::KeyPairSign(privkey_data, privkey_size) wrong privkey_size"};
     std::copy(privkey_data, privkey_data+privkey_size,

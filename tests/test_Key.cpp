@@ -49,9 +49,6 @@ static constexpr std::size_t ks1     = Sodium::KEYSIZE_SECRETBOX;
 static constexpr std::size_t ks2     = Sodium::KEYSIZE_AUTH;
 static constexpr std::size_t ks3     = Sodium::KEYSIZE_AEAD;
 static constexpr std::size_t ks_salt = Sodium::KEYSIZE_SALT;
-static constexpr std::size_t ks_pub  = Sodium::KEYSIZE_PUBKEY;
-static constexpr std::size_t ks_priv = Sodium::KEYSIZE_PRIVKEY;
-static constexpr std::size_t ks_seed = Sodium::KEYSIZE_SEEDBYTES;
 
 bool isAllZero(const unsigned char *bytes, const std::size_t &size)
 {

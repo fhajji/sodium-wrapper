@@ -56,7 +56,7 @@ FileCryptor::encrypt(std::istream &istr, std::ostream &ostr)
   // check to see if we've read a final partial chunk
   auto s = istr.gcount();
   if (s != 0) {
-    if (s != plaintext.size())
+    if (static_cast<std::size_t>(s) != plaintext.size())
       plaintext.resize(s);
 
     // encrypt the final partial block
@@ -104,7 +104,7 @@ FileCryptor::decrypt(std::ifstream &ifs, std::ostream &ostr)
 		 hash_saved.size())) {
     // We've got a partial read
     auto s = ifs.gcount();
-    if (s != 0 && s != hashsize_)
+    if (s != 0 && static_cast<std::size_t>(s) != hashsize_)
       throw std::runtime_error {"Sodium::FileCryptor::decrypt(): read partial hash"};
   }
   
@@ -144,7 +144,7 @@ FileCryptor::decrypt(std::ifstream &ifs, std::ostream &ostr)
     auto s = ifs.gcount();
     if (s != 0) {
       // we've got a partial chunk
-      if (s != ciphertext.size())
+      if (static_cast<std::size_t>(s) != ciphertext.size())
 	ciphertext.resize(s);
 
       // before we decrypt, we must again be sure that we didn't read

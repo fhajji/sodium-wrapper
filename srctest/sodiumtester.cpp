@@ -290,8 +290,10 @@ SodiumTester::test3()
   if (! b.is_zero())
     throw std::runtime_error {"SodiumTester::test3() not initialized to zero"};
 
-  for (int i: {1,2,3,4,5})
+  for (int i: {1,2,3,4,5}) {
+    static_cast<void>(i); // "use" unused variable i
     b.increment();
+  }
   // b is now 5, display it!
   os << "b+5: " << Sodium::tohex(b.as_data_t()) << std::endl;
 

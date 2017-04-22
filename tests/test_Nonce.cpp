@@ -89,9 +89,11 @@ BOOST_AUTO_TEST_CASE( sodium_test_nonce_increment_compare )
 
   BOOST_CHECK_EQUAL(Sodium::compare(a, a_copy), 0);
   
-  for (int i: {1,2,3,4,5})
+  for (int i: {1,2,3,4,5}) {
+    static_cast<void>(i); // "use" unused variable i
     a.increment();
-
+  }
+  
   // The compare checks, except for == and !=, may fail in rare
   // cases, if wrap around occurs. But that is rare with the
   // nonces having the default number of bytes.
@@ -137,6 +139,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_nonce_operator_plus_equal )
 
   // 1. increment 'a' and 'five' 5 times:
   for (int i: {1,2,3,4,5}) {
+    static_cast<void>(i); // "use" unused variable i
     a.increment();
     five.increment();
   }

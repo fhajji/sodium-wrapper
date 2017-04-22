@@ -95,8 +95,8 @@ class FileCryptor {
 	      const std::size_t             blocksize,
 	      const KeyVar                  &hashkey,
 	      const std::size_t             hashsize) :
-  key_ {key}, nonce_ {nonce}, header_ {}, blocksize_ {blocksize},
-  hashkey_ {hashkey}, hashsize_ {hashsize} {
+  key_ {key}, hashkey_ {hashkey}, nonce_ {nonce}, header_ {},
+  blocksize_ {blocksize}, hashsize_ {hashsize} {
     // some sanity checks, before we start
     if (blocksize < 1)
       throw std::runtime_error {"Sodium::FileCryptor::FileCryptor(): wrong blocksize"};
