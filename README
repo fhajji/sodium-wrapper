@@ -39,8 +39,8 @@ I'm developing on:
   - Linux Mint Sarah 18.0
     clang++ 3.8.0 / llvm 3.8.0
       OR
-    g++
-  - cmake version
+    g++ 5.4.0
+  - cmake version 3.5.1
   
 Thanks,
 

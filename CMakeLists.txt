@@ -102,7 +102,7 @@ elseif ( BUILD_SYSTEM STREQUAL "Linux-g++-libc++" )
   set ( CMAKE_EXE_LINKER_FLAGS "-nodefaultlibs -stdlib=libc++ -lm -lc -lc++abi -lgcc_s -lgcc" )
 elseif ( BUILD_SYSTEM STREQUAL "Linux-g++-stdlibc++" )
   # g++ and stdlibc++ on Linux
-  # Status: OK, except for include/bytestring.h dependent files
+  # Status: OK
   add_compile_options ( -Wall )
 else ()
   # Any other combination of C++ compiler and platform
