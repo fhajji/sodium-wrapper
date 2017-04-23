@@ -19,8 +19,14 @@
 #ifndef _BYTESTRING_H_
 #define _BYTESTRING_H_
 
-#include <locale> // std::ctype_base, std::ctype<char>, ...
-#include <string> // std::char_traits<char>
+#include <boost/predef.h> // detect library and compiler...
+
+// bytestring.h supports only libc++ (-stdlib=libc++) for now.
+
+#if BOOST_LIB_STD_CXX    // are we using lic++?
+
+#include <locale>  // std::ctype_base, std::ctype<char>, ...
+#include <string>  // std::char_traits<char>
 #include <cstddef> // EOF etc.
 
 /**
@@ -58,8 +64,16 @@
 #define _LIBCPP_ALWAYS_INLINE inline
 #endif // ! _LIBCPP_ALWAYS_INLINE
 
+#if BOOST_COMP_GNUC // && ! BOOST_COMP_CLANG
+namespace std {
+
+template<>
+struct char_traits<unsigned char> : public char_traits<char>
+#else
+  
 template<>
 struct std::char_traits<unsigned char> : public std::char_traits<char>
+#endif
 {
   typedef unsigned char char_type; // unsigned char instead of char!
   typedef int int_type;
@@ -161,6 +175,10 @@ struct std::char_traits<unsigned char> : public std::char_traits<char>
   }
 }; // std::char_traits<unsigned char>
 
+#if BOOST_COMP_GNUC // && ! BOOST_COMP_CLANG
+} // namespace std
+#endif
+  
 /**
  * std::ctype<unsigned char> is a specialization of std::ctype for
  * unsigned char.  We shamelessly take the implementation of
@@ -168,9 +186,18 @@ struct std::char_traits<unsigned char> : public std::char_traits<char>
  * unsigned chars.
  **/
 
+#if BOOST_COMP_GNUC // && ! BOOST_COMP_CLANG
+namespace std {
+
+template<>
+class ctype<unsigned char> :
+  public locale::facet, public ctype_base
+#else
+  
 template<>
 class std::ctype<unsigned char> :
   public std::locale::facet, public std::ctype_base
+#endif
 {
   const mask* tab;
   bool        del;
@@ -270,9 +297,22 @@ class std::ctype<unsigned char> :
 				char dfault, char* to) const;
 }; // std::ctype<unsigned char>
 
-template <>
+#if BOOST_COMP_GNUC // && ! BOOST_COMP_CLANG
+} // namespace std
+#endif
+ 
+#if BOOST_COMP_GNUC // && ! BOOST_COMP_CLANG
+namespace std {
+
+template<>
+class ctype_byname<unsigned char>
+  : public ctype<unsigned char>
+#else  
+  
+template<>
 class std::ctype_byname<unsigned char>
   : public std::ctype<unsigned char>
+#endif
 {
   locale_t __l;
 
@@ -288,6 +328,26 @@ protected:
   virtual const char_type* do_tolower(char_type* low, const char_type* high) const;
 };
 
+#if BOOST_COMP_GNUC // && ! BOOST_COMP_CLANG
+} // namespace std
+#endif
+ 
+#if BOOST_COMP_GNUC // && ! BOOST_COMP_CLANG
+namespace std {
+
+locale::id ctype<unsigned char>::id;
+#else
+
 std::locale::id std::ctype<unsigned char>::id;
+#endif
+
+#if BOOST_COMP_GNUC // && ! BOOST_COMP_CLANG
+} // namespace std
+#endif
+ 
+#else // ! BOOST_LIB_STD_CXX
+#error "bytestring.h supports only libc++ for now"
+
+#endif // BOOST_LIB_STD_CXX
 
 #endif // _BYTESTRING_H_

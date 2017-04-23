@@ -18,6 +18,7 @@ Dependencies:
   - Boost
       * Boost.Test for unit testing
       * Boost.Iostreams for streaming APIs.
+      * Boost.Predef for include/bytestring.h
 
 Build dependencies:
   - a C++11 compliant compiler
