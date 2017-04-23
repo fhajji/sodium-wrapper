@@ -22,7 +22,6 @@
 
 #include "chacha20_filter.h"
 #include "common.h"
-#include "bytestring.h"
 
 #include <string>
 #include <stdexcept>    // std::runtime_error
@@ -30,17 +29,14 @@
 #include <iterator>     // std::back_inserter
 
 #include <boost/iostreams/device/array.hpp>
+#include <boost/iostreams/device/file.hpp>
+#include <boost/iostreams/tee.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 
 using Sodium::chacha20_filter;
-using data_t = Sodium::data_t;
+using data_t = Sodium::data2_t;
 
 namespace io = boost::iostreams;
-typedef io::basic_array_sink<unsigned char>             bytes_array_sink;
-typedef io::basic_array_source<unsigned char>           bytes_array_source;
-
-typedef io::filtering_stream<io::output, unsigned char> bytes_filtering_ostream;
-typedef io::filtering_stream<io::input,  unsigned char> bytes_filtering_istream;
 
 struct SodiumFixture {
   SodiumFixture()  {
@@ -65,8 +61,8 @@ test_of_correctness_combined_output_filter(const std::string &plaintext)
   
   data_t decrypted (2 * plaintext.size()); // because of both writes below
 
-  bytes_array_sink        sink {decrypted.data(), decrypted.size()};
-  bytes_filtering_ostream os   {};
+  io::array_sink        sink {decrypted.data(), decrypted.size()};
+  io::filtering_ostream os   {};
   os.push(encrypt_filter); // first encrypt
   os.push(decrypt_filter); // then decrypt again
   os.push(sink);           // and store result in sink/derypted.
@@ -114,8 +110,8 @@ test_of_correctness_combined_input_filter(const std::string &plaintext)
   
   data_t decrypted (2 * plaintext.size()); // because of plainblob2 above
 
-  bytes_array_source      source {plainblob2.data(), plainblob2.size()};
-  bytes_filtering_istream is   {};
+  io::array_source      source {plainblob2.data(), plainblob2.size()};
+  io::filtering_istream is     {};
   is.push(decrypt_filter); // then decrypt again
   is.push(encrypt_filter); // first encrypt
   is.push(source);         // data to be encrypted in source/plainblob2.
@@ -165,8 +161,8 @@ test_of_correctness_output_filter(const std::string &plaintext,
   
   data_t ciphertext ( 2*plaintext.size() );
 
-  bytes_array_sink          sink1 {ciphertext.data(), ciphertext.size()};
-  bytes_filtering_ostream   os1   {};
+  io::array_sink          sink1 {ciphertext.data(), ciphertext.size()};
+  io::filtering_ostream   os1   {};
   os1.push(encrypt_filter); // encrypt
   os1.push(sink1);          // then store result in sink/ciphertext.
 
@@ -177,7 +173,7 @@ test_of_correctness_output_filter(const std::string &plaintext,
 
   // sink1 (i.e. ciphertext) contains ciphertext (without MAC)
 
-  BOOST_TEST_MESSAGE(std::string(plainblob.cbegin(), plainblob.cend()));
+  BOOST_TEST_MESSAGE(std::string(plainblob.cbegin(),  plainblob.cend()));
   BOOST_TEST_MESSAGE(std::string(ciphertext.cbegin(), ciphertext.cend()));
   
   BOOST_CHECK_EQUAL(ciphertext.size(), 2*plainblob.size());
@@ -201,8 +197,8 @@ test_of_correctness_output_filter(const std::string &plaintext,
 
   data_t decrypted (ciphertext.size());
 
-  bytes_array_sink          sink2 {decrypted.data(), decrypted.size()};
-  bytes_filtering_ostream   os2   {};
+  io::array_sink          sink2 {decrypted.data(), decrypted.size()};
+  io::filtering_ostream   os2   {};
   os2.push(decrypt_filter); // (attempt to) decrypt
   os2.push(sink2);          // then store result in sink/ciphertext.
 
@@ -251,8 +247,8 @@ test_of_correctness_input_filter(const std::string &plaintext,
   
   data_t ciphertext ( 2*plaintext.size() );
 
-  bytes_array_source        source1 {plainblob2.data(), plainblob2.size()};
-  bytes_filtering_istream   is1   {};
+  io::array_source        source1 {plainblob2.data(), plainblob2.size()};
+  io::filtering_istream   is1   {};
   is1.push(encrypt_filter); // encrypt data
   is1.push(source1);        // ... stored in source1/plainblob2.
 
@@ -265,7 +261,7 @@ test_of_correctness_input_filter(const std::string &plaintext,
 
   BOOST_TEST_MESSAGE(std::string(plainblob.cbegin(), plainblob.cend()));
   BOOST_TEST_MESSAGE(std::string(ciphertext.cbegin(), ciphertext.cend()));
-  
+
   BOOST_CHECK_EQUAL(ciphertext.size(), 2*plainblob.size());
 
   // plainblob2 != ciphertext if and only if plaintext was not empty!
@@ -284,8 +280,8 @@ test_of_correctness_input_filter(const std::string &plaintext,
 
   data_t decrypted (ciphertext.size());
 
-  bytes_array_source        source2 {ciphertext.data(), ciphertext.size()};
-  bytes_filtering_istream   is2   {};
+  io::array_source        source2 {ciphertext.data(), ciphertext.size()};
+  io::filtering_istream   is2   {};
   is2.push(decrypt_filter); // (attempt to) decrypt data...
   is2.push(source2);        // ... stored in source2/ciphertext
 
@@ -299,6 +295,7 @@ test_of_correctness_input_filter(const std::string &plaintext,
   // variable decrypted has been hopefully filled with decrypted text
 
   BOOST_TEST_MESSAGE(std::string(decrypted.cbegin(), decrypted.cend()));
+  
   BOOST_CHECK_EQUAL(decrypted.size(), 2*plainblob.size());
 
   // decryption succeeded and plainblob2 == decrypted if and only if
@@ -323,8 +320,8 @@ length_test_output_filter(const std::string &plaintext)
   
   data_t ciphertext (plainblob.size());
 
-  bytes_array_sink        sink {ciphertext.data(), ciphertext.size()};
-  bytes_filtering_ostream os   {};
+  io::array_sink        sink {ciphertext.data(), ciphertext.size()};
+  io::filtering_ostream os   {};
   os.push(encrypt_filter); // first encrypt
   os.push(sink);           // and store result in sink/ciphertext.
 
@@ -337,7 +334,7 @@ length_test_output_filter(const std::string &plaintext)
 
   BOOST_TEST_MESSAGE(std::string(plainblob.cbegin(), plainblob.cend()));
   BOOST_TEST_MESSAGE(std::string(ciphertext.cbegin(), ciphertext.cend()));
-  
+
   // unless plaintext was empty, in which case ciphertext is also empty,
   // check that plaintext and ciphertext aren't the same:
   if (plaintext.empty())
@@ -361,8 +358,8 @@ length_test_input_filter(const std::string &plaintext)
   
   data_t ciphertext (plainblob.size());
 
-  bytes_array_source      source {plainblob.data(), plainblob.size()};
-  bytes_filtering_istream is   {};
+  io::array_source      source {plainblob.data(), plainblob.size()};
+  io::filtering_istream is   {};
   is.push(encrypt_filter); // encrypt from ...
   is.push(source);         // data stored in source/plainblob.
 
@@ -374,7 +371,7 @@ length_test_input_filter(const std::string &plaintext)
   BOOST_CHECK(is); // after encryption, stream must still be ready
   
   // variable ciphertext has been hopefully filled with ciphertext
-  
+
   BOOST_TEST_MESSAGE(std::string(plainblob.cbegin(), plainblob.cend()));
   BOOST_TEST_MESSAGE(std::string(ciphertext.cbegin(), ciphertext.cend()));
   
@@ -387,6 +384,34 @@ length_test_input_filter(const std::string &plaintext)
   
   BOOST_CHECK_EQUAL(ciphertext.size(),
 		    plaintext.size());
+}
+
+void
+pipeline_output_device (const std::string &plaintext,
+			const std::string &encfile_name,
+			const std::string &decfile_name)
+{
+  data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
+
+  chacha20_filter::key_type   key;   // Create a random key
+  chacha20_filter::nonce_type nonce; // Create a random nonce
+
+  chacha20_filter encrypt_filter {10, key, nonce};
+  chacha20_filter decrypt_filter {12, key, nonce};
+
+  io::file_sink encfile {encfile_name,
+                         std::ios_base::out | std::ios_base::binary };
+  io::file_sink decfile {decfile_name,
+                         std::ios_base::out | std::ios_base::binary };
+
+  io::tee_filter<io::file_sink> tee_filter(encfile);
+  
+  io::filtering_ostream os(encrypt_filter | tee_filter |
+		           decrypt_filter | decfile);
+
+  os.write(plainblob.data(), plainblob.size());
+
+  os.flush();
 }
 
 BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture );
@@ -418,109 +443,127 @@ BOOST_AUTO_TEST_CASE( sodium_test_chacha20_filter_size_empty_input_filter )
 BOOST_AUTO_TEST_CASE( sodium_test_chacha20_filter_correctness_combined_full_output_filter )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  auto result {test_of_correctness_combined_output_filter(plaintext)};
+  auto result = test_of_correctness_combined_output_filter(plaintext);
 
   // Test must succeed
-  BOOST_CHECK_EQUAL(result, true);
+  BOOST_CHECK(result);
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_chacha20_filter_correctness_combined_empty_output_filter )
 {
   std::string plaintext {};
-  auto result           {test_of_correctness_combined_output_filter(plaintext)};
+  auto result = test_of_correctness_combined_output_filter(plaintext);
 
   // Test must succeed
-  BOOST_CHECK_EQUAL(result, true);
+  BOOST_CHECK(result);
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_chacha20_filter_correctness_combined_full_input_filter )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  auto result {test_of_correctness_combined_input_filter(plaintext)};
+  auto result = test_of_correctness_combined_input_filter(plaintext);
 
   // Test must succeed
-  BOOST_CHECK_EQUAL(result, true);
+  BOOST_CHECK(result);
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_chacha20_filter_correctness_combined_empty_input_filter )
 {
   std::string plaintext {};
-  auto result           {test_of_correctness_combined_input_filter(plaintext)};
+  auto result = test_of_correctness_combined_input_filter(plaintext);
 
   // Test must succeed
-  BOOST_CHECK_EQUAL(result, true);
+  BOOST_CHECK(result);
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_chacha20_filter_correctness_full_output_filter )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  auto result {test_of_correctness_output_filter(plaintext)};
+  auto result = test_of_correctness_output_filter(plaintext);
 
   // Test must succeed
-  BOOST_CHECK_EQUAL(result, true);
+  BOOST_CHECK(result);
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_chacha20_filter_correctness_falsify_ciphertext_output_filter )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  auto result {test_of_correctness_output_filter(plaintext, true, false, false)};
+  auto result = test_of_correctness_output_filter(plaintext, true, false, false);
 
   // Test must succeed, we falsified the ciphertext but caught it!
-  BOOST_CHECK_EQUAL(result, true);
+  BOOST_CHECK(result);
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_chacha20_filter_correctness_falsify_key_full_output_filter )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  auto result {test_of_correctness_output_filter(plaintext, false, true, false)};
+  auto result = test_of_correctness_output_filter(plaintext, false, true, false);
 
   // Test must succeed, we falsified the key but caught it!
-  BOOST_CHECK_EQUAL(result, true);
+  BOOST_CHECK(result);
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_chacha20_filter_correctness_falsify_nonce_full_output_filter )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  auto result {test_of_correctness_output_filter(plaintext, false, false, true)};
+  auto result = test_of_correctness_output_filter(plaintext, false, false, true);
 
   // Test must succeed, we falsified the nonce but caught it!
-  BOOST_CHECK_EQUAL(result, true);
+  BOOST_CHECK(result);
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_chacha20_filter_correctness_full_input_filter )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  auto result {test_of_correctness_input_filter(plaintext)};
+  auto result = test_of_correctness_input_filter(plaintext);
 
   // Test must succeed
-  BOOST_CHECK_EQUAL(result, true);
+  BOOST_CHECK(result);
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_chacha20_filter_correctness_falsify_ciphertext_input_filter )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  auto result {test_of_correctness_input_filter(plaintext, true, false, false)};
+  auto result = test_of_correctness_input_filter(plaintext, true, false, false);
 
   // Test must succeed, we falsified the ciphertext but caught it!
-  BOOST_CHECK_EQUAL(result, true);
+  BOOST_CHECK(result);
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_chacha20_filter_correctness_falsify_key_full_input_filter )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  auto result {test_of_correctness_input_filter(plaintext, false, true, false)};
+  auto result = test_of_correctness_input_filter(plaintext, false, true, false);
 
   // Test must succeed, we falsified the key but caught it!
-  BOOST_CHECK_EQUAL(result, true);
+  BOOST_CHECK(result);
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_chacha20_filter_correctness_falsify_nonce_full_input_filter )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  auto result {test_of_correctness_input_filter(plaintext, false, false, true)};
+  auto result = test_of_correctness_input_filter(plaintext, false, false, true);
 
   // Test must succeed, we falsified the nonce but caught it!
-  BOOST_CHECK_EQUAL(result, true);
+  BOOST_CHECK(result);
+}
+
+BOOST_AUTO_TEST_CASE( sodium_test_chacha20_filter_pipeline_output_device )
+{
+  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+  pipeline_output_device(plaintext,
+			 "/var/tmp/outfile.enc",
+			 "/var/tmp/outfile.dec");
+
+  // Test succeeds if /var/tmp/outfile.dec contains plaintext
+  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  
+  io::file_source is("/var/tmp/outfile.dec",
+		     std::ios_base::in | std::ios_base::binary);
+  data_t decrypted(plaintext.size());
+  is.read(decrypted.data(), decrypted.size());
+
+  BOOST_CHECK(decrypted == plainblob);
 }
 
 // NYI: add test cases to prove that we used chacha20 correctly...

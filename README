@@ -25,11 +25,22 @@ Build dependencies:
   - CMake
 
 I'm developing on:
+
+  (primary development platform)
   - FreeBSD/amd64 11.0-STABLE
-  - clang++ 3.9.1 / llvm 3.9.1
-    OR
-    g++49
-  - cmake version 3.7.2
+    clang++ 3.9.1 / llvm 3.9.1
+      OR
+    g++ 4.9.4
+      OR
+    g++ 6.3.0
+    cmake version 3.7.2
+
+  (secondary development platform)
+  - Linux Mint Sarah 18.0
+    clang++ 3.8.0 / llvm 3.8.0
+      OR
+    g++
+  - cmake version
   
 Thanks,
 

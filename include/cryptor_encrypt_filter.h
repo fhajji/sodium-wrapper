@@ -39,17 +39,16 @@ namespace io = boost::iostreams;
 
 namespace Sodium {
 
-class cryptor_encrypt_filter : public io::aggregate_filter<unsigned char> {
+class cryptor_encrypt_filter : public io::aggregate_filter<char> {
 
   /**
    * Use cryptor_encrypt_filter as a DualUse filter like this:
    * 
    *     #include <boost/iostreams/device/array.hpp>
    *     #include <boost/iostreams/filtering_stream.hpp>
-   *     #include "bytestring.h"
    * 
    *     using Sodium::cryptor_encrypt_filter;
-   *     using data_t = Sodium::data_t;
+   *     using data_t = Sodium::data2_t;
    * 
    *     std::string plaintext {"the quick brown fox jumps over the lazy dog"};
    *     data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -57,8 +56,6 @@ class cryptor_encrypt_filter : public io::aggregate_filter<unsigned char> {
    * <---- If using as an OutputFilter:
    * 
    *     namespace io = boost::iostreams;
-   *     typedef io::basic_array_sink<unsigned char>             bytes_array_sink;
-   *     typedef io::filtering_stream<io::output, unsigned char> bytes_filtering_ostream;
    * 
    *     cryptor_encrypt_filter::key_type      key;      // Create a random key
    *     cryptor_encrypt_filter::nonce_type    nonce;    // create random nonce
@@ -66,8 +63,8 @@ class cryptor_encrypt_filter : public io::aggregate_filter<unsigned char> {
    * 
    *     data_t ciphertext(encryptor_encrypt_filter::MACSIZE + plainblob.size());
    * 
-   *     bytes_array_sink        sink {ciphertext.data(), ciphertext.size()};
-   *     bytes_filtering_ostream os   {};
+   *     io::array_sink        sink {ciphertext.data(), ciphertext.size()};
+   *     io::filtering_ostream os   {};
    *     os.push(encrypt_filter);
    *     os.push(sink);
    * 
@@ -82,16 +79,14 @@ class cryptor_encrypt_filter : public io::aggregate_filter<unsigned char> {
    * ----> If using as an InputFilter:
    *
    *     namespace io = boost::iostreams;
-   *     typedef io::basic_array_source<unsigned char>          bytes_array_source;
-   *     typedef io::filtering_stream<io::input, unsigned char> bytes_filtering_istream;
    * 
    *     cryptor_encrypt_filter::key_type      key;      // Create a random key
    *     cryptor_encrypt_filter::nonce_type    nonce;    // create random nonce
    *     cryptor_encrypt_filter encrypt_filter {key, nonce};  // create a cryptor filter
    * 
    *     data_t ciphertext ( cryptor_encrypt_filter::MACSIZE + plaintext.size() );
-   *     bytes_array_source        source {plainblob.data(), plainblob.size()};
-   *     bytes_filtering_istream   is     {};
+   *     io::array_source        source {plainblob.data(), plainblob.size()};
+   *     io::filtering_istream   is     {};
    *     is.push(encrypt_filter); // encrypt data...
    *     is.push(source);         // from source / plainblob.
    * 
@@ -105,12 +100,12 @@ class cryptor_encrypt_filter : public io::aggregate_filter<unsigned char> {
    **/
 
   private:
-    typedef io::aggregate_filter<unsigned char> base_type;
+    typedef io::aggregate_filter<char> base_type;
   
   public:
     typedef typename base_type::char_type   char_type;
     typedef typename base_type::category    category;
-    typedef typename base_type::vector_type vector_type; // data_t
+    typedef typename base_type::vector_type vector_type; // data2_t
 
     static constexpr std::size_t MACSIZE   = Cryptor::MACSIZE;
     
@@ -119,7 +114,7 @@ class cryptor_encrypt_filter : public io::aggregate_filter<unsigned char> {
     
     cryptor_encrypt_filter(const key_type &key,
 			   const nonce_type &nonce) :
-      key_ {key}, nonce_ {nonce}, sc_ {}
+      key_ {key}, nonce_ {nonce}
     { }
 
     virtual ~cryptor_encrypt_filter()
@@ -133,7 +128,13 @@ class cryptor_encrypt_filter : public io::aggregate_filter<unsigned char> {
 #endif // ! NDEBUG
 
       // compute (MAC || ciphertext)
-      data_t ciphertext_with_mac = sc_.encrypt(src, key_, nonce_);
+      vector_type ciphertext_with_mac(MACSIZE + src.size());
+      crypto_secretbox_easy (reinterpret_cast<unsigned char *>(ciphertext_with_mac.data()),
+			     reinterpret_cast<const unsigned char *>(src.data()),
+			     src.size(),
+			     nonce_.data(),
+			     key_.data());
+			     
       dest.swap(ciphertext_with_mac);   // efficiently store it into dest
       
       // old dest elements will be destroyed when do_filter()
@@ -143,8 +144,6 @@ class cryptor_encrypt_filter : public io::aggregate_filter<unsigned char> {
   private:
     key_type   key_;
     nonce_type nonce_;
-    Cryptor    sc_;
-
 }; // cryptor_encrypt_filter
 
 } //namespace Sodium

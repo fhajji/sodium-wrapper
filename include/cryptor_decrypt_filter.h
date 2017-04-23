@@ -43,17 +43,16 @@ namespace io = boost::iostreams;
 
 namespace Sodium {
 
-class cryptor_decrypt_filter : public io::aggregate_filter<unsigned char> {
+class cryptor_decrypt_filter : public io::aggregate_filter<char> {
 
   /**
    * Use cryptor_decrypt_filter as a DualUse filter like this:
    * 
    *   #include <boost/iostreams/device/array.hpp>
    *   #include <boost/iostreams/filtering_stream.hpp>
-   *   #include "bytestring.h"
    * 
    *   using Sodium::cryptor_decrypt_filter;
-   *   using data_t = Sodium::data_t;
+   *   using data_t = Sodium::data2_t;
    * 
    *   std::string ciphertext = ... // computed earlier...
    *   data_t      cipherblob {ciphertext.cbegin(), ciphertext.cend()};
@@ -61,8 +60,6 @@ class cryptor_decrypt_filter : public io::aggregate_filter<unsigned char> {
    * <---- If using as an OutputFilter:
    * 
    *   namespace io = boost::iostreams;
-   *   typedef io::basic_array_sink<unsigned char>             bytes_array_sink;
-   *   typedef io::filtering_stream<io::output, unsigned char> bytes_filtering_ostream;
    * 
    *   cryptor_decrypt_filter::key_type   key { ... };   // ... with this key
    *   cryptor_decrypt_filter::nonce_type nonce { ... }; // ... and this nonce.
@@ -70,8 +67,8 @@ class cryptor_decrypt_filter : public io::aggregate_filter<unsigned char> {
    *   data_t decrypted (ciphertext.size() - cryptor_decrypt_filter::MACSIZE);
    * 
    *   try {
-   *     bytes_array_sink         sink {decrypted.data(), decrypted.size()};
-   *     bytes_filtering_ostream  os {};
+   *     io::array_sink         sink {decrypted.data(), decrypted.size()};
+   *     io::filtering_ostream  os {};
    *     os.push(decrypt_filter);
    *     os.push(sink);
    * 
@@ -89,16 +86,14 @@ class cryptor_decrypt_filter : public io::aggregate_filter<unsigned char> {
    * ----> If using as an InputFilter:
    * 
    *   namespace io = boost::iostreams;
-   *   typedef io::basic_array_source<unsigned char>          bytes_array_source;
-   *   typedef io::filtering_stream<io::input, unsigned char> bytes_filtering_istream;
    * 
    *   cryptor_decrypt_filter::key_type   key { ... };   // ... with this key
    *   cryptor_decrypt_filter::nonce_type nonce { ... }; // ... and this nonce.
    *   cryptor_decrypt_filter             decrypt_filter {key, nonce}; // create a decryptor filter
    *   data_t decrypted (ciphertext.size() - cryptor_decrypt_filter::MACSIZE);
    * 
-   *   bytes_array_source      source {ciphertext.data(), ciphertext.size()};
-   *   bytes_filtering_istream is     {};
+   *   io::array_source      source {ciphertext.data(), ciphertext.size()};
+   *   io::filtering_istream is     {};
    *   std::streamsize n {};
    * 
    *   is.push(decrypt_filter); // (attempt do decrypt)
@@ -125,12 +120,12 @@ class cryptor_decrypt_filter : public io::aggregate_filter<unsigned char> {
     };
   
   private:
-    typedef io::aggregate_filter<unsigned char> base_type;
+    typedef io::aggregate_filter<char> base_type;
   
   public:
     typedef typename base_type::char_type   char_type;
     typedef typename base_type::category    category;
-    typedef typename base_type::vector_type vector_type; // data_t
+    typedef typename base_type::vector_type vector_type; // data2_t
 
     static constexpr std::size_t MACSIZE   = Cryptor::MACSIZE;
     
@@ -139,7 +134,7 @@ class cryptor_decrypt_filter : public io::aggregate_filter<unsigned char> {
   
     cryptor_decrypt_filter(const key_type &key,
 			   const nonce_type &nonce) :
-      key_ {key}, nonce_ {nonce}, sc_ {}
+      key_ {key}, nonce_ {nonce}
     {
     }
 
@@ -156,8 +151,17 @@ class cryptor_decrypt_filter : public io::aggregate_filter<unsigned char> {
 #endif // ! NDEBUG
 
       try {
+	if (src.size() < MACSIZE)
+	  throw std::runtime_error {"Sodium::cryptor_decrypt_filter::do_filter() ciphertext too small for mac"};
+
 	// Try to decrypt the (MAC || ciphertext) passed in src.
-	data_t decrypted = sc_.decrypt(src, key_, nonce_);
+	vector_type decrypted(src.size() - MACSIZE);
+	if (crypto_secretbox_open_easy (reinterpret_cast<unsigned char *>(decrypted.data()),
+					reinterpret_cast<const unsigned char *>(src.data()),
+					src.size(),
+					nonce_.data(),
+					key_.data()) != 0)
+	  throw std::runtime_error {"Sodium::cryptor_decrypt_filter::do_filter() can't decrypt"};
       
 	dest.swap(decrypted); // efficiently store result vector into dest
       }
@@ -165,7 +169,7 @@ class cryptor_decrypt_filter : public io::aggregate_filter<unsigned char> {
 	std::string error_message {e.what()};
 
 #ifndef NDEBUG
-	std::cerr << "cryptor_decrypt_filter::do_filter() "
+	std::cerr << "Sodium::cryptor_decrypt_filter::do_filter() "
 		  << "throwing exception {" << error_message << "}"
 		  << std::endl;
 #endif // ! NDEBUG
@@ -184,8 +188,6 @@ class cryptor_decrypt_filter : public io::aggregate_filter<unsigned char> {
   private:
     key_type   key_;
     nonce_type nonce_;
-    Cryptor    sc_;
-
 }; // cryptor_decrypt_filter
 
 } //namespace Sodium

@@ -27,12 +27,12 @@
 #   $ rm -rf build
 #
 # BUILD_SYSTEM can be one of
-#    FreeBSD-clang++, FreeBSD-g++
+#    FreeBSD-clang++, FreeBSD-g++, FreeBSD-g++6
 #    Linux-clang++, Linux-g++-libc++, Linux-g++-stdlibc++
 #    something else
 #
 # CMAKE_CXX_COMPILER can be one of
-#    clang++ or g++
+#    clang++ or g++ or g++6
 # and must match BUILD_SYSTEM
 
 cmake_minimum_required ( VERSION 3.1 )
@@ -73,10 +73,16 @@ if ( BUILD_SYSTEM STREQUAL "FreeBSD-clang++" )
   add_compile_options ( -Wall -stdlib=libc++ )
 elseif ( BUILD_SYSTEM STREQUAL "FreeBSD-g++" )
   # g++ and libc++ on FreeBSD
-  # Status: OK, except for include/bytestring.h
+  # Status: OK
   # See also: http://libcxx.llvm.org/docs/UsingLibcxx.html
   add_compile_options ( -Wall -nostdinc++ -I/usr/include/c++/v1 )
   set ( CMAKE_EXE_LINKER_FLAGS "-nodefaultlibs -lc++ -lm -lc -lgcc_s -lgcc" )
+elseif ( BUILD_SYSTEM STREQUAL "FreeBSD-g++6" )
+  # g++6 and libc++ on FreeBSD
+  # Status: OK
+  # See also: http://libcxx.llvm.org/docs/UsingLibcxx.html
+  add_compile_options ( -Wall -nostdinc++ -I/usr/include/c++/v1 )
+  set ( CMAKE_EXE_LINKER_FLAGS " -Wl,-rpath=/usr/local/lib/gcc6 -nodefaultlibs -lc++ -lm -lc -lgcc_s -lgcc" )
 elseif ( BUILD_SYSTEM STREQUAL "Linux-clang++" )
   # clang++ and libc++ on Linux
   # Status: OK

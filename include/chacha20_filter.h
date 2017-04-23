@@ -57,7 +57,7 @@ class chacha20_symmetric_filter
   static constexpr std::size_t NONCESIZE = Sodium::NONCESIZE_CHACHA20;
   static constexpr std::size_t BLOCKSIZE = 64; // ChaCha20 blocksize
   
-  typedef unsigned char char_type;
+  typedef char char_type; // !!! char, not unsigned char
   
   using key_type   = Key<KEYSIZE>;
   using nonce_type = Nonce<NONCESIZE>;
@@ -118,8 +118,8 @@ class chacha20_symmetric_filter
     // filter as many bytes as possible from [i1,i2) to [o1,o2)
     // and update i1, and o1 when done.
       
-    if (crypto_stream_chacha20_xor_ic(o1,        /* c, destination */
-				      i1,        /* m, source */
+    if (crypto_stream_chacha20_xor_ic(reinterpret_cast<unsigned char *>(o1),
+				      reinterpret_cast<const unsigned char *>(i1),
 				      mlen,
 				      nonce_.data(),
 				      ic,
@@ -135,12 +135,10 @@ class chacha20_symmetric_filter
 	      << flush << ") called" << '\n'
 	      << "  [mlen=" << mlen << "]" << '\n'
 	      << "  [[i1,i1+mlen)={"
-	      << std::string(reinterpret_cast<const char *>(i1),
-			     reinterpret_cast<const char *>(i1+mlen))
+	      << std::string(i1, i1+mlen)
 	      << "}" << '\n'
 	      << "  [[o1,o1+mlen)={"
-	      << std::string(reinterpret_cast<const char *>(o1),
-			     reinterpret_cast<const char *>(o1+mlen))
+	      << std::string(o1, o1+mlen)
 	      << "}"
 	      << "  [ic]=" << ic << '\n'
 	      << std::endl;
@@ -196,14 +194,10 @@ class chacha20_filter : public io::symmetric_filter<chacha20_symmetric_filter>
    * 
    *   #include <boost/iostreams/device/array.hpp>
    *   #include <boost/iostreams/filtering_stream.hpp>
-   *   #include "bytestring.h"
-   * 
+   *
+   *   using data_t = Sodium::data2_t; 
    *   namespace io = boost::iostreams;
-   *   typedef io::basic_array_sink<unsigned char>    bytes_array_sink;
-   *   typedef io::basic_array_source<unsigned char>  bytes_array_source;
    * 
-   *   typedef io::filtering_stream<io::output, unsigned char> bytes_filtering_ostream;
-   *   typedef io::filtering_stream<io::input,  unsigned char> bytes_filtering_istream;
    *   data_t plainblob { plaintext.cbegin(), plaintext.cend() };
    * 
    *   chacha20_filter::key_type   key;   // Create a random key
@@ -216,8 +210,8 @@ class chacha20_filter : public io::symmetric_filter<chacha20_symmetric_filter>
    * 
    * <---- If using as an OutputFilter:
    *
-   *   bytes_array_sink        sink {decrypted.data(), decrypted.size()};
-   *   bytes_filtering_ostream os   {};
+   *   io::array_sink        sink {decrypted.data(), decrypted.size()};
+   *   io::filtering_ostream os   {};
    *   os.push(encrypt_filter); // first encrypt
    *   os.push(decrypt_filter); // then decrypt again
    *   os.push(sink);           // and store result in sink/derypted.
@@ -232,8 +226,8 @@ class chacha20_filter : public io::symmetric_filter<chacha20_symmetric_filter>
    * 
    * ----> If using as an InputFilter:
    * 
-   *   bytes_array_source      source {plainblob.data(), plainblob.size()};
-   *   bytes_filtering_istream is   {};
+   *   io::array_source      source {plainblob.data(), plainblob.size()};
+   *   io::filtering_istream is   {};
    *   is.push(decrypt_filter); // then decrypt again
    *   is.push(encrypt_filter); // first encrypt
    *   is.push(source);         // data to be encrypted in source/plainblob.
@@ -295,18 +289,40 @@ class chacha20_filter : public io::symmetric_filter<chacha20_symmetric_filter>
  * in a pipeline.
  * 
  * Usage:
- *   <to be documented>
+ *   #include <boost/iostreams/device/file.hpp>
+ *   #include <boost/iostreams/tee.hpp>
+ *   #include <boost/iostreams/filtering_stream.hpp>
+ *
+ *   using Sodium::chacha20_filter;
+ *   using data_t = Sodium::data2_t;
+ * 
+ *   namespace io = boost::iostreams;
+ * 
+ *   data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
+ * 
+ *   chacha20_filter::key_type   key;   // Create a random key
+ *   chacha20_filter::nonce_type nonce; // Create a random nonce
+ * 
+ *   chacha20_filter encrypt_filter {10, key, nonce};
+ *   chacha20_filter decrypt_filter {12, key, nonce};
+ * 
+ *   io::file_sink encfile {encfile_name,
+ *                          std::ios_base::out | std::ios_base::binary };
+ *   io::file_sink decfile {decfile_name,
+ *                          std::ios_base::out | std::ios_base::binary };
+ * 
+ *   io::tee_filter<io::file_sink> tee_filter(encfile);
+ *  
+ *   io::filtering_ostream os(encrypt_filter | tee_filter |
+ *                            decrypt_filter | decfile);
+ * 
+ *   os.write(plainblob.data(), plainblob.size());
+ *  
+ *  os.flush();
  **/
  
 BOOST_IOSTREAMS_PIPABLE(chacha20_filter, 0)
- 
-/**
- * Use like this:
- * 
- *   chacha20_filter chacha20(2048, key, nonce); // 2048: buffer size
- *   ...
- **/
-
+  
 } // namespace Sodium
 
 #endif // _S_CHACHA20_FILTER_H_

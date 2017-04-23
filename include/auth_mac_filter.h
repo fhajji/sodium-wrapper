@@ -38,17 +38,16 @@ namespace io = boost::iostreams;
 
 namespace Sodium {
 
-class auth_mac_filter : public io::aggregate_filter<unsigned char> {
+class auth_mac_filter : public io::aggregate_filter<char> {
 
   /**
    * Use auth_mac_filter as a DualUse filter like this:
    * 
    *     #include <boost/iostreams/device/array.hpp>
    *     #include <boost/iostreams/filtering_stream.hpp>
-   *     #include "bytestring.h"
    * 
    *     using Sodium::auth_mac_filter;
-   *     using data_t = Sodium::data_t;
+   *     using data_t = Sodium::data2_t;
    * 
    *     std::string plaintext {"the quick brown fox jumps over the lazy dog"};
    *     data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -56,16 +55,14 @@ class auth_mac_filter : public io::aggregate_filter<unsigned char> {
    * <---- If using as an OutputFilter:
    * 
    *     namespace io = boost::iostreams;
-   *     typedef io::basic_array_sink<unsigned char>             bytes_array_sink;
-   *     typedef io::filtering_stream<io::output, unsigned char> bytes_filtering_ostream;
    * 
    *     auth_mac_filter::key_type  key;       // Create a random key
    *     auth_mac_filter mac_filter {key};     // create a MAC creator filter
    * 
    *     data_t mac(auth_mac_filter::MACSIZE); // where to store MAC
    * 
-   *     bytes_array_sink        sink {mac.data(), mac.size()};
-   *     bytes_filtering_ostream os   {};
+   *     io::array_sink        sink {mac.data(), mac.size()};
+   *     io::filtering_ostream os   {};
    *     os.push(mac_filter);
    *     os.push(sink);
    * 
@@ -83,16 +80,14 @@ class auth_mac_filter : public io::aggregate_filter<unsigned char> {
    * ----> If using as an InputFilter:
    * 
    *     namespace io = boost::iostreams;
-   *     typedef io::basic_array_source<unsigned char>          bytes_array_source;
-   *     typedef io::filtering_stream<io::input, unsigned char> bytes_filtering_istream;
    * 
    *     auth_mac_filter::key_type  key;       // Create a random key
    *     auth_mac_filter mac_filter {key};     // create a MAC creator filter
    * 
    *     data_t mac(auth_mac_filter::MACSIZE); // where to store MAC
    * 
-   *     bytes_array_source      source {plainblob.data(), plainblob.size()};
-   *     bytes_filtering_istream is   {};
+   *     io::array_source      source {plainblob.data(), plainblob.size()};
+   *     io::filtering_istream is   {};
    *     is.push(mac_filter);
    *     is.push(source);
    * 
@@ -108,18 +103,18 @@ class auth_mac_filter : public io::aggregate_filter<unsigned char> {
    **/
 
   private:
-    typedef io::aggregate_filter<unsigned char> base_type;
+    typedef io::aggregate_filter<char> base_type;
   
   public:
     typedef typename base_type::char_type   char_type;
     typedef typename base_type::category    category;
-    typedef typename base_type::vector_type vector_type; // data_t
+    typedef typename base_type::vector_type vector_type; // data2_t
   
     static constexpr std::size_t MACSIZE = Auth::MACSIZE;
     using key_type = Auth::key_type;
     
     auth_mac_filter(const key_type &key) :
-      key_ {key}, sa_ {}
+      key_ {key}
     { }
 
     virtual ~auth_mac_filter()
@@ -131,8 +126,14 @@ class auth_mac_filter : public io::aggregate_filter<unsigned char> {
 #ifndef NDEBUG
       std::cerr << "auth_mac_filter::do_filter() called" << std::endl;
 #endif // ! NDEBUG
+
+      // Compute MAC:
+      vector_type mac(MACSIZE);
+      crypto_auth(reinterpret_cast<unsigned char *>(mac.data()),
+		  reinterpret_cast<const unsigned char *>(src.data()),
+		  src.size(),
+		  key_.data());
       
-      data_t mac = sa_.auth(src, key_); // compute MAC
       dest.swap(mac);                   // efficiently store it into dest
 
       // old dest elements will be destroyed when do_filter()
@@ -141,8 +142,6 @@ class auth_mac_filter : public io::aggregate_filter<unsigned char> {
     
   private:
     key_type key_;
-    Auth     sa_;
-
 }; // auth_mac_filter
 
 } //namespace Sodium

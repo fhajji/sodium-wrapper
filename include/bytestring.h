@@ -25,7 +25,7 @@
 
 #if BOOST_LIB_STD_CXX    // are we using lic++?
 
-#include <locale>  // std::ctype_base, std::ctype<char>, ...
+#include <locale>  // std::ctype_base, std::ctype<char>, std::codecvt_base,...
 #include <string>  // std::char_traits<char>
 #include <cstddef> // EOF etc.
 
@@ -35,6 +35,7 @@
  * Skeleton implementation of
  *   std::char_traits<unsigned char>
  *   std::ctype<unsigned char>
+ *   std::codecvt<unsigned char>
  * which are specializations NOT specified by C++11
  * 
  * This is barely enough in order to compile
@@ -344,7 +345,111 @@ std::locale::id std::ctype<unsigned char>::id;
 #if BOOST_COMP_GNUC // && ! BOOST_COMP_CLANG
 } // namespace std
 #endif
- 
+
+/**
+ * std::codecvt<unsigned char> is a specialization of std::codecvt for
+ * unsigned char.  We shamelessly take the implementation of
+ * std::codecvt<char> from LLVM39/CLANG39 and use it unchanged for
+ * unsigned chars.
+ **/
+
+#if BOOST_COMP_GNUC // && ! BOOST_COMP_CLANG
+namespace std {
+
+template <>
+class codecvt<unsigned char, char, mbstate_t>
+    : public locale::facet,
+      public codecvt_base
+#else
+  
+template<>
+class std::codecvt<unsigned char, char, std::mbstate_t> :
+  public std::locale::facet, public std::codecvt_base
+#endif
+{
+public:
+    typedef unsigned char      intern_type;
+    typedef unsigned char      extern_type;
+    typedef std::mbstate_t     state_type;
+
+    _LIBCPP_ALWAYS_INLINE
+    explicit codecvt(std::size_t __refs = 0)
+        : std::locale::facet(__refs) {}
+
+    _LIBCPP_ALWAYS_INLINE
+    result out(state_type& __st,
+               const intern_type* __frm, const intern_type* __frm_end, const intern_type*& __frm_nxt,
+               extern_type* __to, extern_type* __to_end, extern_type*& __to_nxt) const
+    {
+        return do_out(__st, __frm, __frm_end, __frm_nxt, __to, __to_end, __to_nxt);
+    }
+
+    _LIBCPP_ALWAYS_INLINE
+    result unshift(state_type& __st,
+                   extern_type* __to, extern_type* __to_end, extern_type*& __to_nxt) const
+    {
+        return do_unshift(__st, __to, __to_end, __to_nxt);
+    }
+
+    _LIBCPP_ALWAYS_INLINE
+    result in(state_type& __st,
+              const extern_type* __frm, const extern_type* __frm_end, const extern_type*& __frm_nxt,
+              intern_type* __to, intern_type* __to_end, intern_type*& __to_nxt) const
+    {
+        return do_in(__st, __frm, __frm_end, __frm_nxt, __to, __to_end, __to_nxt);
+    }
+
+    _LIBCPP_ALWAYS_INLINE
+    int encoding() const  _NOEXCEPT
+    {
+        return do_encoding();
+    }
+
+    _LIBCPP_ALWAYS_INLINE
+    bool always_noconv() const  _NOEXCEPT
+    {
+        return do_always_noconv();
+    }
+
+    _LIBCPP_ALWAYS_INLINE
+    int length(state_type& __st, const extern_type* __frm, const extern_type* __end, size_t __mx) const
+    {
+        return do_length(__st, __frm, __end, __mx);
+    }
+
+    _LIBCPP_ALWAYS_INLINE
+    int max_length() const  _NOEXCEPT
+    {
+        return do_max_length();
+    }
+
+    static std::locale::id id;
+
+protected:
+    _LIBCPP_ALWAYS_INLINE
+    explicit codecvt(const char*, std::size_t __refs = 0)
+      : std::locale::facet(__refs) {}
+
+    ~codecvt();
+
+    virtual result do_out(state_type& __st,
+                          const intern_type* __frm, const intern_type* __frm_end, const intern_type*& __frm_nxt,
+                          extern_type* __to, extern_type* __to_end, extern_type*& __to_nxt) const;
+    virtual result do_in(state_type& __st,
+                         const extern_type* __frm, const extern_type* __frm_end, const extern_type*& __frm_nxt,
+                         intern_type* __to, intern_type* __to_end, intern_type*& __to_nxt) const;
+    virtual result do_unshift(state_type& __st,
+                              extern_type* __to, extern_type* __to_end, extern_type*& __to_nxt) const;
+    virtual int do_encoding() const  _NOEXCEPT;
+    virtual bool do_always_noconv() const  _NOEXCEPT;
+    virtual int do_length(state_type& __st, const extern_type* __frm, const extern_type* __end, size_t __mx) const;
+    virtual int do_max_length() const  _NOEXCEPT;
+}; // std::codecvt<unsigned char, unsigned char, std::mbstate_t>
+
+#if BOOST_COMP_GNUC // && ! BOOST_COMP_CLANG
+} // namespace std
+#endif
+
 #else // ! BOOST_LIB_STD_CXX
 #error "bytestring.h supports only libc++ for now"
 

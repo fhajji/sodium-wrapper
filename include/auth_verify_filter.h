@@ -40,17 +40,16 @@ namespace io = boost::iostreams;
 
 namespace Sodium {
 
-class auth_verify_filter : public io::aggregate_filter<unsigned char> {
+class auth_verify_filter : public io::aggregate_filter<char> {
 
   /**
    * Use auth_verify_filter as a DualUse filter like this:
    * 
    *     #include <boost/iostreams/device/array.hpp>
    *     #include <boost/iostreams/filtering_stream.hpp>
-   *     #include "bytestring.h"
    * 
    *     using Sodium::auth_mac_filter;
-   *     using data_t = Sodium::data_t;
+   *     using data_t = Sodium::data2_t;
    * 
    *     std::string plaintext {"the quick brown fox jumps over the lazy dog"};
    *     data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -60,15 +59,13 @@ class auth_verify_filter : public io::aggregate_filter<unsigned char> {
    * <---- If using as an OutputFilter:
    * 
    *     namespace io = boost::iostreams;
-   *     typedef io::basic_array_sink<unsigned char>             bytes_array_sink;
-   *     typedef io::filtering_stream<io::output, unsigned char> bytes_filtering_ostream;
    * 
    *     auth_verify_filter verify_filter {key, mac};   // create a MAC verifier filter
    *    
    *     data_t result(1); // where to store result
    * 
-   *     bytes_array_sink        sink {result.data(), result.size()};
-   *     bytes_filtering_ostream os   {};
+   *     io::array_sink        sink {result.data(), result.size()};
+   *     io::filtering_ostream os   {};
    *     os.push(verify_filter);
    *     os.push(sink);
    * 
@@ -89,13 +86,11 @@ class auth_verify_filter : public io::aggregate_filter<unsigned char> {
    * ----> If using as an InputFilter:
    * 
    *     namespace io = boost::iostreams;
-   *     typedef io::basic_array_source<unsigned char>          bytes_array_source;
-   *     typedef io::filtering_stream<io::input, unsigned char> bytes_filtering_istream;
    * 
    *     auth_verify_filter verify_filter {key, mac};     // create a MAC verifier filter
    * 
-   *     bytes_array_source      source {plainblob.data(), plainblob.size()};
-   *     bytes_filtering_istream is   {};
+   *     io::array_source      source {plainblob.data(), plainblob.size()};
+   *     io::filtering_istream is   {};
    *     is.push(verify_filter);
    *     is.push(source);
    * 
@@ -114,21 +109,21 @@ class auth_verify_filter : public io::aggregate_filter<unsigned char> {
    **/
 
   private:
-    typedef io::aggregate_filter<unsigned char> base_type;
+    typedef io::aggregate_filter<char> base_type;
   
   public:
     typedef typename base_type::char_type   char_type;
     typedef typename base_type::category    category;
-    typedef typename base_type::vector_type vector_type; // data_t
+    typedef typename base_type::vector_type vector_type; // data2_t
 
     static constexpr std::size_t MACSIZE = Auth::MACSIZE;
     using key_type = Auth::key_type;
   
-    auth_verify_filter(const key_type &key, const data_t &mac) :
-      key_ {key}, mac_ {mac}, sa_ {}
+    auth_verify_filter(const key_type &key, const vector_type &mac) :
+      key_ {key}, mac_ {mac}
     {
       if (mac.size() != MACSIZE)
-	throw std::runtime_error {"Sodium::auth_verify_filter::auth_verify_filter wrong MAC size"};
+	throw std::runtime_error {"Sodium::auth_verify_filter::auth_verify_filter() wrong MAC size"};
     }
 
     virtual ~auth_verify_filter()
@@ -140,19 +135,25 @@ class auth_verify_filter : public io::aggregate_filter<unsigned char> {
 #ifndef NDEBUG
       std::cerr << "auth_verify_filter::do_filter() called" << std::endl;
 #endif // ! NDEBUG
+
+      if (mac_.size() != MACSIZE)
+	throw std::runtime_error {"Sodium::auth_verify_filter::do_filter() mac wrong size"};
+
+      // Verify MAC against src.
+      bool result = crypto_auth_verify(reinterpret_cast<const unsigned char *>(mac_.data()),
+				       reinterpret_cast<const unsigned char *>(src.data()),
+				       src.size(),
+				       key_.data()) == 0;
       
-      bool result = sa_.verify(src, mac_, key_); // verify MAC against src
-      data_t result_vector(1);
+      vector_type result_vector(1);
       result_vector[0] = (result ? '1' : '0');
 
       dest.swap(result_vector); // efficiently store result vector into dest
     }
     
   private:
-    key_type key_;
-    data_t   mac_;
-    Auth     sa_;
-
+    key_type    key_;
+    vector_type mac_;
 }; // auth_verify_filter
 
 } //namespace Sodium
