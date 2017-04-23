@@ -1,0 +1,18 @@
+On (Ubuntu-) Linux:
+
+$ sudo apt-get install libc++-dev
+$ sudo apt-get install libc++-abi-dev
+
+$ sudo bash
+# cd /
+# patch -p0 < $PATH_TO_SODIUM_WRAPPER/patches/libc++-string-linux.patch
+# ln -s /usr/include/libcxxabi/__cxxabi_config.h /usr/include/c++/v1/__cxxabi_config.h
+
+Then, compile for Linux with clang++:
+
+$ cd $PATH_TO_SODIUM_WRAPPER
+$ mkdir build
+$ cd build
+$ cmake -DBUILD_SYSTEM="Linux-clang++" -DCMAKE_CXX_COMPILER="clang++" ..
+$ make
+

@@ -28,7 +28,7 @@
 #
 # BUILD_SYSTEM can be one of
 #    FreeBSD-clang++, FreeBSD-g++
-#    Linux-clang++, Linux-g++
+#    Linux-clang++, Linux-g++-libc++, Linux-g++-stdlibc++
 #    something else
 #
 # CMAKE_CXX_COMPILER can be one of
@@ -69,23 +69,38 @@ message ("BUILD_SYSTEM == ${BUILD_SYSTEM}")
 
 if ( BUILD_SYSTEM STREQUAL "FreeBSD-clang++" )
   # clang++ and libc++ on FreeBSD
+  # Status: OK
   add_compile_options ( -Wall -stdlib=libc++ )
 elseif ( BUILD_SYSTEM STREQUAL "FreeBSD-g++" )
   # g++ and libc++ on FreeBSD
+  # Status: OK, except for include/bytestring.h
   # See also: http://libcxx.llvm.org/docs/UsingLibcxx.html
   add_compile_options ( -Wall -nostdinc++ -I/usr/include/c++/v1 )
   set ( CMAKE_EXE_LINKER_FLAGS "-nodefaultlibs -lc++ -lm -lc -lgcc_s -lgcc" )
 elseif ( BUILD_SYSTEM STREQUAL "Linux-clang++" )
   # clang++ and libc++ on Linux
-  add_compile_options ( -Wall -stdlib=libc++ )
-elseif ( BUILD_SYSTEM STREQUAL "Linux-g++" )
+  # Status: OK
+  # See also: http://stackoverflow.com/questions/37096062/get-a-basic-c-program-to-compile-using-clang-on-ubuntu-16/38385967#38385967
+  #   + Need to modify /usr/include/c++/v1/string as explained
+  #     at the line number reported by the error message
+  #     (see also patches/libc++-string-linux.patch)
+  #     (see patches/README)
+  #   + Need to ln -s /usr/include/libcxxabi/__cxxabi_config.h /usr/include/c++/v1/__cxxabi_config.h
+  add_compile_options ( -Wall -stdlib=libc++ -I/usr/include/c++/v1 )
+  set ( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi" )
+elseif ( BUILD_SYSTEM STREQUAL "Linux-g++-libc++" )
   # g++ and libc++ on Linux
+  # Status: BROKEN
   # See also: http://libcxx.llvm.org/docs/UsingLibcxx.html
   add_compile_options ( -Wall -nostdinc++ -I/usr/include/c++/v1 )
-  set ( CMAKE_EXE_LINKER_FLAGS "-nodefaultlibs -lc++ -lm -lc -lc++abi -lgcc_s -lgcc" )
+  set ( CMAKE_EXE_LINKER_FLAGS "-nodefaultlibs -stdlib=libc++ -lm -lc -lc++abi -lgcc_s -lgcc" )
+elseif ( BUILD_SYSTEM STREQUAL "Linux-g++-stdlibc++" )
+  # g++ and stdlibc++ on Linux
+  # Status: OK, except for include/bytestring.h dependent files
+  add_compile_options ( -Wall )
 else ()
   # Any other combination of C++ compiler and platform
-  # most likely g++ and libstdc++ on Unix != FreeBSD...
+  # most likely g++ and libstdc++ on Unix != (FreeBSD || Linux)
   add_compile_options ( -Wall )
 endif ()
 
