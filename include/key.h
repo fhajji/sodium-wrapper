@@ -46,6 +46,7 @@ namespace Sodium {
   static constexpr std::size_t KEYSIZE_CHACHA20       = crypto_stream_chacha20_KEYBYTES;
   static constexpr std::size_t KEYSIZE_XCHACHA20      = crypto_stream_xchacha20_KEYBYTES;
   static constexpr std::size_t KEYSIZE_SALSA20        = crypto_stream_salsa20_KEYBYTES;
+  static constexpr std::size_t KEYSIZE_XSALSA20       = crypto_stream_KEYBYTES;
   
 template <std::size_t KEYSIZE=0>
 class Key
