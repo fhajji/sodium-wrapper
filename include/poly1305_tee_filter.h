@@ -212,6 +212,9 @@ class poly1305_tee_filter : public detail::filter_adapter<Device>
       
     // and now close the streams
     detail::close_all(this->component());
+
+    // reset Poly1305 state so we can start afresh with new streams:
+    crypto_onetimeauth_init(&state_, key_.data());
   }
 
   template<typename Sink>

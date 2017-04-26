@@ -78,34 +78,34 @@ verify_mac(const std::string &plaintext,
 		     std::ios_base::in | std::ios_base::binary);
   data_t read_back(plaintext.size());
   is.read(read_back.data(), read_back.size());
-
+  is.close();
+  
   BOOST_CHECK(read_back == plainblob);
 
   std::string read_back_as_string { read_back.cbegin(), read_back.cend() };
   BOOST_TEST_MESSAGE(read_back_as_string);
   
-
-  // 3. Compute the MAC independently with the C-API
+  // 2. Compute the MAC independently with the C-API
   data_t mac_c_api(poly1305_tee_filter<io::file_sink>::MACSIZE);
   crypto_onetimeauth(reinterpret_cast<unsigned char *>(mac_c_api.data()),
 		     reinterpret_cast<unsigned char *>(read_back.data()),
 		     read_back.size(),
 		     key.data());
   
-  // 4. Read back the MAC computed by poly1305_tee_filter:
+  // 3. Read back the MAC computed by poly1305_tee_filter:
   io::file_source ismac(poly1305file_name,
 			std::ios_base::in | std::ios_base::binary);
   data_t mac_cpp_api(poly1305_tee_filter<io::file_sink>::MACSIZE);
   ismac.read(mac_cpp_api.data(), mac_cpp_api.size());
   ismac.close();
   
-  // 5. Verify the MAC independently with the C-API
+  // 4. Verify the MAC independently with the C-API
   BOOST_CHECK_EQUAL(crypto_onetimeauth_verify(reinterpret_cast<unsigned char *>(mac_cpp_api.data()),
 					      reinterpret_cast<unsigned char *>(read_back.data()),
 					      read_back.size(),
 					      key.data()), 0);
 
-  // 6. Compare C-API and C++-API MACs:
+  // 5. Compare C-API and C++-API MACs:
   std::string mac_c_api_as_string   {mac_c_api.cbegin(), mac_c_api.cend()};
   std::string mac_cpp_api_as_string {mac_cpp_api.cbegin(), mac_cpp_api.cend()};
   BOOST_TEST_MESSAGE(mac_c_api_as_string);
