@@ -27,13 +27,14 @@
 namespace Sodium {
 
   // data_t is a binary blob of bytes (plaintext, ciphertext, nonces, etc...)
-  using data_t = std::vector<unsigned char>;
-
+  using data_t  = std::vector<unsigned char>;
+  
   // data2_t is a binary blob of bytes, interpreted as char instead of bytes
   using data2_t = std::vector<char>;
   
-  std::string tohex (const data_t &in); // in: utils.cpp
-
+  std::string tohex (const data_t &in);  // in: utils.cpp
+  std::string tohex (const data2_t &in); // in: utils.cpp
+  
 } // namespace Sodium
 
 

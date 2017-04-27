@@ -34,6 +34,7 @@
 #include <boost/iostreams/filtering_stream.hpp>
 
 using Sodium::xsalsa20_filter;
+using Sodium::tohex;
 using data_t = Sodium::data2_t;
 
 namespace io = boost::iostreams;
@@ -174,7 +175,7 @@ test_of_correctness_output_filter(const std::string &plaintext,
   // sink1 (i.e. ciphertext) contains ciphertext (without MAC)
 
   BOOST_TEST_MESSAGE(std::string(plainblob.cbegin(),  plainblob.cend()));
-  BOOST_TEST_MESSAGE(std::string(ciphertext.cbegin(), ciphertext.cend()));
+  BOOST_TEST_MESSAGE(tohex(ciphertext));
   
   BOOST_CHECK_EQUAL(ciphertext.size(), 2*plainblob.size());
 
@@ -260,7 +261,7 @@ test_of_correctness_input_filter(const std::string &plaintext,
   // variable ciphertext now contains ciphertext (without MAC)
 
   BOOST_TEST_MESSAGE(std::string(plainblob.cbegin(), plainblob.cend()));
-  BOOST_TEST_MESSAGE(std::string(ciphertext.cbegin(), ciphertext.cend()));
+  BOOST_TEST_MESSAGE(tohex(ciphertext));
 
   BOOST_CHECK_EQUAL(ciphertext.size(), 2*plainblob.size());
 
@@ -333,7 +334,7 @@ length_test_output_filter(const std::string &plaintext)
   // sink (i.e. ciphertext) has been hopefully filled with ciphertext
 
   BOOST_TEST_MESSAGE(std::string(plainblob.cbegin(), plainblob.cend()));
-  BOOST_TEST_MESSAGE(std::string(ciphertext.cbegin(), ciphertext.cend()));
+  BOOST_TEST_MESSAGE(tohex(ciphertext));
 
   // unless plaintext was empty, in which case ciphertext is also empty,
   // check that plaintext and ciphertext aren't the same:
@@ -373,7 +374,7 @@ length_test_input_filter(const std::string &plaintext)
   // variable ciphertext has been hopefully filled with ciphertext
 
   BOOST_TEST_MESSAGE(std::string(plainblob.cbegin(), plainblob.cend()));
-  BOOST_TEST_MESSAGE(std::string(ciphertext.cbegin(), ciphertext.cend()));
+  BOOST_TEST_MESSAGE(tohex(ciphertext));
   
   // unless plaintext was empty, in which case ciphertext is also empty,
   // check that plaintext and ciphertext aren't the same:

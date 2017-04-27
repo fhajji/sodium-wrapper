@@ -31,6 +31,7 @@
 
 using Sodium::blake2b_tee_filter;
 using Sodium::Hash;
+using Sodium::tohex;
 using data_t = Sodium::data2_t;
 
 namespace io = boost::iostreams;
@@ -123,10 +124,8 @@ verify_hash(const std::string &plaintext,
   }
   
   // 5. Compare C-API and C++-API hashes:
-  std::string hash_c_api_as_string   {hash_c_api.cbegin(), hash_c_api.cend()};
-  std::string hash_cpp_api_as_string {hash_cpp_api.cbegin(), hash_cpp_api.cend()};
-  BOOST_TEST_MESSAGE(hash_c_api_as_string);
-  BOOST_TEST_MESSAGE(hash_cpp_api_as_string);
+  BOOST_TEST_MESSAGE(tohex(hash_c_api));
+  BOOST_TEST_MESSAGE(tohex(hash_cpp_api));
   
   return hash_c_api == hash_cpp_api;
 }

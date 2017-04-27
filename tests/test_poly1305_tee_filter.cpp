@@ -29,6 +29,7 @@
 #include <boost/iostreams/filtering_stream.hpp>
 
 using Sodium::poly1305_tee_filter;
+using Sodium::tohex;
 using data_t = Sodium::data2_t;
 
 namespace io = boost::iostreams;
@@ -106,10 +107,8 @@ verify_mac(const std::string &plaintext,
 					      key.data()), 0);
 
   // 5. Compare C-API and C++-API MACs:
-  std::string mac_c_api_as_string   {mac_c_api.cbegin(), mac_c_api.cend()};
-  std::string mac_cpp_api_as_string {mac_cpp_api.cbegin(), mac_cpp_api.cend()};
-  BOOST_TEST_MESSAGE(mac_c_api_as_string);
-  BOOST_TEST_MESSAGE(mac_cpp_api_as_string);
+  BOOST_TEST_MESSAGE(tohex(mac_c_api));
+  BOOST_TEST_MESSAGE(tohex(mac_cpp_api));
   
   return mac_c_api == mac_cpp_api;
 }
