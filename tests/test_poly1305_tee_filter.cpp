@@ -1,4 +1,4 @@
-// test_poly1305_tee_filter.cpp -- Test Sodium::poly1305_tee_filter
+// test_poly1305_tee_filter.cpp -- Test Sodium::poly1305_tee_{filter,device}
 //
 // ISC License
 // 
@@ -24,15 +24,31 @@
 #include "common.h"
 
 #include <string>
+#include <array>
 
 #include <boost/iostreams/device/file.hpp>
+#include <boost/iostreams/device/back_inserter.hpp>
+#include <boost/iostreams/device/null.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 
+namespace io = boost::iostreams;
+
 using Sodium::poly1305_tee_filter;
+using Sodium::poly1305_tee_device;
 using Sodium::tohex;
 using data_t = Sodium::data2_t;
 
-namespace io = boost::iostreams;
+using mac_array_type = typename poly1305_tee_filter<io::null_sink>::mac_type;
+using vector_sink    = io::back_insert_device<mac_array_type>;
+
+// a filter which outputs to io::file_sink and tee-s to io::file_sink
+using poly1305_to_file_type  = poly1305_tee_filter<io::file_sink>;
+
+// an output filter that outputs to io::file_sink and tee-s to vector_sink
+using poly1305_to_vector_type = poly1305_tee_device<io::file_sink, vector_sink>;
+
+// an output device that discards the output, and tee-s to vector_sink
+using poly1305_to_vector_null_type = poly1305_tee_device<io::null_sink, vector_sink>;
 
 struct SodiumFixture {
   SodiumFixture()  {
@@ -46,7 +62,7 @@ struct SodiumFixture {
 
 void
 pipeline_output_device (const std::string &plaintext,
-			const typename poly1305_tee_filter<io::file_sink>::key_type key,
+			const typename poly1305_to_file_type::key_type key,
 			const std::string &poly1305file_name,
 			const std::string &outfile_name)
 {
@@ -57,7 +73,7 @@ pipeline_output_device (const std::string &plaintext,
   io::file_sink outfile      {outfile_name,
                               std::ios_base::out | std::ios_base::binary };
 
-  poly1305_tee_filter<io::file_sink> poly1305_filter(poly1305file, key);
+  poly1305_to_file_type poly1305_filter(poly1305file, key);
   
   io::filtering_ostream os(poly1305_filter | outfile);
 
@@ -68,7 +84,7 @@ pipeline_output_device (const std::string &plaintext,
 
 bool
 verify_mac(const std::string &plaintext,
-	   const typename poly1305_tee_filter<io::file_sink>::key_type key,
+	   const typename poly1305_to_file_type::key_type key,
 	   const std::string &poly1305file_name,
 	   const std::string &outfile_name)
 {
@@ -87,16 +103,16 @@ verify_mac(const std::string &plaintext,
   BOOST_TEST_MESSAGE(read_back_as_string);
   
   // 2. Compute the MAC independently with the C-API
-  data_t mac_c_api(poly1305_tee_filter<io::file_sink>::MACSIZE);
+  mac_array_type mac_c_api(poly1305_tee_filter<io::file_sink>::MACSIZE);
   crypto_onetimeauth(reinterpret_cast<unsigned char *>(mac_c_api.data()),
 		     reinterpret_cast<unsigned char *>(read_back.data()),
 		     read_back.size(),
 		     key.data());
   
-  // 3. Read back the MAC computed by poly1305_tee_filter:
+  // 3. Read back the MAC computed by poly1305_* filter/device
   io::file_source ismac(poly1305file_name,
 			std::ios_base::in | std::ios_base::binary);
-  data_t mac_cpp_api(poly1305_tee_filter<io::file_sink>::MACSIZE);
+  mac_array_type  mac_cpp_api(poly1305_to_file_type::MACSIZE);
   ismac.read(mac_cpp_api.data(), mac_cpp_api.size());
   ismac.close();
   
@@ -113,11 +129,135 @@ verify_mac(const std::string &plaintext,
   return mac_c_api == mac_cpp_api;
 }
 
+mac_array_type
+pipeline_output_device (const std::string &plaintext,
+			const typename poly1305_to_vector_type::key_type key,
+			const std::string &outfile_name)
+{
+  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+
+  mac_array_type mac; // will grow
+  vector_sink    poly1305_sink(mac);
+  
+  io::file_sink  outfile {outfile_name,
+                          std::ios_base::out | std::ios_base::binary };
+
+  poly1305_to_vector_type
+    poly1305_vector_output_device(outfile,       // Device
+				  poly1305_sink, // Sink
+				  key);
+  
+  io::filtering_ostream os(poly1305_vector_output_device);
+
+  os.write(plainblob.data(), plainblob.size());
+  os.flush();
+  
+  return mac; // by move semantics
+}
+
+bool
+verify_mac(const std::string &plaintext,
+	   const typename poly1305_to_vector_type::key_type key,
+	   const mac_array_type &mac,
+	   const std::string &infile_name)
+{
+  // 1. Test succeeds only if file infile_name contains plaintext
+  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  
+  io::file_source is(infile_name,
+		     std::ios_base::in | std::ios_base::binary);
+  data_t read_back(plaintext.size());
+  is.read(read_back.data(), read_back.size());
+  is.close();
+  
+  BOOST_CHECK(read_back == plainblob);
+
+  std::string read_back_as_string { read_back.cbegin(), read_back.cend() };
+  BOOST_TEST_MESSAGE(read_back_as_string);
+
+  // 2. Compute the MAC independently with the C-API
+  mac_array_type mac_c_api(poly1305_to_vector_type::MACSIZE);
+  crypto_onetimeauth(reinterpret_cast<unsigned char *>(mac_c_api.data()),
+		     reinterpret_cast<unsigned char *>(read_back.data()),
+		     read_back.size(),
+		     key.data());
+  
+  // 3. Fetch the computed MAC from parameter (NO-OP)
+  mac_array_type mac_cpp_api {mac};
+    
+  // 4. Verify the MAC independently with the C-API
+  BOOST_CHECK_EQUAL(crypto_onetimeauth_verify(reinterpret_cast<const unsigned char *>(mac_cpp_api.data()),
+					      reinterpret_cast<unsigned char *>(read_back.data()),
+					      read_back.size(),
+					      key.data()), 0);
+
+  // 5. Compare C-API and C++-API MACs:
+  BOOST_TEST_MESSAGE(tohex(mac_c_api));
+  BOOST_TEST_MESSAGE(tohex(mac_cpp_api));
+  
+  return mac_c_api == mac_cpp_api;
+}
+
+mac_array_type
+pipeline_output_device (const std::string &plaintext,
+			const typename poly1305_to_vector_null_type::key_type key)
+{
+  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+
+  mac_array_type mac; // will grow
+  vector_sink    poly1305_sink(mac);
+  io::null_sink  dev_null_sink;
+  
+  poly1305_to_vector_null_type
+    poly1305_vector_null_output_device(dev_null_sink, // Device
+				       poly1305_sink, // Sink
+				       key);
+  
+  io::filtering_ostream os(poly1305_vector_null_output_device);
+
+  os.write(plainblob.data(), plainblob.size());
+  os.flush();
+  
+  return mac; // by move semantics
+}
+
+bool
+verify_mac(const std::string &plaintext,
+	   const typename poly1305_to_vector_null_type::key_type key,
+	   const mac_array_type &mac)
+{
+  // 1. Fetch data to check from parameter:
+  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  
+  BOOST_TEST_MESSAGE(plaintext);
+
+  // 2. Compute the MAC independently with the C-API
+  mac_array_type mac_c_api(poly1305_to_vector_null_type::MACSIZE);
+  crypto_onetimeauth(reinterpret_cast<unsigned char *>(mac_c_api.data()),
+		     reinterpret_cast<const unsigned char *>(plainblob.data()),
+		     plainblob.size(),
+		     key.data());
+  
+  // 3. Fetch the computed MAC from parameter (nothing to do)
+      
+  // 4. Verify the MAC independently with the C-API
+  BOOST_CHECK_EQUAL(crypto_onetimeauth_verify(reinterpret_cast<const unsigned char *>(mac.data()),
+					      reinterpret_cast<const unsigned char *>(plainblob.data()),
+					      plainblob.size(),
+					      key.data()), 0);
+
+  // 5. Compare C-API and C++-API MACs:
+  BOOST_TEST_MESSAGE(tohex(mac_c_api));
+  BOOST_TEST_MESSAGE(tohex(mac));
+  
+  return mac_c_api == mac;
+}
+
 BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture );
 
-BOOST_AUTO_TEST_CASE( sodium_test_poly1305_filter_pipeline_output_device )
+BOOST_AUTO_TEST_CASE( sodium_test_poly1305_filter_poly1305_to_file )
 {
-  poly1305_tee_filter<io::file_sink>::key_type key; // generate a random key for Poly1305
+  poly1305_to_file_type::key_type key; // generate a random key for Poly1305
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
 
@@ -133,6 +273,42 @@ BOOST_AUTO_TEST_CASE( sodium_test_poly1305_filter_pipeline_output_device )
 			   key,
 			   macfile_name,
 			   outfile_name);
+
+  BOOST_CHECK(result);
+}
+
+BOOST_AUTO_TEST_CASE( sodium_test_poly1305_filter_poly1305_to_vector )
+{
+  poly1305_to_vector_type::key_type key; // generate a random key for Poly1305
+
+  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+
+  const std::string outfile_name {"/var/tmp/poly1305outfile.data"};
+  
+  mac_array_type mac {pipeline_output_device(plaintext,
+					     key,
+					     outfile_name)};
+
+  auto result = verify_mac(plaintext,
+			   key,
+			   mac,
+			   outfile_name);
+
+  BOOST_CHECK(result);
+}
+
+BOOST_AUTO_TEST_CASE( sodium_test_poly1305_filter_poly1305_to_vector_null )
+{
+  poly1305_to_vector_null_type::key_type key; // generate a random key for Poly1305
+
+  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+
+  mac_array_type mac {pipeline_output_device(plaintext,
+					     key)};
+
+  auto result = verify_mac(plaintext,
+			   key,
+			   mac);
 
   BOOST_CHECK(result);
 }
