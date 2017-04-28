@@ -1,4 +1,4 @@
-// test_blake2b_tee_filter.cpp -- Test Sodium::blake2b_tee_filter
+// test_blake2b_tee_filter.cpp -- Test Sodium::blake2b_tee_{filter,device}
 //
 // ISC License
 // 
@@ -22,19 +22,32 @@
 
 #include "blake2b_tee_filter.h"
 #include "common.h"
-#include "hash.h"
 
 #include <string>
 
 #include <boost/iostreams/device/file.hpp>
+#include <boost/iostreams/device/back_inserter.hpp>
+#include <boost/iostreams/device/null.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 
+namespace io = boost::iostreams;
+
 using Sodium::blake2b_tee_filter;
-using Sodium::Hash;
+using Sodium::blake2b_tee_device;
 using Sodium::tohex;
 using data_t = Sodium::data2_t;
 
-namespace io = boost::iostreams;
+using hash_array_type = typename blake2b_tee_filter<io::null_sink>::hash_type;
+using vector_sink     = io::back_insert_device<hash_array_type>;
+
+// a filter which outputs to io::file_sink and tee-s to io::file_sink
+using blake2b_to_file_type = blake2b_tee_filter<io::file_sink>;
+
+// an output filter that outputs to io::file_sink and tee-s to vector_sink
+using blake2b_to_vector_type = blake2b_tee_device<io::file_sink, vector_sink>;
+
+// an output device that discards the output, and tee-s to vector_sink
+using blake2b_to_vector_null_type = blake2b_tee_device<io::null_sink, vector_sink>;
 
 struct SodiumFixture {
   SodiumFixture()  {
@@ -48,8 +61,7 @@ struct SodiumFixture {
 
 void
 pipeline_output_device (const std::string &plaintext,
-			const typename blake2b_tee_filter<io::file_sink>::key_type key,
-			const std::size_t hashsize,
+			const typename blake2b_to_file_type::key_type &key,
 			const std::string &blake2bfile_name,
 			const std::string &outfile_name)
 {
@@ -60,19 +72,32 @@ pipeline_output_device (const std::string &plaintext,
   io::file_sink outfile     {outfile_name,
                              std::ios_base::out | std::ios_base::binary };
 
-  blake2b_tee_filter<io::file_sink> blake2b_filter(blake2bfile, key, hashsize);
+  if (key.size() != 0) {
+    blake2b_to_file_type blake2b_filter(blake2bfile, key,
+					blake2b_to_file_type::HASHSIZE);
   
-  io::filtering_ostream os(blake2b_filter | outfile);
+    io::filtering_ostream os(blake2b_filter | outfile);
 
-  os.write(plainblob.data(), plainblob.size());
+    os.write(plainblob.data(), plainblob.size());
 
-  os.flush();
+    os.flush();
+  }
+  else {
+    // keyless version:
+    blake2b_to_file_type blake2b_filter(blake2bfile, /* no key param */
+					blake2b_to_file_type::HASHSIZE);
+  
+    io::filtering_ostream os(blake2b_filter | outfile);
+
+    os.write(plainblob.data(), plainblob.size());
+
+    os.flush();
+  }
 }
 
 bool
 verify_hash(const std::string &plaintext,
-	    const typename blake2b_tee_filter<io::file_sink>::key_type key,
-	    const std::size_t hashsize,
+	    const typename blake2b_to_file_type::key_type &key,
 	    const std::string &blake2bfile_name,
 	    const std::string &outfile_name)
 {
@@ -91,98 +116,299 @@ verify_hash(const std::string &plaintext,
   BOOST_TEST_MESSAGE(read_back_as_string);
   
   // 2. Compute the hash independently with the C-API
-  data_t hash_c_api(hashsize);
+  hash_array_type hash_c_api(blake2b_tee_filter<io::file_sink>::HASHSIZE);
   crypto_generichash(reinterpret_cast<unsigned char *>(hash_c_api.data()),
 		     hash_c_api.size(),
-		     reinterpret_cast<const unsigned char *>(read_back.data()),
+		     reinterpret_cast<unsigned char *>(read_back.data()),
 		     read_back.size(),
-		     key.data(), key.size());
+		     key.size() != 0 ? key.data() : NULL,
+		     key.size());
+    
   
-  // 3. Read back the hash computed by blake2b_tee_filter:
+  // 3. Read back the hash computed by blake2b_* filter/device
   io::file_source ishash(blake2bfile_name,
 			 std::ios_base::in | std::ios_base::binary);
-  data_t hash_cpp_api(hashsize);
+  hash_array_type hash_cpp_api(blake2b_to_file_type::HASHSIZE);
   ishash.read(hash_cpp_api.data(), hash_cpp_api.size());
   ishash.close();
-
-  // 4. Verify the hash with Sodium::Hash (optional)
-  Sodium::data_t plainblob_uc {plainblob.cbegin(), plainblob.cend()};
-  Hash hasher;
-
-  if (key.size() != 0) {
-    Sodium::data_t hash_sodium_api_uc = hasher.hash(plainblob_uc, key, hashsize);
-    data_t hash_sodium_api { hash_sodium_api_uc.cbegin(), hash_sodium_api_uc.cend() };
-    
-    BOOST_CHECK(hash_sodium_api == hash_cpp_api);
-  }
-  else {
-    // keyless version
-    Sodium::data_t hash_sodium_api_uc = hasher.hash(plainblob_uc, hashsize);
-    data_t hash_sodium_api { hash_sodium_api_uc.cbegin(), hash_sodium_api_uc.cend() };
-    
-    BOOST_CHECK(hash_sodium_api == hash_cpp_api);
-  }
   
-  // 5. Compare C-API and C++-API hashes:
+  // 4. Compare C-API and C++-API hashes:
   BOOST_TEST_MESSAGE(tohex(hash_c_api));
   BOOST_TEST_MESSAGE(tohex(hash_cpp_api));
   
   return hash_c_api == hash_cpp_api;
 }
 
+hash_array_type
+pipeline_output_device (const std::string &plaintext,
+			const typename blake2b_to_vector_type::key_type &key,
+			const std::string &outfile_name)
+{
+  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+
+  hash_array_type hash; // will grow
+  vector_sink     blake2b_sink(hash);
+  
+  io::file_sink   outfile {outfile_name,
+                           std::ios_base::out | std::ios_base::binary };
+
+  if (key.size() != 0) {
+    blake2b_to_vector_type
+      blake2b_to_vector_output_device(outfile,      // Device
+				      blake2b_sink, // Sink
+				      key,
+				      blake2b_to_vector_type::HASHSIZE);
+    
+    io::filtering_ostream os(blake2b_to_vector_output_device);
+    
+    os.write(plainblob.data(), plainblob.size());
+    os.flush();
+  }
+  else {
+    // keyless version
+    blake2b_to_vector_type
+      blake2b_to_vector_output_device(outfile,      // Device
+				      blake2b_sink, // Sink
+				      /* no key parameter */
+				      blake2b_to_vector_type::HASHSIZE);
+    
+    io::filtering_ostream os(blake2b_to_vector_output_device);
+    
+    os.write(plainblob.data(), plainblob.size());
+    os.flush();
+  }
+    
+  return hash; // by move semantics
+}
+
+bool
+verify_hash(const std::string &plaintext,
+	    const typename blake2b_to_vector_type::key_type &key,
+	    const hash_array_type &hash,
+	    const std::string &infile_name)
+{
+  // 1. Test succeeds only if file infile_name contains plaintext
+  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  
+  io::file_source is(infile_name,
+		     std::ios_base::in | std::ios_base::binary);
+  data_t read_back(plaintext.size());
+  is.read(read_back.data(), read_back.size());
+  is.close();
+  
+  BOOST_CHECK(read_back == plainblob);
+
+  std::string read_back_as_string { read_back.cbegin(), read_back.cend() };
+  BOOST_TEST_MESSAGE(read_back_as_string);
+
+  // 2. Compute the hash independently with the C-API
+  hash_array_type hash_c_api(blake2b_to_vector_type::HASHSIZE);
+  crypto_generichash(reinterpret_cast<unsigned char *>(hash_c_api.data()),
+		     hash_c_api.size(),
+		     reinterpret_cast<unsigned char *>(read_back.data()),
+		     read_back.size(),
+		     key.size() != 0 ? key.data() : NULL,
+		     key.size());
+  
+  // 3. Fetch the computed hash from parameter (NO-OP)
+  hash_array_type hash_cpp_api {hash};
+    
+  // 4. Compare C-API and C++-API hashes:
+  BOOST_TEST_MESSAGE(tohex(hash_c_api));
+  BOOST_TEST_MESSAGE(tohex(hash_cpp_api));
+  
+  return hash_c_api == hash_cpp_api;
+}
+
+hash_array_type
+pipeline_output_device (const std::string &plaintext,
+			const typename blake2b_to_vector_null_type::key_type &key)
+{
+  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+
+  hash_array_type hash; // will grow
+  vector_sink     blake2b_sink(hash);
+  io::null_sink   dev_null_sink;
+
+  if (key.size() != 0) {
+    blake2b_to_vector_null_type
+      blake2b_to_vector_null_output_device(dev_null_sink, // Device
+					   blake2b_sink, // Sink
+					   key,
+					   blake2b_to_vector_null_type::HASHSIZE);
+    
+    io::filtering_ostream os(blake2b_to_vector_null_output_device);
+    
+    os.write(plainblob.data(), plainblob.size());
+    os.flush();
+  }
+  else {
+    // keyless vesion
+    blake2b_to_vector_null_type
+      blake2b_to_vector_null_output_device(dev_null_sink, // Device
+					   blake2b_sink, // Sink
+					   /* no key parameter */
+					   blake2b_to_vector_null_type::HASHSIZE);
+    
+    io::filtering_ostream os(blake2b_to_vector_null_output_device);
+    
+    os.write(plainblob.data(), plainblob.size());
+    os.flush();
+  }
+    
+  return hash; // by move semantics
+}
+
+bool
+verify_hash(const std::string &plaintext,
+	    const typename blake2b_to_vector_null_type::key_type &key,
+	    const hash_array_type &hash)
+{
+  // 1. Fetch data to check from parameter:
+  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  
+  BOOST_TEST_MESSAGE(plaintext);
+
+  // 2. Compute the hash independently with the C-API
+  hash_array_type hash_c_api(blake2b_to_vector_null_type::HASHSIZE);
+  crypto_generichash(reinterpret_cast<unsigned char *>(hash_c_api.data()),
+		     hash_c_api.size(),
+		     reinterpret_cast<const unsigned char *>(plainblob.data()),
+		     plainblob.size(),
+		     key.size() != 0 ? key.data() : NULL,
+		     key.size());
+  
+  // 3. Fetch the computed hash from parameter (nothing to do)
+      
+  // 4. Compare C-API and C++-API hashes:
+  BOOST_TEST_MESSAGE(tohex(hash_c_api));
+  BOOST_TEST_MESSAGE(tohex(hash));
+  
+  return hash_c_api == hash;
+}
+
 BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture );
 
-BOOST_AUTO_TEST_CASE( sodium_test_blake2b_filter_pipeline_output_device_non_keyless )
+BOOST_AUTO_TEST_CASE( sodium_test_blake2b_filter_blake2b_to_file )
 {
-  blake2b_tee_filter<io::file_sink>::key_type key(blake2b_tee_filter<io::file_sink>::KEYSIZE); // generate a random key for BLAKE2b
+  // generate a random key for BLAKE2b of recommended size:
+  blake2b_to_file_type::key_type key(blake2b_to_file_type::KEYSIZE);
 
-  // XXX: keyless version not tested yet.
-  
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
 
-  const std::string hashfile_name {"/var/tmp/blake2bhashfile.data"};
+  const std::string hashfile_name {"/var/tmp/blake2bmacfile.data"};
   const std::string outfile_name  {"/var/tmp/blake2boutfile.data"};
   
   pipeline_output_device(plaintext,
 			 key,
-			 blake2b_tee_filter<io::file_sink>::HASHSIZE,
 			 hashfile_name,
 			 outfile_name);
 
   auto result = verify_hash(plaintext,
 			    key,
-			    blake2b_tee_filter<io::file_sink>::HASHSIZE,
 			    hashfile_name,
 			    outfile_name);
 
   BOOST_CHECK(result);
 }
 
-BOOST_AUTO_TEST_CASE( sodium_test_blake2b_filter_pipeline_output_device_keyless )
+BOOST_AUTO_TEST_CASE( sodium_test_blake2b_filter_blake2b_to_file_keyless )
 {
-  blake2b_tee_filter<io::file_sink>::key_type key(0, false); // keyless!
+  // generate an empty key for keyless BLAKE2b:
+  blake2b_to_file_type::key_type key {0, false};
 
-  // XXX: keyless version not tested yet.
-  
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
 
-  const std::string hashfile_name {"/var/tmp/blake2bhashfile.data"};
+  const std::string hashfile_name {"/var/tmp/blake2bmacfile.data"};
   const std::string outfile_name  {"/var/tmp/blake2boutfile.data"};
   
   pipeline_output_device(plaintext,
 			 key,
-			 blake2b_tee_filter<io::file_sink>::HASHSIZE,
 			 hashfile_name,
 			 outfile_name);
 
   auto result = verify_hash(plaintext,
 			    key,
-			    blake2b_tee_filter<io::file_sink>::HASHSIZE,
 			    hashfile_name,
 			    outfile_name);
 
   BOOST_CHECK(result);
 }
 
+BOOST_AUTO_TEST_CASE( sodium_test_blake2b_filter_blake2b_to_vector )
+{
+  // generate a random key for BLAKE2b of recommended size:
+  blake2b_to_vector_type::key_type key(blake2b_to_vector_type::KEYSIZE);
+
+  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+
+  const std::string outfile_name {"/var/tmp/blake2boutfile.data"};
+  
+  hash_array_type hash {pipeline_output_device(plaintext,
+					       key,
+					       outfile_name)};
+
+  auto result = verify_hash(plaintext,
+			    key,
+			    hash,
+			    outfile_name);
+
+  BOOST_CHECK(result);
+}
+
+BOOST_AUTO_TEST_CASE( sodium_test_blake2b_filter_blake2b_to_vector_keyless )
+{
+  // generate an empty key for keyless BLAKE2b
+  blake2b_to_vector_type::key_type key {0, false};
+
+  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+
+  const std::string outfile_name {"/var/tmp/blake2boutfile.data"};
+  
+  hash_array_type hash {pipeline_output_device(plaintext,
+					       key,
+					       outfile_name)};
+
+  auto result = verify_hash(plaintext,
+			    key,
+			    hash,
+			    outfile_name);
+
+  BOOST_CHECK(result);
+}
+
+BOOST_AUTO_TEST_CASE( sodium_test_blake2b_filter_blake2b_to_vector_null )
+{
+  // generate a random key for BLAKE2b with recommended size:
+  blake2b_to_vector_null_type::key_type key(blake2b_to_vector_null_type::HASHSIZE);
+
+  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+
+  hash_array_type hash {pipeline_output_device(plaintext,
+					       key)};
+
+  auto result = verify_hash(plaintext,
+			    key,
+			    hash);
+
+  BOOST_CHECK(result);
+}
+
+BOOST_AUTO_TEST_CASE( sodium_test_blake2b_filter_blake2b_to_vector_null_keyless )
+{
+  // generate an empty key for keyless BLAKE2b:
+  blake2b_to_vector_null_type::key_type key {0, false};
+
+  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+
+  hash_array_type hash {pipeline_output_device(plaintext,
+					       key)};
+
+  auto result = verify_hash(plaintext,
+			    key,
+			    hash);
+
+  BOOST_CHECK(result);
+}
 
 BOOST_AUTO_TEST_SUITE_END ();

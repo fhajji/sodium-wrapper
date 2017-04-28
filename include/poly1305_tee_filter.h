@@ -1,4 +1,4 @@
-// poly1305_tee_filter.h -- Boost.Iostreams tee filter for Poly1305
+// poly1305_tee_filter.h -- Boost.Iostreams tee {filter,device} for Poly1305
 //
 // ISC License
 // 
@@ -268,7 +268,7 @@ class poly1305_tee_filter : public detail::filter_adapter<Device>
 	      << std::endl;
 #endif // ! NDEBUG
     
-    BOOST_ASSERT(result = MACSIZE);
+    BOOST_ASSERT(result == MACSIZE);
       
     // and now close the streams
     detail::close_all(this->component());
@@ -375,8 +375,8 @@ poly1305_tee_filter<Sink> poly1305_tee(const Sink& snk,
  *                             std::ios_base::out | std::ios_base::binary };
  * 
  * poly1305_to_vector_type
- *   poly1305_vector_output_device(outfile,      // Device
- *                                 poly1305file, // Sink
+ *   poly1305_vector_output_device(outfile,       // Device
+ *                                 poly1305_sink, // Sink
  *                                 key);
  *  
  * io::filtering_ostream os(poly1305_vector_output_device);
@@ -392,7 +392,7 @@ poly1305_tee_filter<Sink> poly1305_tee(const Sink& snk,
  * // everything as above, except for this:
  * 
  * // an output filter that outputs to io::file_sink and tee-s to vector_sink
- * using poly1305_to_vector_type = 
+ * using poly1305_to_vector_null_type = 
  *   poly1305_tee_device<io::file_sink, vector_sink>;
  * 
  * mac_array_type mac; // will grow
@@ -462,7 +462,7 @@ public:
   using mac_type = data2_t; // of size MACSIZE
   
   poly1305_tee_device(device_param device, sink_param sink,
-		      const key_type key)
+		      const key_type &key)
     : dev_(device), sink_(sink), key_ {key}
   {
     // initialize the Poly1305 state machine
@@ -586,7 +586,7 @@ public:
 	      << std::endl;
 #endif // ! NDEBUG
 
-    BOOST_ASSERT(result = MACSIZE); // sanity check: we didn't lose anything
+    BOOST_ASSERT(result == MACSIZE); // sanity check: we didn't lose anything
 
     // And now, close the streams
     detail::execute_all( detail::call_close_all(dev_),

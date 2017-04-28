@@ -36,8 +36,9 @@ class StreamHash {
  public:
 
   /**
-   * See also blake2b_tee_filter for an alternative implementation
-   * of generic hash (BLAKE2b-based) using Boost::Iostreams.
+   * See also blake2b_tee_filter, blake2b_tee_device for an
+   * alternative implementation of generic hash (BLAKE2b-based) using
+   * Boost::Iostreams.
    **/
   
   static constexpr std::size_t KEYSIZE      = Sodium::KEYSIZE_HASHKEY;
