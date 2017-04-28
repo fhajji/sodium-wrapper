@@ -58,7 +58,55 @@ namespace Sodium {
 /**
  * poly1305_tee_filter<Device>
  * 
- * XXX: TODO -- Add documentation
+ * A pipepable output tee filter that computes a Poly1305 MAC for
+ * data being sent to it. This filter sends its data unchanged
+ * downstream, and, when the stream is about to close, sends
+ * the computed Poly1305 MAC to the tee-ed Device.
+ * 
+ * As a Device, you can use _any_ OutputDevice that provides a
+ * write() function (i.e. _not_ Direct Devices). Examples of Device(s)
+ * include io::file_sink, io::back_insert_device<STL-Container>, ...
+ * 
+ * This output filter can be included in a pipe like this:
+ *   io::filtering_ostream os(filter1 | filter2 | poly1305_filter | filter3 | somesink);
+ *  
+ * Usage (example):
+ * 
+ * // Let's compute a Poly1305 mac of a std::string and send it to a file
+ * // Send the data that is being checksummed downstream, to another file
+ *
+ * #include "poly1305_tee_filter.h"
+ * #include "common.h"
+ *
+ * #include <string>
+ * 
+ * #include <boost/iostreams/device/file.hpp>
+ * #include <boost/iostreams/filtering_stream.hpp>
+ * 
+ * namespace io = boost::iostreams;
+ * 
+ * using Sodium::poly1305_tee_filter;
+ * using data_t = Sodium::data2_t;
+ * 
+ * // a filter which outputs to io::file_sink and tee-s to io::file_sink
+ * using poly1305_to_file_type  = poly1305_tee_filter<io::file_sink>;
+ * 
+ * poly1305_to_vector_type::key_type key; // generate a random key for Poly1305
+ * 
+ * std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+ * data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+ * 
+ * io::file_sink poly1305file {"/var/tmp/poly1305.mac",
+ *                             std::ios_base::out | std::ios_base::binary };
+ * io::file_sink outfile      {"/var/tmp/poly1305.data",
+ *                             std::ios_base::out | std::ios_base::binary };
+ * 
+ * poly1305_to_file_type poly1305_filter(poly1305file, key);
+ *  
+ * io::filtering_ostream os(poly1305_filter | outfile);
+ * 
+ * os.write(plainblob.data(), plainblob.size());
+ * os.flush();
  **/
   
 template <typename Device>
@@ -264,7 +312,104 @@ poly1305_tee_filter<Sink> poly1305_tee(const Sink& snk,
 /**
  * poly1305_tee_device<Device, Sink>
  * 
- * XXX: TODO -- add documentation
+ * An OutputDevice with tee functionality that computes a Poly1305 MAC
+ * for data being sent to it. This device sends its data unchanged
+ * downstream to a sink of type Device. Then, when the stream is about
+ * to close, it sends the computed Poly1305 MAC to the tee-ed device
+ * of type Sink.
+ * 
+ * As a Device and as a Sink, you can use _any_ OutputDevice that
+ * provides a write() function (i.e. _not_ Direct Devices). Examples
+ * of Device(s) and Sink(s) include io::file_sink,
+ * io::back_insert_device<STL-Container>, io::null_sink.
+ * 
+ * By setting Device to io::null_sink, you can discard the data
+ * being Poly1305-checksummed, while still collecting the MAC
+ * through Sink. If you need that checksum in a std::vector<char>,
+ * simply use an io::back_insert_device<std::vector<char>> as Sink.
+ *
+ * This OutputDevice can be included in a pipe as a sink (i.e. in
+ * last position) like this:
+ *   io::filtering_ostream os(filter1 | filter2 | poly1305_device);
+ * or if no filtering is needed beforehand:
+ *   io::filtering_ostream os(poly1305_device);
+ * 
+ * Usage (example):
+ * 
+ * // Let's compute a Poly1305 mac of a std::string and send
+ * //  1. the data being checksummed downstream to Device
+ * //  2. the Poly1305 MAC to Sink
+ * // In this example, we send data to an output file (Device=io::file_sink),
+ * // and the Poly1305 MAC to a std::vector<char>     (Sink=vector_sink)
+ *
+ * #include "poly1305_tee_filter.h"
+ * #include "common.h"
+ *
+ * #include <string>
+ * 
+ * #include <boost/iostreams/device/file.hpp>
+ * #include <boost/iostreams/device/back_inserter.hpp>
+ * #include <boost/iostreams/device/null.hpp>
+ * #include <boost/iostreams/filtering_stream.hpp>
+ * 
+ * namespace io = boost::iostreams;
+ * 
+ * using Sodium::poly1305_tee_device;
+ * using data_t = Sodium::data2_t;
+ * 
+ * using mac_array_type = typename poly1305_tee_filter<io::null_sink>;
+ * using vector_sink    = io::back_insert_device<mac_array_type>;
+ * 
+ * // an output filter that outputs to io::file_sink and tee-s to vector_sink
+ * using poly1305_to_vector_type = poly1305_tee_device<io::file_sink, vector_sink>;
+ * 
+ * poly1305_to_vector_type::key_type key; // generate a random key for Poly1305
+ * 
+ * std::string plaintext {"the quick brown fox jumps over the lazy dog"};
+ * data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+ *
+ * mac_array_type mac; // will grow
+ * vector_sink    poly1305_sink(mac);
+ * 
+ * io::file_sink outfile      {"/var/tmp/poly1305.data",
+ *                             std::ios_base::out | std::ios_base::binary };
+ * 
+ * poly1305_to_vector_type
+ *   poly1305_vector_output_device(outfile,      // Device
+ *                                 poly1305file, // Sink
+ *                                 key);
+ *  
+ * io::filtering_ostream os(poly1305_vector_output_device);
+ * 
+ * os.write(plainblob.data(), plainblob.size());
+ * os.flush();
+ * 
+ * // ------- ALTERNATIVELY:
+ * // 
+ * // In this example, we discard the data by sending it to a io::null_sink,
+ * // and we send the Poly1305 MAC to a std::vector<char>, i.e. a vector_sink
+ * //
+ * // everything as above, except for this:
+ * 
+ * // an output filter that outputs to io::file_sink and tee-s to vector_sink
+ * using poly1305_to_vector_type = 
+ *   poly1305_tee_device<io::file_sink, vector_sink>;
+ * 
+ * mac_array_type mac; // will grow
+ * vector_sink    poly1305_sink(mac);
+ * 
+ * io::null_sink dev_null_sink;
+ *
+ * poly1305_to_vector_null_type
+ *   poly1305_vector_null_output_device(dev_null_sink, // Device
+ *                                      poly1305_sink, // Sink
+ *                                      key);
+ * io::filtering_ostream os(poly1305_vector_null_output_device);
+ * 
+ * os.write(plainblob.data(), plainblob.size());
+ * os.flush();
+ * 
+ * // now collect Poly1305 MAC in 'mac'.
  **/
 
 template<typename Device, typename Sink>

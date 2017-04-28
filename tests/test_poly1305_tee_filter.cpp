@@ -24,7 +24,6 @@
 #include "common.h"
 
 #include <string>
-#include <array>
 
 #include <boost/iostreams/device/file.hpp>
 #include <boost/iostreams/device/back_inserter.hpp>
