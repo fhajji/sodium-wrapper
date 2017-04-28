@@ -357,7 +357,7 @@ poly1305_tee_filter<Sink> poly1305_tee(const Sink& snk,
  * using Sodium::poly1305_tee_device;
  * using data_t = Sodium::data2_t;
  * 
- * using mac_array_type = typename poly1305_tee_filter<io::null_sink>;
+ * using mac_array_type = typename poly1305_tee_filter<io::null_sink>::mac_type;
  * using vector_sink    = io::back_insert_device<mac_array_type>;
  * 
  * // an output filter that outputs to io::file_sink and tee-s to vector_sink
