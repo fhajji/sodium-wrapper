@@ -156,7 +156,7 @@ class poly1305_tee_filter : public detail::filter_adapter<Device>
    * the second sink when the input stream is about to be closed.
    **/
   
-  explicit poly1305_tee_filter(param_type dev, const key_type key) 
+  explicit poly1305_tee_filter(param_type dev, const key_type &key) 
     : detail::filter_adapter<Device>(dev), key_ {key}
   {
     // initialize the Poly1305 state machine
@@ -301,12 +301,12 @@ BOOST_IOSTREAMS_PIPABLE(poly1305_tee_filter, 1)
 
 template<typename Sink>
 poly1305_tee_filter<Sink> poly1305_tee(Sink& snk,
-				       const typename poly1305_tee_filter<Sink>::key_type key) 
+				       const typename poly1305_tee_filter<Sink>::key_type &key) 
 { return poly1305_tee_filter<Sink>(snk, key); }
 
 template<typename Sink>
 poly1305_tee_filter<Sink> poly1305_tee(const Sink& snk,
-				       const typename poly1305_tee_filter<Sink>::key_type key) 
+				       const typename poly1305_tee_filter<Sink>::key_type &key) 
 { return poly1305_tee_filter<Sink>(snk, key); }
 
 /**
@@ -632,22 +632,22 @@ private:
 
 template<typename Device, typename Sink>
 poly1305_tee_device<Device, Sink> poly1305_tee(Device& dev, Sink& sink,
-					       const typename poly1305_tee_device<Device, Sink>::key_type key)
+					       const typename poly1305_tee_device<Device, Sink>::key_type &key)
 { return poly1305_tee_device<Device, Sink>(dev, sink, key); }
 
 template<typename Device, typename Sink>
 poly1305_tee_device<Device, Sink> poly1305_tee(const Device& dev, Sink& sink,
-						 const typename poly1305_tee_device<Device, Sink>::key_type key) 
+						 const typename poly1305_tee_device<Device, Sink>::key_type &key) 
 { return poly1305_tee_device<Device, Sink>(dev, sink, key); }
 
 template<typename Device, typename Sink>
   poly1305_tee_device<Device, Sink> poly1305_tee(Device& dev, const Sink& sink,
-						 const typename poly1305_tee_device<Device, Sink>::key_type key) 
+						 const typename poly1305_tee_device<Device, Sink>::key_type &key) 
 { return poly1305_tee_device<Device, Sink>(dev, sink, key); }
 
 template<typename Device, typename Sink>
   poly1305_tee_device<Device, Sink> poly1305_tee(const Device& dev, const Sink& sink,
-						 const typename poly1305_tee_device<Device, Sink>::key_type key) 
+						 const typename poly1305_tee_device<Device, Sink>::key_type &key) 
 { return poly1305_tee_device<Device, Sink>(dev, sink, key); }
  
 } // namespace Sodium

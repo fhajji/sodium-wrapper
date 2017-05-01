@@ -175,7 +175,7 @@ class blake2b_tee_filter : public detail::filter_adapter<Device>
    **/
   
   explicit blake2b_tee_filter(param_type dev,
-			      const key_type key,
+			      const key_type &key,
 			      const std::size_t hashsize=HASHSIZE) 
     : detail::filter_adapter<Device>(dev), key_ {key}, hashsize_ {hashsize}
   {
@@ -374,13 +374,13 @@ BOOST_IOSTREAMS_PIPABLE(blake2b_tee_filter, 1)
 
 template<typename Sink>
 blake2b_tee_filter<Sink> blake2b_tee(Sink& snk,
-				     const typename blake2b_tee_filter<Sink>::key_type key,
+				     const typename blake2b_tee_filter<Sink>::key_type &key,
 				     const std::size_t hashsize) 
 { return blake2b_tee_filter<Sink>(snk, key, hashsize); }
 
 template<typename Sink>
 blake2b_tee_filter<Sink> blake2b_tee(const Sink& snk,
-				     const typename blake2b_tee_filter<Sink>::key_type key,
+				     const typename blake2b_tee_filter<Sink>::key_type &key,
 				     const std::size_t hashsize) 
 { return blake2b_tee_filter<Sink>(snk, key, hashsize); }
 
@@ -788,25 +788,25 @@ private:
 
 template<typename Device, typename Sink>
 blake2b_tee_device<Device, Sink> blake2b_tee(Device& dev, Sink& sink,
-					     const typename blake2b_tee_device<Device, Sink>::key_type key,
+					     const typename blake2b_tee_device<Device, Sink>::key_type &key,
 					     const std::size_t hashsize)
 { return blake2b_tee_device<Device, Sink>(dev, sink, key, hashsize); }
 
 template<typename Device, typename Sink>
 blake2b_tee_device<Device, Sink> blake2b_tee(const Device& dev, Sink& sink,
-					     const typename blake2b_tee_device<Device, Sink>::key_type key,
+					     const typename blake2b_tee_device<Device, Sink>::key_type &key,
 					     const std::size_t hashsize) 
 { return blake2b_tee_device<Device, Sink>(dev, sink, key, hashsize); }
 
 template<typename Device, typename Sink>
   blake2b_tee_device<Device, Sink> blake2b_tee(Device& dev, const Sink& sink,
-					       const typename blake2b_tee_device<Device, Sink>::key_type key,
+					       const typename blake2b_tee_device<Device, Sink>::key_type &key,
 					       const std::size_t hashsize) 
 { return blake2b_tee_device<Device, Sink>(dev, sink, key, hashsize); }
 
 template<typename Device, typename Sink>
   blake2b_tee_device<Device, Sink> blake2b_tee(const Device& dev, const Sink& sink,
-					       const typename blake2b_tee_device<Device, Sink>::key_type key,
+					       const typename blake2b_tee_device<Device, Sink>::key_type &key,
 					       const std::size_t hashsize) 
 { return blake2b_tee_device<Device, Sink>(dev, sink, key, hashsize); }
 

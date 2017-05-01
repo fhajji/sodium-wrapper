@@ -112,13 +112,6 @@ class cryptor_decrypt_filter : public io::aggregate_filter<char> {
    *   }
    **/
 
-  public:
-    class decrypt_error : public std::ios_base::failure {
-      public:
-        decrypt_error(const std::string &message)
-  	  : std::ios_base::failure(message) {}
-    };
-  
   private:
     typedef io::aggregate_filter<char> base_type;
   
@@ -174,7 +167,6 @@ class cryptor_decrypt_filter : public io::aggregate_filter<char> {
 		  << std::endl;
 #endif // ! NDEBUG
 
-	// throw cryptor_decrypt_filter::decrypt_error(error_message);
 	throw std::ios_base::failure(error_message);
       }
 
