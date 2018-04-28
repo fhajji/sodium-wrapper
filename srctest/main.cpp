@@ -36,6 +36,8 @@
 
 int main()
 {
+  std::cout << (sizeof(int) << 3) << "-bit platform." << std::endl;
+
   try {
     SodiumTester st {};
 

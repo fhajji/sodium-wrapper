@@ -21,6 +21,7 @@
 
 #include "filecryptor.h"
 
+using data_t = Sodium::data_t;
 using Sodium::FileCryptor;
 using Sodium::CryptorAEAD;
 
@@ -154,7 +155,7 @@ FileCryptor::decrypt(std::ifstream &ifs, std::ostream &ostr)
 
       if (current_pos > hash_pos)
 	ciphertext.resize(ciphertext.size() - (current_pos - hash_pos));
-      else if (current_pos == -1) {
+      else if (current_pos == std::ifstream::pos_type(-1)) {
 	// we've reached end of file...
 	if (ciphertext.size() > hashsize_)
 	  // remove hash, there is still some ciphertext...

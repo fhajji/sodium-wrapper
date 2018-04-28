@@ -42,7 +42,7 @@ test_hash_default_size(const std::string &plaintext)
     
     return outHash.size() == HashShort::HASHSIZE;
   }
-  catch (std::exception &e) {
+  catch (std::exception & /* e */) {
     // test failed for some reason
     return false;
   }
@@ -84,7 +84,7 @@ test_hash_size(const std::string &plaintext,
     hasher.hash(plainblob, key, outHash);
     return true; // hashing was successful
   }
-  catch (std::exception &e) {
+  catch (std::exception & /* e */) {
     // hashing threw because of wrong size
     return false;
   }
@@ -110,7 +110,7 @@ test_different_keys(const std::string &plaintext)
     
     return (key1 != key2) && (outHash1 != outHash2);
   }
-  catch (std::exception &e) {
+  catch (std::exception & /* e */) {
     // test failed for some reason
     return false;
   }

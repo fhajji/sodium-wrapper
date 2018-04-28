@@ -43,9 +43,6 @@
 #include <stdexcept>     // std::runtime_error
 #include <sodium.h>
 
-#define NDEBUG
-// #undef NDEBUG
-
 #ifndef NDEBUG
 #include <iostream>
 #include <string>
@@ -317,7 +314,7 @@ class blake2b_tee_filter : public detail::filter_adapter<Device>
   void close(Next&, BOOST_IOS::openmode)
   {
     // before closing, send the computed BLAKE2b hash:
-    char_type out[hashsize_];
+	auto out = new char_type[hashsize_];
     crypto_generichash_final(&state_,
 			     reinterpret_cast<unsigned char *>(out),
 			     hashsize_);
@@ -347,6 +344,8 @@ class blake2b_tee_filter : public detail::filter_adapter<Device>
       crypto_generichash_init(&state_, key_.data(), key_.size(), hashsize_);
     else
       crypto_generichash_init(&state_, NULL, 0, hashsize_);
+
+	delete[] out;
   }
 
   template<typename Sink>
@@ -717,7 +716,7 @@ public:
   void close()
   {
     // before closing, send the computed BLAKE2b MAC:
-    char_type out[hashsize_]; // XXX: actually, char_type of sink_, not of dev_
+    auto out = new char_type[hashsize_]; // XXX: actually, char_type of sink_, not of dev_
     crypto_generichash_final(&state_,
 			     reinterpret_cast<unsigned char *>(out),
 			     hashsize_);
@@ -749,6 +748,8 @@ public:
       crypto_generichash_init(&state_, key_.data(), key_.size(), hashsize_);
     else
       crypto_generichash_init(&state_, NULL, 0, hashsize_);
+
+	delete[] out;
   }
   
   bool flush()

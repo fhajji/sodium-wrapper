@@ -27,9 +27,6 @@
 #include "key.h"
 #include "auth.h"
 
-#define NDEBUG
-// #undef NDEBUG
-
 #ifndef NDEBUG
 #include <iostream>
 #endif // ! NDEBUG

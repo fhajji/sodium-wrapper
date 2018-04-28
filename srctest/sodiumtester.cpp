@@ -44,8 +44,6 @@ using Sodium::Auth;
 using Sodium::StreamCryptor;
 using Sodium::FileCryptor;
 
-#define NDEBUG
-
 #ifndef NDEBUG
 #include <iostream>
 #endif // ! NDEBUG
@@ -429,9 +427,9 @@ SodiumTester::test4(const std::string &plaintext,
     else
       throw std::runtime_error {"SodiumTester::test4() decrypted != plaintext with new nonce"};
   }
-  catch (std::exception &e) {
-    os << "ERROR: unexpectedly can't decrypt with updated nonce."
-       << std::endl;
+  catch (std::exception & /* e */) {
+	  os << "ERROR: unexpectedly can't decrypt with updated nonce."
+         << std::endl;
   }
 
   // Finally, encrypt an empty message
@@ -457,7 +455,7 @@ SodiumTester::test4(const std::string &plaintext,
     else
       throw std::runtime_error {"SodiumTester::test4() empty decrypted != empty plaintext"};
   }
-  catch (std::exception &e) {
+  catch (std::exception & /* e */) {
     os << "ERROR: caught failed decryption of encryption of empty plaintext"
        << std::endl;
   }

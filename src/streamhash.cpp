@@ -24,7 +24,6 @@
 #include <sodium.h>
 
 using data_t = Sodium::data_t;
-
 using Sodium::StreamHash;
 
 data_t

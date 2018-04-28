@@ -58,7 +58,7 @@ test_of_correctness(const std::string &header,
   try {
     decrypted  = sc.decrypt(headerblob, ciphertext, key, nonce);
   }
-  catch (std::exception &e) {
+  catch (std::exception & /* e */) {
     return false; // decryption failed;
   }
 

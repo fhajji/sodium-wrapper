@@ -156,7 +156,7 @@ falsify_signature(const std::string &plaintext)
     data_t message_without_signature = sc.verify(signedtext,
 						 keypair_alice);
   }
-  catch (std::exception &e) {
+  catch (std::exception & /* e */) {
     // verification failed as expected: test passed.
     return true;
   }
@@ -216,7 +216,7 @@ falsify_signedtext(const std::string &plaintext)
     data_t plaintext_without_signature = sc.verify(signedtext,
 						   keypair_alice);
   }
-  catch (std::exception &e) {
+  catch (std::exception & /* e */) {
     // Exception caught as expected. Test passed.
     return true;
   }
@@ -289,7 +289,7 @@ falsify_sender(const std::string &plaintext)
 
     return false;
   }
-  catch (std::exception &e) {
+  catch (std::exception & /* e */) {
     // verification failed; either because signedtext was modified
     // en route, or, more likely here, because keypair_bob.pubkey()
     // doesn't match keypair_oscar.privkey(). Oscar was not able to

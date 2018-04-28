@@ -139,7 +139,7 @@ class KeyPair
    *   <SOME_KEYPAIR>.privkey().data(), <SOME_KEYPAIR>.privkey().size()
    **/
 
-  const privkey_type privkey() const { return privkey_; }
+  const privkey_type& privkey() const { return privkey_; }
 
   /**
    * Give const access to the stored public key as a data_t object.
@@ -149,7 +149,7 @@ class KeyPair
    *  <SOME_KEYPAIR>.pubkey().data(), <SOME_KEYPAIR>.pubkey().size()
    **/
 
-  const data_t pubkey() const { return pubkey_; }
+  const data_t& pubkey() const { return pubkey_; }
   
  private:
   data_t       pubkey_;

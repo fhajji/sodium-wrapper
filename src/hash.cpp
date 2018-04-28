@@ -23,7 +23,6 @@
 #include <sodium.h>
 
 using data_t = Sodium::data_t;
-
 using Sodium::KeyVar;
 using Sodium::Hash;
 

@@ -21,7 +21,6 @@
 #include "sealedbox.h"
 
 using data_t = Sodium::data_t;
-
 using Sodium::SealedBox;
 
 data_t

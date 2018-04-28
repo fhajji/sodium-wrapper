@@ -24,7 +24,7 @@
 #include <stdexcept>
 #include <sodium.h>
 
-using Sodium::data_t;
+using data_t = Sodium::data_t;
 using Sodium::SignorPK;
 using Sodium::KeyPairSign;
 

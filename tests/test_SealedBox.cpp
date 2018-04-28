@@ -99,7 +99,7 @@ falsify_seal(const std::string &plaintext)
     data_t decrypted = sb.decrypt(ciphertext,
 				  keypair_alice);
   }
-  catch (std::exception &e) {
+  catch (std::exception & /* e */) {
     // decryption failed as expected: test passed.
     return true;
   }
@@ -136,7 +136,7 @@ falsify_ciphertext(const std::string &plaintext)
     data_t decrypted = sb.decrypt(ciphertext,
 				  keypair_alice);
   }
-  catch (std::exception &e) {
+  catch (std::exception & /* e */) {
     // Exception caught as expected. Test passed.
     return true;
   }
@@ -177,7 +177,7 @@ falsify_recipient(const std::string &plaintext)
 
     return false;
   }
-  catch (std::exception &e) {
+  catch (std::exception & /* e */) {
     // decryption failed; either because ciphertext was modified
     // en route, or, more likely here, because keypair_bob
     // doesn't match keypair_oscar. Oscar was not able to

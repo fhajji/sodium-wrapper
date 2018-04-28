@@ -20,7 +20,7 @@
 
 #include <stdexcept>
 
-using Sodium::data_t;
+using data_t = Sodium::data_t;
 using Sodium::Cryptor;
 
 data_t

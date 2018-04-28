@@ -21,7 +21,7 @@
 
 #include <istream>
 
-using Sodium::data_t;
+using data_t = Sodium::data_t;
 using Sodium::StreamSignorPK;
 
 data_t

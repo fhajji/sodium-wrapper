@@ -44,7 +44,7 @@ test_hash_size(const std::string &plaintext,
     
     return outHash.size() == hashsize;
   }
-  catch (std::exception &e) {
+  catch (std::exception & /* e */) {
     // test failed for some reason
     return false;
   }
@@ -74,7 +74,7 @@ test_key_size(const std::string &plaintext,
 
     return true; // hashing succeeded. test ok.
   }
-  catch (std::exception &e) {
+  catch (std::exception & /* e */) {
     // test failed for some reason (likely key size too small or too big)
     return false;
   }
@@ -98,7 +98,7 @@ test_different_keys(const std::string &plaintext)
     
     return (key1 != key2) && (outHash1 != outHash2);
   }
-  catch (std::exception &e) {
+  catch (std::exception & /* e */) {
     // test failed for some reason
     return false;
   }
@@ -121,7 +121,7 @@ test_keyless_hashing(const std::string &plaintext)
 
     return outHash1 == outHash2;
   }
-  catch (std::exception &e) {
+  catch (std::exception & /* e */) {
     // test failed for some reason
     return false;
   }

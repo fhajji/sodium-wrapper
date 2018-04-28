@@ -31,9 +31,6 @@
 
 #include <sodium.h>
 
-#define NDEBUG
-// #undef NDEBUG
-
 #ifndef NDEBUG
 #include <iostream>
 #include <string>

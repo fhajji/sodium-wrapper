@@ -110,7 +110,7 @@ falsify_mac(const std::string &plaintext)
   try {
     data_t decrypted = sc.decrypt(ciphertext, nonce);
   }
-  catch (std::exception &e) {
+  catch (std::exception & /* e */) {
     // decryption failed as expected: test passed.
     return true;
   }
@@ -146,7 +146,7 @@ falsify_ciphertext(const std::string &plaintext)
   try {
     data_t decrypted = sc.decrypt(ciphertext, nonce);
   }
-  catch (std::exception &e) {
+  catch (std::exception & /* e */) {
     // Exception caught as expected. Test passed.
     return true;
   }
@@ -199,7 +199,7 @@ falsify_sender(const std::string &plaintext)
 
     return false;
   }
-  catch (std::exception &e) {
+  catch (std::exception & /* e */) {
     // decryption failed; either because ciphertext was modified
     // en route, or, more likely here, because keypair_bob.pubkey()
     // doesn't match keypair_oscar.privkey(). Oscar was not able to
@@ -229,7 +229,7 @@ destroy_shared_key_then_encrypt(const data_t &plaintext)
     // test failed.
     return false;
   }
-  catch (std::exception &e) {
+  catch (std::exception & /* e */) {
     // 3. encryption failed as expected because of destroyed shared key.
     // test succeeded.
     return true;
@@ -256,7 +256,7 @@ destroy_shared_key_then_decrypt(const data_t                     &ciphertext,
     // test failed.
     return false;
   }
-  catch (std::exception &e) {
+  catch (std::exception & /* e */) {
     // 3. decryption failed as expected, probably because of
     // destroyed shared key. test succeeded.
     return true;

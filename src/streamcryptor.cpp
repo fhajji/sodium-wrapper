@@ -18,6 +18,7 @@
 
 #include "streamcryptor.h"
 
+using data_t = Sodium::data_t;
 using Sodium::StreamCryptor;
 using Sodium::CryptorAEAD;
 

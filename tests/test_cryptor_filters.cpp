@@ -28,9 +28,6 @@
 #include <stdexcept>
 #include <algorithm>
 
-#define NDEBUG
-// #undef NDEBUG
-
 #ifndef NDEBUG
 #include <iostream>
 #endif // ! NDEBUG
@@ -79,7 +76,7 @@ test_of_correctness_combined_output_filter(const std::string &plaintext)
     
     os.pop();
   }
-  catch (std::exception &e) {
+  catch (std::exception & /* e */) {
     // decryption failed for some reason
 
 #ifndef NDEBUG
@@ -203,7 +200,7 @@ test_of_correctness_output_filter(const std::string &plaintext,
     
     BOOST_CHECK_EQUAL(decrypted.size(), plainblob.size());
   }
-  catch (std::exception &e) {
+  catch (std::exception & /* e */) {
     // decryption failed. This is expected if and only if we falsified
     // the ciphertext OR we falsified the MAC
     // OR we falsified the key

@@ -21,6 +21,7 @@
 
 #include <istream>
 
+using data_t = Sodium::data_t;
 using Sodium::StreamVerifierPK;
 
 bool

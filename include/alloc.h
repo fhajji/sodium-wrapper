@@ -24,8 +24,6 @@
 #include <new>
 #include <stdexcept>
 
-#define NDEBUG
-
 #ifndef NDEBUG
 #include <iostream>
 #endif // ! NDEBUG
@@ -79,9 +77,9 @@ class SodiumAlloc
       throw std::runtime_error {"SodiumAlloc::SodiumAlloc() can't sodium_init()"};
   }
 
-  SodiumAlloc(const SodiumAlloc &) = default;
-  SodiumAlloc & operator= (const SodiumAlloc &) = delete; // for now
-  
+  template <typename U>
+  SodiumAlloc(const SodiumAlloc<U> &) {};
+
   ~SodiumAlloc() {}
 
   /**

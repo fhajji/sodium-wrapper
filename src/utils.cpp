@@ -20,6 +20,8 @@
 #include <string>
 #include "common.h"
 
+using data_t = Sodium::data_t;
+
 std::string
 Sodium::tohex (const Sodium::data_t &in)
 {

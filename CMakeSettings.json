@@ -1,0 +1,80 @@
+{
+  "configurations": [
+    {
+      "name": "x86-Debug",
+      "generator": "Visual Studio 15 2017",
+      "configurationType": "Debug",
+      "inheritEnvironments": [ "msvc_x86" ],
+      "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "-m -v:minimal",
+      "variables": [
+        {
+          "name": "CMAKE_TOOLCHAIN_FILE",
+          "value": "C:\\Users\\fhajji\\C++\\vcpkg\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
+        },
+        {
+          "name": "CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS",
+          "value": "TRUE"
+        }
+      ]
+    },
+    {
+      "name": "x86-Release",
+      "generator": "Visual Studio 15 2017",
+      "configurationType": "Release",
+      "inheritEnvironments": [ "msvc_x86" ],
+      "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "-m -v:minimal",
+      "variables": [
+        {
+          "name": "CMAKE_TOOLCHAIN_FILE",
+          "value": "C:\\Users\\fhajji\\C++\\vcpkg\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
+        },
+        {
+          "name": "CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS",
+          "value": "TRUE"
+        }
+      ]
+    },
+    {
+      "name": "x64-Debug",
+      "generator": "Visual Studio 15 2017",
+      "configurationType": "Debug",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "-m -v:minimal",
+      "variables": [
+        {
+          "name": "CMAKE_TOOLCHAIN_FILE",
+          "value": "C:\\Users\\fhajji\\C++\\vcpkg\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
+        },
+        {
+          "name": "CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS",
+          "value": "TRUE"
+        }
+      ]
+    },
+    {
+      "name": "x64-Release",
+      "generator": "Visual Studio 15 2017",
+      "configurationType": "Release",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "-m -v:minimal",
+      "variables": [
+        {
+          "name": "CMAKE_TOOLCHAIN_FILE",
+          "value": "C:\\Users\\fhajji\\C++\\vcpkg\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
+        },
+        {
+          "name": "CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS",
+          "value": "TRUE"
+        }
+      ]
+    }
+  ]
+}

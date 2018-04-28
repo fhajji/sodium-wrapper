@@ -73,7 +73,7 @@ test_of_correctness(const std::string &plaintext,
       !falsify_nonce &&
       (plainblob == decrypted);
   }
-  catch (std::exception &e) {
+  catch (std::exception & /* e */) {
     // decryption failed. This is expected if and only if we falsified
     // the ciphertext OR we falsified the MAC
     // OR we falsified the key
@@ -129,7 +129,7 @@ test_of_correctness_detached(const std::string &plaintext,
       !falsify_nonce &&
       (plainblob == decrypted);
   }
-  catch (std::exception &e) {
+  catch (std::exception & /* e */) {
     // decryption failed. This is expected if and only if we falsified
     // the ciphertext OR we falsified the MAC
     // OR falsified the key
