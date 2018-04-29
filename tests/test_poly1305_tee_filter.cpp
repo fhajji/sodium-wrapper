@@ -252,7 +252,7 @@ verify_mac(const std::string &plaintext,
   return mac_c_api == mac;
 }
 
-BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture );
+BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture )
 
 BOOST_AUTO_TEST_CASE( sodium_test_poly1305_filter_poly1305_to_file )
 {
@@ -312,4 +312,4 @@ BOOST_AUTO_TEST_CASE( sodium_test_poly1305_filter_poly1305_to_vector_null )
   BOOST_CHECK(result);
 }
 
-BOOST_AUTO_TEST_SUITE_END ();
+BOOST_AUTO_TEST_SUITE_END ()

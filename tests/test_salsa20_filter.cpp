@@ -415,7 +415,7 @@ pipeline_output_device (const std::string &plaintext,
   os.flush();
 }
 
-BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture );
+BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture )
 
 BOOST_AUTO_TEST_CASE( sodium_test_salsa20_filter_size_full_output_filter )
 {
@@ -570,4 +570,4 @@ BOOST_AUTO_TEST_CASE( sodium_test_salsa20_filter_pipeline_output_device )
 // NYI: add test cases to prove that we used salsa20 correctly...
 // i.e. compare with crypto_stream_salsa20_xor() on the whole input.
 
-BOOST_AUTO_TEST_SUITE_END ();
+BOOST_AUTO_TEST_SUITE_END ()

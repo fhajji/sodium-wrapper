@@ -92,7 +92,7 @@ struct SodiumFixture {
  * To see the output of the messages, invoke with --log_level=message.
  **/
 
-BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture );
+BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture )
 
 BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_full_plaintext_full_header )
 {
@@ -207,4 +207,4 @@ BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_big_header )
   BOOST_CHECK(! test_of_correctness(header, plaintext, csize, true, false));
 }
 
-BOOST_AUTO_TEST_SUITE_END ();
+BOOST_AUTO_TEST_SUITE_END ()

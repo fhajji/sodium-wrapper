@@ -103,7 +103,7 @@ struct SodiumFixture {
   }
 };
 
-BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture );
+BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture )
 
 BOOST_AUTO_TEST_CASE( sodium_test_key_size )
 {
@@ -404,4 +404,4 @@ BOOST_AUTO_TEST_CASE( sodium_test_key_select_copy_or_move )
 
 // NYI: add test cases for readwrite(), readonly() and noaccess()...
 
-BOOST_AUTO_TEST_SUITE_END ();
+BOOST_AUTO_TEST_SUITE_END ()

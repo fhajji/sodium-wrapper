@@ -32,7 +32,7 @@ struct SodiumFixture {
   }
 };
 
-BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture );
+BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture )
 
 BOOST_AUTO_TEST_CASE( sodium_test_nonce_defaultsize )
 {
@@ -151,4 +151,4 @@ BOOST_AUTO_TEST_CASE( sodium_test_nonce_operator_plus_equal )
   BOOST_CHECK(a == b);
 }
 
-BOOST_AUTO_TEST_SUITE_END ();
+BOOST_AUTO_TEST_SUITE_END ()

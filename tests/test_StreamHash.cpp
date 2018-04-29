@@ -124,7 +124,7 @@ struct SodiumFixture {
   }
 };
 
-BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture );
+BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture )
 
 BOOST_AUTO_TEST_CASE( sodium_streamhash_test_falsify_plaintext )
 {
@@ -169,4 +169,4 @@ BOOST_AUTO_TEST_CASE( sodium_streamhash_test_compare_hashes_empty_plaintext )
   BOOST_CHECK(compare_both_hashes(plaintext));
 }
 
-BOOST_AUTO_TEST_SUITE_END ();
+BOOST_AUTO_TEST_SUITE_END ()

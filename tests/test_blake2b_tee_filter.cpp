@@ -287,7 +287,7 @@ verify_hash(const std::string &plaintext,
   return hash_c_api == hash;
 }
 
-BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture );
+BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture )
 
 BOOST_AUTO_TEST_CASE( sodium_test_blake2b_filter_blake2b_to_file )
 {
@@ -411,4 +411,4 @@ BOOST_AUTO_TEST_CASE( sodium_test_blake2b_filter_blake2b_to_vector_null_keyless 
   BOOST_CHECK(result);
 }
 
-BOOST_AUTO_TEST_SUITE_END ();
+BOOST_AUTO_TEST_SUITE_END ()

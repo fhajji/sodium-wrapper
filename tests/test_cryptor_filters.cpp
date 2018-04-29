@@ -407,7 +407,7 @@ length_test_input_filter(const std::string &plaintext)
 		    cryptor_encrypt_filter::MACSIZE + plaintext.size());
 }
 
-BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture );
+BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture )
 
 BOOST_AUTO_TEST_CASE( sodium_test_cryptor_filters_size_full_output_filter )
 {
@@ -559,4 +559,4 @@ BOOST_AUTO_TEST_CASE( sodium_test_cryptor_filters_correctness_falsify_nonce_full
   BOOST_CHECK(result);
 }
 
-BOOST_AUTO_TEST_SUITE_END ();
+BOOST_AUTO_TEST_SUITE_END ()

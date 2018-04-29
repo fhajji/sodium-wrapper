@@ -150,7 +150,7 @@ class KeyVar
    **/
 
   const unsigned char *data() const { return keydata.data(); }
-  const std::size_t    size() const { return keydata.size(); }
+        std::size_t    size() const { return keydata.size(); }
 
   /**
    * Provide mutable access to the bytes of the keyvar, so that users

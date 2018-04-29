@@ -181,7 +181,7 @@ struct SodiumFixture {
   }
 };
 
-BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture );
+BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture )
 
 BOOST_AUTO_TEST_CASE( sodium_streamsignorpk_test_full_plaintext )
 {
@@ -292,4 +292,4 @@ BOOST_AUTO_TEST_CASE( sodium_streamsignorpk_test_small_plaintext )
   BOOST_CHECK(sc_verifier.verify(istr_received, signature));
 }
 
-BOOST_AUTO_TEST_SUITE_END ();
+BOOST_AUTO_TEST_SUITE_END ()

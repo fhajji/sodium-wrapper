@@ -78,7 +78,7 @@ class SodiumAlloc
   }
 
   template <typename U>
-  SodiumAlloc(const SodiumAlloc<U> &) {};
+  SodiumAlloc(const SodiumAlloc<U> &) {}
 
   ~SodiumAlloc() {}
 

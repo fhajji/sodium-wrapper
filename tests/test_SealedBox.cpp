@@ -200,7 +200,7 @@ struct SodiumFixture {
   }
 };
 
-BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture );
+BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture )
 
 BOOST_AUTO_TEST_CASE( sodium_sealedbox_test_full_plaintext )
 {
@@ -273,4 +273,4 @@ BOOST_AUTO_TEST_CASE( sodium_sealedbox_test_falsify_seal_empty )
   BOOST_CHECK(falsify_seal(plaintext));
 }
 
-BOOST_AUTO_TEST_SUITE_END ();
+BOOST_AUTO_TEST_SUITE_END ()

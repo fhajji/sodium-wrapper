@@ -356,7 +356,7 @@ falsify_key_input_filter(const std::string &plaintext)
   return result[0];
 }
 
-BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture );
+BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture )
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_mac_size_output_filter )
 {
@@ -621,4 +621,4 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_filters_falsify_plaintext_input_filter )
   BOOST_CHECK_EQUAL(result[0], '0');
 }
 
-BOOST_AUTO_TEST_SUITE_END ();
+BOOST_AUTO_TEST_SUITE_END ()

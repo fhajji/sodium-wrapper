@@ -40,7 +40,7 @@ struct SodiumFixture {
   }
 };
 
-BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture );
+BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture )
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_size )
 {
@@ -182,4 +182,4 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_empty_falsify_key )
   BOOST_CHECK(! sa.verify(plainblob, mac, key2));
 }
 
-BOOST_AUTO_TEST_SUITE_END ();
+BOOST_AUTO_TEST_SUITE_END ()

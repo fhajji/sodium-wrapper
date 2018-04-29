@@ -68,7 +68,7 @@ struct SodiumFixture {
   }
 };
 
-BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture );
+BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture )
 
 BOOST_AUTO_TEST_CASE( sodium_test_keypair_size_ctor_default )
 {
@@ -210,4 +210,4 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypair_seedcompare_ctor_different_seed )
   BOOST_CHECK(keypair1 != keypair2); // check also operator!=()
 }
 
-BOOST_AUTO_TEST_SUITE_END ();
+BOOST_AUTO_TEST_SUITE_END ()

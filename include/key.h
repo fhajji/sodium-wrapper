@@ -184,8 +184,8 @@ class Key
    * _after_ the constructor has finished constructing *this! (XXX).
    **/
 
-            const unsigned char *data() const { return keydata.data(); }
-  constexpr const std::size_t    size() const { return keydata.size(); }
+  const      unsigned char *data() const { return keydata.data(); }
+  constexpr  std::size_t    size() const { return keydata.size(); }
 
   /**
    * Provide mutable access to the bytes of the key, so that users

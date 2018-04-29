@@ -344,7 +344,7 @@ struct SodiumFixture {
   }
 };
 
-BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture );
+BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture )
 
 BOOST_AUTO_TEST_CASE( sodium_signorpk_test_full_plaintext )
 {
@@ -514,4 +514,4 @@ BOOST_AUTO_TEST_CASE( sodium_signorpk_test_plaintext_remains_plaintext )
 			 plainblob.data()));
 }
 
-BOOST_AUTO_TEST_SUITE_END ();
+BOOST_AUTO_TEST_SUITE_END ()

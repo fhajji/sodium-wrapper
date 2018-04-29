@@ -131,7 +131,7 @@ struct SodiumFixture {
   }
 };
 
-BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture );
+BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture )
 
 BOOST_AUTO_TEST_CASE( sodium_hashshort_test_hash_default_size_full )
 {
@@ -214,4 +214,4 @@ BOOST_AUTO_TEST_CASE( sodium_hashshort_test_outHash_size_just_right )
   BOOST_CHECK(test_hash_size(plaintext, HashShort::HASHSIZE));
 }
 
-BOOST_AUTO_TEST_SUITE_END ();
+BOOST_AUTO_TEST_SUITE_END ()

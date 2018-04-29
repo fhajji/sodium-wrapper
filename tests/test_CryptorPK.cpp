@@ -226,7 +226,7 @@ struct SodiumFixture {
   }
 };
 
-BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture );
+BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture )
 
 BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_full_plaintext )
 {
@@ -301,4 +301,4 @@ BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_falsify_mac_empty )
   BOOST_CHECK(falsify_mac(plaintext));
 }
 
-BOOST_AUTO_TEST_SUITE_END ();
+BOOST_AUTO_TEST_SUITE_END ()
