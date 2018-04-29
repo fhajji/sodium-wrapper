@@ -54,6 +54,32 @@ if (Boost_FOUND)
 	set (LOCAL_INCLUDE_DIR ${LOCAL_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
 endif()
 
+# --------------- Crank up warnings to the max --------------------------------
+if (MSVC)
+    add_compile_options (/Wall)
+else()
+    add_compile_options (-Wall -Wextra -Wpedantic)
+endif()
+
+# --------------- Special OS/Compile cases -------------------------------
+if (CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        add_compile_options (-stdlib=libc++)
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        # message("FreeBSD:g++ ${CMAKE_CXX_COMPILER_VERSION}")
+	add_compile_options (-nostdinc++ -I/usr/include/c++/v1)
+        set (CMAKE_EXE_LINKER_FLAGS "-nodefaultlibs -lc++ -lm -lc -lgcc_s -lgcc")
+        # if multiple g++ versions are installed, pick the right libraries
+        # XXX this is brittle: update for g++7, g++8, ...
+        if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "6.0.0")
+            message("GCC6 detected")
+            set (CMAKE_EXE_LINKER_FLAGS "-Wl,-rpath=/usr/local/lib/gcc6 ${CMAKE_EXE_LINKER_FLAGS}")
+        endif()
+    else()
+        message("FreeBSD:unknown")
+    endif()
+endif()
+
 # --------------- Build library libwrapsodium.so -------------------------
 
 # Find source files of libwrapsodium.so:
