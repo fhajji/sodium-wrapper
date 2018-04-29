@@ -55,9 +55,9 @@ FileCryptor::encrypt(std::istream &istr, std::ostream &ostr)
   }
 
   // check to see if we've read a final partial chunk
-  auto s = istr.gcount();
+  std::size_t s = static_cast<std::size_t>(istr.gcount());
   if (s != 0) {
-    if (static_cast<std::size_t>(s) != plaintext.size())
+    if (s != plaintext.size())
       plaintext.resize(s);
 
     // encrypt the final partial block
@@ -96,7 +96,7 @@ FileCryptor::decrypt(std::ifstream &ifs, std::ostream &ostr)
   // before we start decrypting, fetch the hash block at the end of the file.
   // It should be exactly hashsize_ bytes long.
   data_t hash_saved(hashsize_, '\0');
-  ifs.seekg(-hashsize_, std::ios_base::end);
+  ifs.seekg(- static_cast<std::streamoff>(hashsize_), std::ios_base::end);
   if (!ifs)
     throw std::runtime_error {"Sodium::FileCryptor::decrypt(): can't seek to the end for hash"};
   std::ifstream::pos_type hash_pos = ifs.tellg(); // where the hash starts
@@ -125,7 +125,7 @@ FileCryptor::decrypt(std::ifstream &ifs, std::ostream &ostr)
     current_pos = ifs.tellg();
 
     if (current_pos > hash_pos) {
-      ciphertext.resize(ciphertext.size() - (current_pos - hash_pos));
+      ciphertext.resize(ciphertext.size() - static_cast<std::size_t>(current_pos - hash_pos));
       in_hash = true;
     }
     // we've got a whole MACSIZE + blocksize_ chunk
@@ -142,10 +142,10 @@ FileCryptor::decrypt(std::ifstream &ifs, std::ostream &ostr)
 
   if (!in_hash) {
     // check to see if we've read a final partial chunk
-    auto s = ifs.gcount();
+    std::size_t s = static_cast<std::size_t>(ifs.gcount());
     if (s != 0) {
       // we've got a partial chunk
-      if (static_cast<std::size_t>(s) != ciphertext.size())
+      if (s != ciphertext.size())
 	ciphertext.resize(s);
 
       // before we decrypt, we must again be sure that we didn't read
@@ -154,7 +154,7 @@ FileCryptor::decrypt(std::ifstream &ifs, std::ostream &ostr)
       current_pos = ifs.tellg();
 
       if (current_pos > hash_pos)
-	ciphertext.resize(ciphertext.size() - (current_pos - hash_pos));
+	ciphertext.resize(ciphertext.size() - static_cast<std::size_t>(current_pos - hash_pos));
       else if (current_pos == std::ifstream::pos_type(-1)) {
 	// we've reached end of file...
 	if (ciphertext.size() > hashsize_)

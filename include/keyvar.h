@@ -191,7 +191,7 @@ class KeyVar
 		const data_t &salt,
 		const strength_t strength = strength_t::high) {
     // check strength and set appropriate parameters
-    unsigned long long strength_mem;
+    std::size_t strength_mem;
     unsigned long long strength_cpu;
     switch (strength) {
     case strength_t::low:

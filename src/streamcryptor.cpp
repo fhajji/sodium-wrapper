@@ -39,9 +39,9 @@ StreamCryptor::encrypt(std::istream &istr, std::ostream &ostr)
   }
 
   // check to see if we've read a final partial chunk
-  auto s = istr.gcount();
+  std::size_t s = static_cast<std::size_t>(istr.gcount());
   if (s != 0) {
-    if (static_cast<std::size_t>(s) != plaintext.size())
+    if (s != plaintext.size())
       plaintext.resize(s);
 
     data_t ciphertext = sc_aead_.encrypt(header_, plaintext,
@@ -72,10 +72,10 @@ StreamCryptor::decrypt(std::istream &istr, std::ostream &ostr)
   }
 
   // check to see if we've read a final partial chunk
-  auto s = istr.gcount();
+  std::size_t s = static_cast<std::size_t>(istr.gcount());
   if (s != 0) {
     // we've got a partial chunk
-    if (static_cast<std::size_t>(s) != ciphertext.size())
+    if (s != ciphertext.size())
       ciphertext.resize(s);
 
     data_t plaintext = sc_aead_.decrypt(header_, ciphertext,

@@ -42,7 +42,7 @@ CryptorAEAD::encrypt (const data_t     &header,
 					NULL /* nsec */,
 					nonce.data(),
 					key.data());
-  ciphertext.resize(clen);
+  ciphertext.resize(static_cast<std::size_t>(clen));
 
   return ciphertext;
 }
@@ -71,7 +71,7 @@ CryptorAEAD::decrypt (const data_t     &header,
 					    nonce.data(),
 					    key.data()) == -1)
     throw std::runtime_error {"Sodium::CryptorAEAD::decrypt() can't decrypt or message/tag corrupt"};
-  plaintext.resize(mlen);
+  plaintext.resize(static_cast<std::size_t>(mlen));
 
   return plaintext;
 }
