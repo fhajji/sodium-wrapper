@@ -127,11 +127,18 @@ class SodiumAlloc
    *
    **/
   
-  void deallocate (T* ptr, std::size_t num) {
+  void deallocate (T* ptr,
+#ifndef NDEBUG
+                   std::size_t num)
+#else
+                   std::size_t /* num */)
+#endif // ! NDEBUG
+  {
 #ifndef NDEBUG
     std::cerr << "DEBUG: SodiumAlloc::deallocate("
-	      << static_cast<void *>(ptr) << ", "
-	      << num << ")" << std::endl;
+	      << static_cast<void *>(ptr) 
+              << ", " << num
+	      << ")" << std::endl;
 #endif // ! NDEBUG
     
     sodium_free(ptr);

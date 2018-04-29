@@ -97,7 +97,11 @@ class chacha20_symmetric_filter
   
   bool filter(const char_type *&i1, const char_type *i2,
 	      char_type       *&o1, char_type       *o2,
+#ifndef NDEBUG
 	      bool flush)
+#else
+	      bool /* flush */)
+#endif // ! NDEBUG
   {
     // mlen = number of bytes to filter:
     auto mlen = static_cast<unsigned long long>(std::min<std::ptrdiff_t>(i2-i1, o2-o1));

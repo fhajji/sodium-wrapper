@@ -250,7 +250,11 @@ class poly1305_tee_filter : public detail::filter_adapter<Device>
     crypto_onetimeauth_final(&state_,
 			     reinterpret_cast<unsigned char *>(out));
 
+#ifndef NDEBUG
     std::streamsize result =
+#else
+    (void)
+#endif // ! NDEBUG
       boost::iostreams::write(this->component(),
 			      out,
 			      MACSIZE);
@@ -568,7 +572,11 @@ public:
     crypto_onetimeauth_final(&state_,
 			     reinterpret_cast<unsigned char *>(out));
 
+#ifndef NDEBUG
     std::streamsize result =
+#else
+    (void)
+#endif // ! NDEBUG
       boost::iostreams::write(sink_,
 			      out,
 			      MACSIZE);

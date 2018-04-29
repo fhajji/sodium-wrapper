@@ -319,7 +319,11 @@ class blake2b_tee_filter : public detail::filter_adapter<Device>
 			     reinterpret_cast<unsigned char *>(out),
 			     hashsize_);
 
+#ifndef NDEBUG
     std::streamsize result =
+#else
+      (void)
+#endif // ! NDEBUG
       boost::iostreams::write(this->component(),
 			      out,
 			      hashsize_);
@@ -721,7 +725,11 @@ public:
 			     reinterpret_cast<unsigned char *>(out),
 			     hashsize_);
 
+#ifndef NDEBUG
     std::streamsize result =
+#else
+    (void)
+#endif // ! NDEBUG
       boost::iostreams::write(sink_,
 			      out,
 			      hashsize_);
