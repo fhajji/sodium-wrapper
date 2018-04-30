@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,8 +16,7 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef _S_SEALEDBOX_H_
-#define _S_SEALEDBOX_H_
+#pragma once
 
 #include <sodium.h>
 
@@ -25,14 +24,14 @@
 #include "key.h"
 #include "keypair.h"
 
-namespace Sodium {
+namespace sodium {
 
 class SealedBox {
 
  public:
 
-  static constexpr std::size_t KEYSIZE_PUBKEY  = Sodium::KEYSIZE_PUBKEY;
-  static constexpr std::size_t KEYSIZE_PRIVKEY = Sodium::KEYSIZE_PRIVKEY;
+  static constexpr std::size_t KEYSIZE_PUBKEY  = sodium::KEYSIZE_PUBKEY;
+  static constexpr std::size_t KEYSIZE_PRIVKEY = sodium::KEYSIZE_PRIVKEY;
   static constexpr std::size_t SEALSIZE        = crypto_box_SEALBYTES;
 
   using privkey_type = Key<KEYSIZE_PRIVKEY>;
@@ -61,8 +60,8 @@ class SealedBox {
    * this function here.
    **/
 
-  data_t encrypt(const data_t &plaintext,
-		 const data_t &pubkey);
+  bytes encrypt(const bytes &plaintext,
+		 const bytes &pubkey);
 
   /**
    * Encrypt plaintext using recipient's public key part of
@@ -71,7 +70,7 @@ class SealedBox {
    * Otherwise, see encrypt() above.
    **/
 
-  data_t encrypt(const data_t  &plaintext,
+  bytes encrypt(const bytes &plaintext,
 		 const KeyPair &keypair) {
     return encrypt(plaintext, keypair.pubkey());
   }
@@ -95,12 +94,12 @@ class SealedBox {
    * Both keys must be inter-related, i.e. created either by
    *   - libsodium's crypto_box_[seed_]keypair()
    *   or by
-   *   - Sodium::KeyPair
+   *   - sodium::KeyPair
    **/
   
-  data_t decrypt(const data_t       &ciphertext_with_seal,
+  bytes decrypt(const bytes &ciphertext_with_seal,
 		 const privkey_type &privkey,
-		 const data_t       &pubkey);
+		 const bytes &pubkey);
 
   /**
    * Decrypt the sealed ciphertext with the private key part privkey,
@@ -111,7 +110,7 @@ class SealedBox {
    * Otherwise, see decrypt() above.
    **/
   
-  data_t decrypt(const data_t  &ciphertext_with_seal,
+  bytes decrypt(const bytes &ciphertext_with_seal,
 		 const KeyPair &keypair) {
     return decrypt(ciphertext_with_seal,
 		   keypair.privkey(),
@@ -119,6 +118,4 @@ class SealedBox {
   }
 };
 
-} // namespace Sodium
- 
-#endif // _S_SEALEDBOX_H_
+} // namespace sodium

@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,14 +16,13 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef _S_XSALSA20_FILTER_H_
-#define _S_XSALSA20_FILTER_H_
-
-#include <boost/iostreams/filter/symmetric.hpp>
-#include <boost/iostreams/pipeline.hpp>
+#pragma once
 
 #include "key.h"
 #include "nonce.h"
+
+#include <boost/iostreams/filter/symmetric.hpp>
+#include <boost/iostreams/pipeline.hpp>
 
 #include <cstddef>       // std::ptrdiff_t
 #include <stdexcept>     // std::runtime_error
@@ -38,7 +37,7 @@
 
 namespace io = boost::iostreams;
 
-namespace Sodium {
+namespace sodium {
 
 class xsalsa20_symmetric_filter
 {
@@ -50,8 +49,8 @@ class xsalsa20_symmetric_filter
    **/
 
  public:
-  static constexpr std::size_t KEYSIZE   = Sodium::KEYSIZE_XSALSA20;
-  static constexpr std::size_t NONCESIZE = Sodium::NONCESIZE_XSALSA20;
+  static constexpr std::size_t KEYSIZE   = sodium::KEYSIZE_XSALSA20;
+  static constexpr std::size_t NONCESIZE = sodium::NONCESIZE_XSALSA20;
   static constexpr std::size_t BLOCKSIZE = 64; // Salsa20 blocksize
   
   typedef char char_type; // !!! char, not unsigned char
@@ -125,7 +124,7 @@ class xsalsa20_symmetric_filter
 				      nonce_.data(),
 				      ic,
 				      key_.data()) == -1)
-      throw std::runtime_error {"Sodium::xsalsa20_filter::filter() crypto_stream_xsalsa20_xor_ic() -1"};
+      throw std::runtime_error {"sodium::xsalsa20_filter::filter() crypto_stream_xsalsa20_xor_ic() -1"};
 
 #ifndef NDEBUG
     std::cerr << "xsalsa20_symmetric_filter::filter("
@@ -150,7 +149,7 @@ class xsalsa20_symmetric_filter
 
     // assert that post condition holds:
     if (i1!=i2 && o1!=o2)
-      throw std::runtime_error {"Sodium::xsalsa20_filter::filter() postcondition failed"};
+      throw std::runtime_error {"sodium::xsalsa20_filter::filter() postcondition failed"};
     
     // call again, if there is more data to filter
     return i1 != i2;
@@ -196,12 +195,12 @@ class xsalsa20_filter : public io::symmetric_filter<xsalsa20_symmetric_filter>
    *   #include <boost/iostreams/device/array.hpp>
    *   #include <boost/iostreams/filtering_stream.hpp>
    *
-   *   using data_t = Sodium::data2_t; 
-   *   use Sodium::xsalsa20_filter;
+   *   using chars = sodium::chars; 
+   *   using sodium::xsalsa20_filter;
    * 
    *   namespace io = boost::iostreams;
    * 
-   *   data_t plainblob { plaintext.cbegin(), plaintext.cend() };
+   *   chars plainblob { plaintext.cbegin(), plaintext.cend() };
    * 
    *   xsalsa20_filter::key_type   key;   // Create a random key
    *   xsalsa20_filter::nonce_type nonce; // Create a random nonce
@@ -209,7 +208,7 @@ class xsalsa20_filter : public io::symmetric_filter<xsalsa20_symmetric_filter>
    *   xsalsa20_filter encrypt_filter {10, key, nonce};
    *   xsalsa20_filter decrypt_filter {12, key, nonce};
    * 
-   *   data_t decrypted(plaintext.size());
+   *   chars decrypted(plaintext.size());
    * 
    * <---- If using as an OutputFilter:
    *
@@ -296,12 +295,12 @@ class xsalsa20_filter : public io::symmetric_filter<xsalsa20_symmetric_filter>
  *   #include <boost/iostreams/tee.hpp>
  *   #include <boost/iostreams/filtering_stream.hpp>
  *
- *   using Sodium::xsalsa20_filter;
- *   using data_t = Sodium::data2_t;
+ *   using sodium::xsalsa20_filter;
+ *   using chars = Sodium::chars;
  * 
  *   namespace io = boost::iostreams;
  * 
- *   data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
+ *   chars plainblob {plaintext.cbegin(), plaintext.cend()};
  * 
  *   xsalsa20_filter::key_type   key;   // Create a random key
  *   xsalsa20_filter::nonce_type nonce; // Create a random nonce
@@ -325,7 +324,5 @@ class xsalsa20_filter : public io::symmetric_filter<xsalsa20_symmetric_filter>
  **/
  
 BOOST_IOSTREAMS_PIPABLE(xsalsa20_filter, 0)
-  
-} // namespace Sodium
-
-#endif // _S_XSALSA20_FILTER_H_
+ 
+} // namespace sodium

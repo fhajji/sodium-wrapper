@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,10 +16,7 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef _S_STREAMSIGNORPK_H_
-#define _S_STREAMSIGNORPK_H_
-
-#include <sodium.h>
+#pragma once
 
 #include "common.h"
 #include "key.h"
@@ -29,12 +26,14 @@
 #include <istream>
 #include <ostream>
 
-namespace Sodium {
+#include <sodium.h>
+
+namespace sodium {
 
 class StreamSignorPK {
  public:
 
-  static constexpr std::size_t KEYSIZE_PRIVKEY  = Sodium::KEYSIZE_PRIVKEY_SIGN;
+  static constexpr std::size_t KEYSIZE_PRIVKEY  = sodium::KEYSIZE_PRIVKEY_SIGN;
   static constexpr std::size_t SIGNATURE_SIZE   = crypto_sign_BYTES;
 
   using privkey_type = Key<KEYSIZE_PRIVKEY>;
@@ -54,7 +53,7 @@ class StreamSignorPK {
 		 const std::size_t  blocksize) :
     privkey_ {privkey}, blocksize_ {blocksize} {
       if (blocksize < 1)
-	throw std::runtime_error {"Sodium::StreamSignorPK() wrong blocksize"};
+	throw std::runtime_error {"sodium::StreamSignorPK() wrong blocksize"};
 
       crypto_sign_init(&state_);
   }
@@ -73,7 +72,7 @@ class StreamSignorPK {
 		 const std::size_t blocksize) :
     privkey_ {keypair.privkey()}, blocksize_ {blocksize} {
       if (blocksize < 1)
-	throw std::runtime_error {"Sodium::StreamSignorPK() wrong blocksize"};
+	throw std::runtime_error {"sodium::StreamSignorPK() wrong blocksize"};
       
       crypto_sign_init(&state_);
   }
@@ -91,7 +90,7 @@ class StreamSignorPK {
    * sign() will throw a std::runtime_error if the istr fails.
    **/
   
-  data_t sign(std::istream &istr);
+  bytes sign(std::istream &istr);
   
  private:
   privkey_type      privkey_;
@@ -99,6 +98,4 @@ class StreamSignorPK {
   std::size_t       blocksize_;
 };
 
-} // namespace Sodium
-
-#endif // _S_STREAMSIGNORPK_H_
+} // namespace sodium

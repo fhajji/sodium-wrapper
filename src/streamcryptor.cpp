@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -18,24 +18,24 @@
 
 #include "streamcryptor.h"
 
-using data_t = Sodium::data_t;
-using Sodium::StreamCryptor;
-using Sodium::CryptorAEAD;
+using bytes = sodium::bytes;
+using sodium::StreamCryptor;
+using sodium::CryptorAEAD;
 
 void
 StreamCryptor::encrypt(std::istream &istr, std::ostream &ostr)
 {
-  data_t plaintext(blocksize_, '\0');
+  bytes plaintext(blocksize_, '\0');
   CryptorAEAD::nonce_type running_nonce {nonce_};
   
   while (istr.read(reinterpret_cast<char *>(plaintext.data()), blocksize_)) {
-    data_t ciphertext = sc_aead_.encrypt(header_, plaintext,
+    bytes ciphertext = sc_aead_.encrypt(header_, plaintext,
 					 key_, running_nonce);
     running_nonce.increment();
 
     ostr.write(reinterpret_cast<char *>(ciphertext.data()), ciphertext.size());
     if (!ostr)
-      throw std::runtime_error {"Sodium::StreamCryptor::encrypt() error writing full chunk to stream"};
+      throw std::runtime_error {"sodium::StreamCryptor::encrypt() error writing full chunk to stream"};
   }
 
   // check to see if we've read a final partial chunk
@@ -44,31 +44,31 @@ StreamCryptor::encrypt(std::istream &istr, std::ostream &ostr)
     if (s != plaintext.size())
       plaintext.resize(s);
 
-    data_t ciphertext = sc_aead_.encrypt(header_, plaintext,
+    bytes ciphertext = sc_aead_.encrypt(header_, plaintext,
 					 key_, running_nonce);
     // running_nonce.increment() not needed anymore...
     ostr.write(reinterpret_cast<char *>(ciphertext.data()), ciphertext.size());
     if (!ostr)
-      throw std::runtime_error {"Sodium::StreamCryptor::encrypt() error writing final chunk to stream"};
+      throw std::runtime_error {"sodium::StreamCryptor::encrypt() error writing final chunk to stream"};
   }
 }
 
 void
 StreamCryptor::decrypt(std::istream &istr, std::ostream &ostr)
 {
-  data_t ciphertext(MACSIZE + blocksize_, '\0');
+  bytes ciphertext(MACSIZE + blocksize_, '\0');
   CryptorAEAD::nonce_type running_nonce {nonce_};   // restart with saved nonce_
 
   while (istr.read(reinterpret_cast<char *>(ciphertext.data()),
 		   MACSIZE + blocksize_)) {
     // we've got a whole MACSIZE + blocksize_ chunk
-    data_t plaintext = sc_aead_.decrypt(header_, ciphertext,
+    bytes plaintext = sc_aead_.decrypt(header_, ciphertext,
 					key_, running_nonce);
     running_nonce.increment();
 
     ostr.write(reinterpret_cast<char *>(plaintext.data()), plaintext.size());
     if (!ostr)
-      throw std::runtime_error {"Sodium::StreamCryptor::decrypt() error writing full chunk to stream"};
+      throw std::runtime_error {"sodium::StreamCryptor::decrypt() error writing full chunk to stream"};
   }
 
   // check to see if we've read a final partial chunk
@@ -78,12 +78,12 @@ StreamCryptor::decrypt(std::istream &istr, std::ostream &ostr)
     if (s != ciphertext.size())
       ciphertext.resize(s);
 
-    data_t plaintext = sc_aead_.decrypt(header_, ciphertext,
+    bytes plaintext = sc_aead_.decrypt(header_, ciphertext,
 					key_, running_nonce);
     // no need to running_nonce.increment() anymore...
 
     ostr.write(reinterpret_cast<char *>(plaintext.data()), plaintext.size());
     if (!ostr)
-      throw std::runtime_error {"Sodium::StreamCryptor::decrypt() error writing final chunk to stream"};
+      throw std::runtime_error {"sodium::StreamCryptor::decrypt() error writing final chunk to stream"};
   }
 }

@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,18 +16,18 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef _S_AUTH_VERIFY_FILTER_H_
-#define _S_AUTH_VERIFY_FILTER_H_
+#pragma once
+
+#include "common.h"
+#include "key.h"
+#include "auth.h"
+
+#include <stdexcept>
+#include <sodium.h>
 
 #include <boost/iostreams/categories.hpp>       // tags
 #include <boost/iostreams/filter/aggregate.hpp> // aggregate_filter
 
-#include <stdexcept>
-
-#include <sodium.h>
-#include "common.h"
-#include "key.h"
-#include "auth.h"
 
 #ifndef NDEBUG
 #include <iostream>
@@ -35,7 +35,7 @@
 
 namespace io = boost::iostreams;
 
-namespace Sodium {
+namespace sodium {
 
 class auth_verify_filter : public io::aggregate_filter<char> {
 
@@ -45,12 +45,12 @@ class auth_verify_filter : public io::aggregate_filter<char> {
    *     #include <boost/iostreams/device/array.hpp>
    *     #include <boost/iostreams/filtering_stream.hpp>
    * 
-   *     using Sodium::auth_mac_filter;
-   *     using data_t = Sodium::data2_t;
+   *     using sodium::auth_mac_filter;
+   *     using chars = sodium::chars;
    * 
    *     std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-   *     data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
-   *     data_t      mac = ... // computed earlier
+   *     chars       plainblob {plaintext.cbegin(), plaintext.cend()};
+   *     chars       mac = ... // computed earlier
    *     auth_verify_filter::key_type key { ... }; // same as key used earlier
    * 
    * <---- If using as an OutputFilter:
@@ -59,7 +59,7 @@ class auth_verify_filter : public io::aggregate_filter<char> {
    * 
    *     auth_verify_filter verify_filter {key, mac};   // create a MAC verifier filter
    *    
-   *     data_t result(1); // where to store result
+   *     chars result(1); // where to store result
    * 
    *     io::array_sink        sink {result.data(), result.size()};
    *     io::filtering_ostream os   {};
@@ -111,7 +111,7 @@ class auth_verify_filter : public io::aggregate_filter<char> {
   public:
     typedef typename base_type::char_type   char_type;
     typedef typename base_type::category    category;
-    typedef typename base_type::vector_type vector_type; // data2_t
+    typedef typename base_type::vector_type vector_type; // sodium::chars
 
     static constexpr std::size_t MACSIZE = Auth::MACSIZE;
     using key_type = Auth::key_type;
@@ -120,7 +120,7 @@ class auth_verify_filter : public io::aggregate_filter<char> {
       key_ {key}, mac_ {mac}
     {
       if (mac.size() != MACSIZE)
-	throw std::runtime_error {"Sodium::auth_verify_filter::auth_verify_filter() wrong MAC size"};
+	throw std::runtime_error {"sodium::auth_verify_filter::auth_verify_filter() wrong MAC size"};
     }
 
     virtual ~auth_verify_filter()
@@ -134,7 +134,7 @@ class auth_verify_filter : public io::aggregate_filter<char> {
 #endif // ! NDEBUG
 
       if (mac_.size() != MACSIZE)
-	throw std::runtime_error {"Sodium::auth_verify_filter::do_filter() mac wrong size"};
+	throw std::runtime_error {"sodium::auth_verify_filter::do_filter() mac wrong size"};
 
       // Verify MAC against src.
       bool result = crypto_auth_verify(reinterpret_cast<const unsigned char *>(mac_.data()),
@@ -153,6 +153,4 @@ class auth_verify_filter : public io::aggregate_filter<char> {
     vector_type mac_;
 }; // auth_verify_filter
 
-} //namespace Sodium
-
-#endif // _S_AUTH_VERIFY_FILTER_H_
+} //namespace sodium

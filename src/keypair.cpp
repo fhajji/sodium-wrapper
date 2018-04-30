@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,16 +16,16 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#include <sodium.h>
 #include "keypair.h"
+#include <sodium.h>
 
-using Sodium::KeyPair;
+using sodium::KeyPair;
 
 bool operator== (const KeyPair &kp1, const KeyPair &kp2)
 {
   // Compare pubkeys in constant time
   // (privkeys are also compared in constant time
-  // using Sodium::Key<KEYSIZE_PRIVKEY>::operator==()):
+  // using sodium::Key<KEYSIZE_PRIVKEY>::operator==()):
   return (kp1.pubkey().size() == kp2.pubkey().size()
 	  &&
 	  (sodium_memcmp(kp1.pubkey().data(), kp2.pubkey().data(),

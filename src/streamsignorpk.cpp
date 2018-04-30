@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -21,13 +21,13 @@
 
 #include <istream>
 
-using data_t = Sodium::data_t;
-using Sodium::StreamSignorPK;
+using bytes = sodium::bytes;
+using sodium::StreamSignorPK;
 
-data_t
+bytes
 StreamSignorPK::sign(std::istream &istr)
 {
-  data_t plaintext(blocksize_, '\0');
+  bytes plaintext(blocksize_, '\0');
 
   while (istr.read(reinterpret_cast<char *>(plaintext.data()), blocksize_)) {
     // read a whole block of blocksize_ chars (bytes)
@@ -44,7 +44,7 @@ StreamSignorPK::sign(std::istream &istr)
   }
 
   // finalize the signature
-  data_t signature(SIGNATURE_SIZE);
+  bytes signature(SIGNATURE_SIZE);
   crypto_sign_final_create(&state_, signature.data(), NULL, privkey_.data());
 
   // reset the state for next invocation of sign()

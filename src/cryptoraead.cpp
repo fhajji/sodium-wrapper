@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -20,17 +20,17 @@
 
 #include <stdexcept>
 
-using data_t = Sodium::data_t;
-using Sodium::CryptorAEAD;
+using bytes = sodium::bytes;
+using sodium::CryptorAEAD;
 
-data_t
-CryptorAEAD::encrypt (const data_t     &header,
-		      const data_t     &plaintext,
+bytes
+CryptorAEAD::encrypt (const bytes &header,
+		      const bytes      &plaintext,
 		      const key_type   &key,
 		      const nonce_type &nonce)
 {
   // make space for MAC and encrypted message, i.e. (MAC || encrypted)
-  data_t ciphertext(MACSIZE + plaintext.size());
+  bytes ciphertext(MACSIZE + plaintext.size());
 
   // so many bytes will really be written into output buffer
   unsigned long long clen;
@@ -47,18 +47,18 @@ CryptorAEAD::encrypt (const data_t     &header,
   return ciphertext;
 }
 
-data_t
-CryptorAEAD::decrypt (const data_t     &header,
-		      const data_t     &ciphertext_with_mac,
+bytes
+CryptorAEAD::decrypt (const bytes &header,
+		      const bytes         &ciphertext_with_mac,
 		      const key_type   &key,
 		      const nonce_type &nonce)
 {
   // some sanity checks before we get started
   if (ciphertext_with_mac.size() < MACSIZE)
-    throw std::runtime_error {"Sodium::CryptorAEAD::decrypt() ciphertext length too small for a tag"};
+    throw std::runtime_error {"sodium::CryptorAEAD::decrypt() ciphertext length too small for a tag"};
 
   // make space for decrypted buffer
-  data_t plaintext(ciphertext_with_mac.size() - MACSIZE);
+  bytes plaintext(ciphertext_with_mac.size() - MACSIZE);
 
   // how many bytes we decrypt
   unsigned long long mlen;
@@ -70,7 +70,7 @@ CryptorAEAD::decrypt (const data_t     &header,
 					    (header.empty() ? nullptr : header.data()), header.size(),
 					    nonce.data(),
 					    key.data()) == -1)
-    throw std::runtime_error {"Sodium::CryptorAEAD::decrypt() can't decrypt or message/tag corrupt"};
+    throw std::runtime_error {"sodium::CryptorAEAD::decrypt() can't decrypt or message/tag corrupt"};
   plaintext.resize(static_cast<std::size_t>(mlen));
 
   return plaintext;

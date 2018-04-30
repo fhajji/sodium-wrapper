@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -21,14 +21,14 @@
 
 #include <istream>
 
-using data_t = Sodium::data_t;
-using Sodium::StreamVerifierPK;
+using bytes = sodium::bytes;
+using sodium::StreamVerifierPK;
 
 bool
 StreamVerifierPK::verify(std::istream &istr,
-			 const data_t &signature)
+			 const bytes &signature)
 {
-  data_t plaintext(blocksize_, '\0');
+  bytes plaintext(blocksize_, '\0');
 
   while (istr.read(reinterpret_cast<char *>(plaintext.data()), blocksize_)) {
     // read a whole block of blocksize_ chars (bytes)
@@ -46,7 +46,7 @@ StreamVerifierPK::verify(std::istream &istr,
 
   // XXX: since crypto_sign_final_verify() doesn't accept a const
   // signature, we need to copy signature beforehand
-  data_t signature_copy {signature};
+  bytes signature_copy {signature};
   
   // finalize and compare signatures
   if (crypto_sign_final_verify(&state_,

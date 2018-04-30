@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,21 +16,20 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef _S_AUTH_H_
-#define _S_AUTH_H_
+#pragma once
 
-#include <sodium.h>
 #include "common.h"
 #include "key.h"
+#include <sodium.h>
 
-namespace Sodium {
+namespace sodium {
 
 class Auth
 {
  public:
 
   // Some common constants for typical key and MAC sizes from <sodium.h>
-  static constexpr std::size_t KEYSIZE_AUTH = Sodium::KEYSIZE_AUTH;
+  static constexpr std::size_t KEYSIZE_AUTH = sodium::KEYSIZE_AUTH;
   static constexpr std::size_t MACSIZE      = crypto_auth_BYTES;
 
   // Member type aliases
@@ -43,7 +42,7 @@ class Auth
    * The returned MAC is MACSIZE bytes long.
    **/
 
-  data_t auth(const data_t   &plaintext,
+  bytes auth(const bytes &plaintext,
 	      const key_type &key);
 
   /**
@@ -56,11 +55,9 @@ class Auth
    * of the mac don't make sense.
    **/
 
-  bool verify(const data_t   &plaintext,
-	      const data_t   &mac,
+  bool verify(const bytes &plaintext,
+	      const bytes &mac,
 	      const key_type &key);
 };
 
-} // namespace Sodium
- 
-#endif // _S_AUTH_H_
+} // namespace sodium

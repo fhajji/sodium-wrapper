@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,16 +16,16 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef _S_AUTH_MAC_FILTER_H_
-#define _S_AUTH_MAC_FILTER_H_
+#pragma once
 
 #include <boost/iostreams/categories.hpp>       // tags
 #include <boost/iostreams/filter/aggregate.hpp> // aggregate_filter
 
-#include <sodium.h>
 #include "common.h"
 #include "key.h"
 #include "auth.h"
+
+#include <sodium.h>
 
 #ifndef NDEBUG
 #include <iostream>
@@ -33,7 +33,7 @@
 
 namespace io = boost::iostreams;
 
-namespace Sodium {
+namespace sodium {
 
 class auth_mac_filter : public io::aggregate_filter<char> {
 
@@ -43,11 +43,11 @@ class auth_mac_filter : public io::aggregate_filter<char> {
    *     #include <boost/iostreams/device/array.hpp>
    *     #include <boost/iostreams/filtering_stream.hpp>
    * 
-   *     using Sodium::auth_mac_filter;
-   *     using data_t = Sodium::data2_t;
+   *     using sodium::auth_mac_filter;
+   *     using chars = sodium::chars;
    * 
    *     std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-   *     data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
+   *     chars       plainblob {plaintext.cbegin(), plaintext.cend()};
    * 
    * <---- If using as an OutputFilter:
    * 
@@ -56,7 +56,7 @@ class auth_mac_filter : public io::aggregate_filter<char> {
    *     auth_mac_filter::key_type  key;       // Create a random key
    *     auth_mac_filter mac_filter {key};     // create a MAC creator filter
    * 
-   *     data_t mac(auth_mac_filter::MACSIZE); // where to store MAC
+   *     chars mac(auth_mac_filter::MACSIZE);  // where to store MAC
    * 
    *     io::array_sink        sink {mac.data(), mac.size()};
    *     io::filtering_ostream os   {};
@@ -81,7 +81,7 @@ class auth_mac_filter : public io::aggregate_filter<char> {
    *     auth_mac_filter::key_type  key;       // Create a random key
    *     auth_mac_filter mac_filter {key};     // create a MAC creator filter
    * 
-   *     data_t mac(auth_mac_filter::MACSIZE); // where to store MAC
+   *     chars mac(auth_mac_filter::MACSIZE);  // where to store MAC
    * 
    *     io::array_source      source {plainblob.data(), plainblob.size()};
    *     io::filtering_istream is   {};
@@ -105,7 +105,7 @@ class auth_mac_filter : public io::aggregate_filter<char> {
   public:
     typedef typename base_type::char_type   char_type;
     typedef typename base_type::category    category;
-    typedef typename base_type::vector_type vector_type; // data2_t
+    typedef typename base_type::vector_type vector_type; // sodium::chars
   
     static constexpr std::size_t MACSIZE = Auth::MACSIZE;
     using key_type = Auth::key_type;
@@ -141,6 +141,4 @@ class auth_mac_filter : public io::aggregate_filter<char> {
     key_type key_;
 }; // auth_mac_filter
 
-} //namespace Sodium
-
-#endif // _S_AUTH_MAC_FILTER_H_
+} //namespace sodium

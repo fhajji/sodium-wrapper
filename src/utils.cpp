@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,51 +16,51 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#include <sodium.h>
-#include <string>
 #include "common.h"
 
-using data_t = Sodium::data_t;
+#include <sodium.h>
+#include <string>
+#include <vector>
 
 std::string
-Sodium::tohex (const Sodium::data_t &in)
+sodium::tohex (const sodium::bytes &in)
 {
-  const std::size_t hexbuf_size = in.size() * 2 + 1;
-  std::vector<char> hexbuf(hexbuf_size);
+	const std::size_t hexbuf_size = in.size() * 2 + 1;
+	sodium::chars     hexbuf(hexbuf_size);
   
-  // convert [in.cbegin(), in.cend()) into hex:
-  if (! sodium_bin2hex(hexbuf.data(), hexbuf_size,
-		       in.data(), in.size()))
-    throw std::runtime_error {"Sodium::tohex(data_t) overflowed"};
+	// convert bytes in in into hex using sodium_bin2hex():
+	if (! sodium_bin2hex(hexbuf.data(), hexbuf_size, in.data(), in.size()))
+		throw std::runtime_error {"sodium::tohex(bytes) overflowed"};
 
-  // In C++17, we could construct a std::string with hexbuf_size chars,
-  // and modify it directly through non-const data(). Unfortunately,
-  // in C++11 and C++14, std::string's data() is const only, so we need
-  // to copy the data over from std::vector<char> to std::string for now.
+	// In C++17, we could construct a std::string with hexbuf_size chars,
+	// and modify it directly through non-const data(). Unfortunately,
+	// in C++11 and C++14, std::string's data() is const only, so we need
+	// to copy the data over from sodium::chars to std::string for now.
   
-  // return hex output as a string:
-  std::string outhex {hexbuf.cbegin(), hexbuf.cend()};
-  return outhex;
+	// return hex output as a string:
+	std::string outhex {hexbuf.cbegin(), hexbuf.cend()};
+	return outhex;
 }
 
 std::string
-Sodium::tohex (const Sodium::data2_t &in)
+sodium::tohex (const sodium::chars &in)
 {
-  const std::size_t hexbuf_size = in.size() * 2 + 1;
-  std::vector<char> hexbuf(hexbuf_size);
+	const std::size_t hexbuf_size = in.size() * 2 + 1;
+	sodium::chars     hexbuf(hexbuf_size);
   
-  // convert [in.cbegin(), in.cend()) into hex:
-  if (! sodium_bin2hex(hexbuf.data(), hexbuf_size,
-		       reinterpret_cast<const unsigned char *>(in.data()),
-		       in.size()))
-    throw std::runtime_error {"Sodium::tohex(data2_t) overflowed"};
+	// convert chars in in, interpreted as bytes, into hex
+	// using sodium_bin2hex():
+	if (! sodium_bin2hex(hexbuf.data(), hexbuf_size,
+			reinterpret_cast<const unsigned char *>(in.data()),
+			in.size()))
+		throw std::runtime_error {"sodium::tohex(chars) overflowed"};
 
-  // In C++17, we could construct a std::string with hexbuf_size chars,
-  // and modify it directly through non-const data(). Unfortunately,
-  // in C++11 and C++14, std::string's data() is const only, so we need
-  // to copy the data over from std::vector<char> to std::string for now.
+	// In C++17, we could construct a std::string with hexbuf_size chars,
+	// and modify it directly through non-const data(). Unfortunately,
+	// in C++11 and C++14, std::string's data() is const only, so we need
+	// to copy the data over from sodium::chars to std::string for now.
   
-  // return hex output as a string:
-  std::string outhex {hexbuf.cbegin(), hexbuf.cend()};
-  return outhex;
+	// return hex output as a string:
+	std::string outhex {hexbuf.cbegin(), hexbuf.cend()};
+	return outhex;
 }

@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,13 +16,12 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef _S_NONCE_H_
-#define _S_NONCE_H_
+#pragma once
 
-#include <sodium.h>
 #include "common.h"
+#include <sodium.h>
 
-namespace Sodium {
+namespace sodium {
 
 // Typical values for number of bytes of Nonces (from <sodium.h>):
 static constexpr std::size_t NONCESIZE_SECRETBOX = crypto_secretbox_NONCEBYTES;
@@ -37,15 +36,15 @@ template <std::size_t N=NONCESIZE_SECRETBOX>
 class Nonce
 {
   /**
-   * The class Sodium::Nonce<N> represents a nonce with N bytes,
+   * The class sodium::Nonce<N> represents a nonce with N bytes,
    * or N*8 bits length.  A nonce is a big integer number that is
    * supposed to be used only once, thus the name: Number-used-only-ONCE.
    *
    * Nonces SHOULD be generated randomly, and MUST NOT be reused
    * ever again with the same key. They are NOT necessarily secret
    * and can even be sent over an insecure channel. Therefore, Nonces
-   * are kept in regular, non-protected (data_t) memory, unlike
-   * Sodium::Key objects whose data are allocated in protected (key_t)
+   * are kept in regular, non-protected (bytes) memory, unlike
+   * sodium::Key objects whose data are allocated in protected (key_t)
    * memory.
    *
    * This template is parameterized with the number of bytes of the
@@ -62,7 +61,7 @@ class Nonce
    * randombytes_buf().
    *
    * If bool is false, the nonce remains default-initialized to the
-   * default value of data_t, i.e. to zero bytes.
+   * default value of bytes, i.e. to zero bytes.
    **/
  
   Nonce<N>(bool init=true) : noncedata(N) {
@@ -94,14 +93,14 @@ class Nonce
   * this class.
   **/
 
-  const unsigned char *data() const  { return noncedata.data(); }
-  static constexpr std::size_t size() { return N; }
+  const            byte        *data() const { return noncedata.data(); }
+  static constexpr std::size_t  size()       { return N; }
 
   /**
-   * Expose noncedata as const data_t for Sodium::tohex().
+   * Expose noncedata as const bytes for sodium::tohex().
    **/
 
-  const data_t as_data_t() const { return noncedata; }
+  const bytes as_data_t() const { return noncedata; }
  
   /**
    * Increment the Nonce by 1 in constant time.
@@ -136,7 +135,7 @@ class Nonce
   }
  
  private:
-  data_t noncedata; // the bytes of the nonce are stored in normal memory
+  bytes noncedata; // the bytes of the nonce are stored in normal memory
 };
 
 /**
@@ -184,6 +183,4 @@ template<std::size_t N>
   return compare<N>(a, b) >= 0;
 }
 
-} // namespace Sodium
-
-#endif // _S_NONCE_H_
+} // namespace sodium

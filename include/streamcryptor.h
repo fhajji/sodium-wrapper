@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,10 +16,7 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef _S_STREAMCRYPTOR_H_
-#define _S_STREAMCRYPTOR_H_
-
-#include <sodium.h>
+#pragma once
 
 #include "common.h"
 #include "key.h"
@@ -30,7 +27,9 @@
 #include <istream>
 #include <ostream>
 
-namespace Sodium {
+#include <sodium.h>
+
+namespace sodium {
 
 class StreamCryptor {
  public:
@@ -38,7 +37,7 @@ class StreamCryptor {
   /**
    * We encrypt with AEAD.
    **/
-  constexpr static std::size_t KEYSIZE = Sodium::KEYSIZE_AEAD;
+  constexpr static std::size_t KEYSIZE = sodium::KEYSIZE_AEAD;
   
   /**
    * Each block of plaintext will be encrypted to a block of the same
@@ -74,7 +73,7 @@ class StreamCryptor {
   key_ {key}, nonce_ {nonce}, header_ {}, blocksize_ {blocksize} {
     // some sanity checks, before we start
     if (blocksize < 1)
-      throw std::runtime_error {"Sodium::StreamCryptor::StreamCryptor(): wrong blocksize"};
+      throw std::runtime_error {"sodium::StreamCryptor::StreamCryptor(): wrong blocksize"};
     key_.readonly();
   }
 
@@ -151,12 +150,10 @@ class StreamCryptor {
  private:
   CryptorAEAD::key_type   key_;
   CryptorAEAD::nonce_type nonce_;
-  data_t                  header_;
+  bytes                   header_;
   std::size_t             blocksize_;
   
   CryptorAEAD             sc_aead_;
 };
 
-} // namespace Sodium
-
-#endif // _S_STREAMCRYPTOR_H_
+} // namespace sodium

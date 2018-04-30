@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,22 +16,22 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef _S_KEYVAR_H_
-#define _S_KEYVAR_H_
+#pragma once
 
-#include <vector>
-#include <string>
-#include <utility>
 #include "common.h"
 #include "alloc.h"
 #include "key.h"     // for KEYSIZE constants
+#include <vector>
+#include <string>
+#include <utility>
+#include <sodium.h>
 
-namespace Sodium {
+namespace sodium {
 
 class KeyVar
 {
   /**
-   * The class Sodium::KeyVar represents a Key used in various functions
+   * The class sodium::KeyVar represents a Key used in various functions
    * of the libsodium library.  Key material, being particulary sensitive,
    * is stored in "protected memory" using a special allocator.
    *
@@ -58,7 +58,7 @@ class KeyVar
    *     guard pages, and access to those pages is granted with mprotect().
    **/
   
-  using key_t      = std::vector<unsigned char, SodiumAlloc<unsigned char>>;
+  using key_t      = std::vector<byte, SodiumAlloc<byte>>;
   
   // The strengh of the key derivation efforts for setpass()
   using strength_t = enum class Strength { low, medium, high };
@@ -149,7 +149,7 @@ class KeyVar
    *   initialize(), destroy(), setpass().
    **/
 
-  const unsigned char *data() const { return keydata.data(); }
+  const byte          *data() const { return keydata.data(); }
         std::size_t    size() const { return keydata.size(); }
 
   /**
@@ -171,7 +171,7 @@ class KeyVar
    *         it is needed.
    **/
 
-  unsigned char *setdata() { return keydata.data(); }
+  byte *setdata() { return keydata.data(); }
     
   /**
    * Derive key material from the string password, and the salt
@@ -188,7 +188,7 @@ class KeyVar
    **/
 
   void setpass (const std::string &password,
-		const data_t &salt,
+		const bytes &salt,
 		const strength_t strength = strength_t::high) {
     // check strength and set appropriate parameters
     std::size_t strength_mem;
@@ -207,12 +207,12 @@ class KeyVar
       strength_cpu = crypto_pwhash_OPSLIMIT_SENSITIVE;
       break;
     default:
-      throw std::runtime_error {"Sodium::KeyVar::setpass() wrong strength"};
+      throw std::runtime_error {"sodium::KeyVar::setpass() wrong strength"};
     }
 
     // check salt length
     if (salt.size() != KEYSIZE_SALT)
-      throw std::runtime_error {"Sodium::KeyVar::setpass() wrong salt size"};
+      throw std::runtime_error {"sodium::KeyVar::setpass() wrong salt size"};
 
     // derive a key from the hash of the password, and store it!
     readwrite(); // temporarily unlock the key (if not already)
@@ -222,7 +222,7 @@ class KeyVar
 		       strength_cpu,
 		       strength_mem,
 		       crypto_pwhash_ALG_DEFAULT) != 0)
-      throw std::runtime_error {"Sodium::KeyVar::setpass() crypto_pwhash()"};
+      throw std::runtime_error {"sodium::KeyVar::setpass() crypto_pwhash()"};
     readonly(); // relock the key
   }
 
@@ -304,9 +304,7 @@ class KeyVar
   key_t keydata; // the bytes of the key are stored in protected memory
 };
  
-} // namespace Sodium
+} // namespace sodium
 
-extern bool operator== (const Sodium::KeyVar &k1, const Sodium::KeyVar &k2);
-extern bool operator!= (const Sodium::KeyVar &k1, const Sodium::KeyVar &k2);
-
-#endif // _S_KEYVAR_H_
+extern bool operator== (const sodium::KeyVar &k1, const sodium::KeyVar &k2);
+extern bool operator!= (const sodium::KeyVar &k1, const sodium::KeyVar &k2);

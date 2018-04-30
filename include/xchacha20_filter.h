@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,14 +16,13 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef _S_XCHACHA20_FILTER_H_
-#define _S_XCHACHA20_FILTER_H_
-
-#include <boost/iostreams/filter/symmetric.hpp>
-#include <boost/iostreams/pipeline.hpp>
+#pragma once
 
 #include "key.h"
 #include "nonce.h"
+
+#include <boost/iostreams/filter/symmetric.hpp>
+#include <boost/iostreams/pipeline.hpp>
 
 #include <cstddef>       // std::ptrdiff_t
 #include <stdexcept>     // std::runtime_error
@@ -38,7 +37,7 @@
 
 namespace io = boost::iostreams;
 
-namespace Sodium {
+namespace sodium {
 
 class xchacha20_symmetric_filter
 {
@@ -50,8 +49,8 @@ class xchacha20_symmetric_filter
    **/
 
  public:
-  static constexpr std::size_t KEYSIZE   = Sodium::KEYSIZE_XCHACHA20;
-  static constexpr std::size_t NONCESIZE = Sodium::NONCESIZE_XCHACHA20;
+  static constexpr std::size_t KEYSIZE   = sodium::KEYSIZE_XCHACHA20;
+  static constexpr std::size_t NONCESIZE = sodium::NONCESIZE_XCHACHA20;
   static constexpr std::size_t BLOCKSIZE = 64; // XChaCha20 blocksize
   
   typedef char char_type; // !!! char, not unsigned char
@@ -125,7 +124,7 @@ class xchacha20_symmetric_filter
 				       nonce_.data(),
 				       ic,
 				       key_.data()) == -1)
-      throw std::runtime_error {"Sodium::xchacha20_filter::filter() crypto_stream_xchacha20_xor_ic() -1"};
+      throw std::runtime_error {"sodium::xchacha20_filter::filter() crypto_stream_xchacha20_xor_ic() -1"};
 
 #ifndef NDEBUG
     std::cerr << "xchacha20_symmetric_filter::filter("
@@ -150,7 +149,7 @@ class xchacha20_symmetric_filter
 
     // assert that post condition holds:
     if (i1!=i2 && o1!=o2)
-      throw std::runtime_error {"Sodium::xchacha20_filter::filter() postcondition failed"};
+      throw std::runtime_error {"sodium::xchacha20_filter::filter() postcondition failed"};
     
     // call again, if there is more data to filter
     return i1 != i2;
@@ -196,12 +195,12 @@ class xchacha20_filter : public io::symmetric_filter<xchacha20_symmetric_filter>
    *   #include <boost/iostreams/device/array.hpp>
    *   #include <boost/iostreams/filtering_stream.hpp>
    *
-   *   using data_t = Sodium::data2_t; 
-   *   using Sodium::xchacha20_filter;
+   *   using chars = sodium::chars; 
+   *   using sodium::xchacha20_filter;
    * 
    *   namespace io = boost::iostreams;
    * 
-   *   data_t plainblob { plaintext.cbegin(), plaintext.cend() };
+   *   chars plainblob { plaintext.cbegin(), plaintext.cend() };
    * 
    *   xchacha20_filter::key_type   key;   // Create a random key
    *   xchacha20_filter::nonce_type nonce; // Create a random nonce
@@ -296,12 +295,12 @@ class xchacha20_filter : public io::symmetric_filter<xchacha20_symmetric_filter>
  *   #include <boost/iostreams/tee.hpp>
  *   #include <boost/iostreams/filtering_stream.hpp>
  *
- *   using Sodium::xchacha20_filter;
- *   using data_t = Sodium::data2_t;
+ *   using sodium::xchacha20_filter;
+ *   using chars = sodium::chars;
  * 
  *   namespace io = boost::iostreams;
  * 
- *   data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
+ *   chars plainblob {plaintext.cbegin(), plaintext.cend()};
  * 
  *   xchacha20_filter::key_type   key;   // Create a random key
  *   xchacha20_filter::nonce_type nonce; // Create a random nonce
@@ -325,7 +324,5 @@ class xchacha20_filter : public io::symmetric_filter<xchacha20_symmetric_filter>
  **/
  
 BOOST_IOSTREAMS_PIPABLE(xchacha20_filter, 0)
-  
-} // namespace Sodium
 
-#endif // _S_XCHACHA20_FILTER_H_
+} // namespace sodium

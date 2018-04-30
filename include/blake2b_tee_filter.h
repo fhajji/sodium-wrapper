@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,12 +16,9 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef _S_BLAKE2B_FILTER_H_
-#define _S_BLAKE2B_FILTER_H_
+#pragma once
 
-#if defined(_MSC_VER)
-# pragma once
-#endif
+#include "keyvar.h"
 
 #include <boost/assert.hpp>
 #include <boost/config.hpp>  // BOOST_DEDUCE_TYPENAME.
@@ -38,8 +35,6 @@
 #include <boost/type_traits/is_convertible.hpp>
 #include <boost/type_traits/is_same.hpp>
 
-#include "keyvar.h"
-
 #include <stdexcept>     // std::runtime_error
 #include <sodium.h>
 
@@ -50,7 +45,7 @@
 
 using namespace boost::iostreams;
 
-namespace Sodium {
+namespace sodium {
 
 /**
  * blake2b_tee_filter<Device>
@@ -82,8 +77,8 @@ namespace Sodium {
  * 
  * namespace io = boost::iostreams;
  * 
- * using Sodium::blake2b_tee_filter;
- * using data_t = Sodium::data2_t;
+ * using sodium::blake2b_tee_filter;
+ * using chars = sodium::chars;
  * 
  * // a filter which outputs to io::file_sink and tee-s to io::file_sink
  * using blake2b_to_file_type  = blake2b_tee_filter<io::file_sink>;
@@ -92,7 +87,7 @@ namespace Sodium {
  * blake2b_to_vector_type::key_type key(blake2b_to_vector_type::KEYSIZE);
  * 
  * std::string plaintext {"the quick brown fox jumps over the lazy dog"};
- * data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+ * chars       plainblob {plaintext.cbegin(), plaintext.cend()};
  * 
  * io::file_sink blake2bfile {"/var/tmp/blake2b.hash",
  *                             std::ios_base::out | std::ios_base::binary };
@@ -143,15 +138,15 @@ class blake2b_tee_filter : public detail::filter_adapter<Device>
                          >::value
   ));
 
-  static constexpr std::size_t KEYSIZE      = Sodium::KEYSIZE_HASHKEY;
-  static constexpr std::size_t KEYSIZE_MIN  = Sodium::KEYSIZE_HASHKEY_MIN;
-  static constexpr std::size_t KEYSIZE_MAX  = Sodium::KEYSIZE_HASHKEY_MAX;
+  static constexpr std::size_t KEYSIZE      = sodium::KEYSIZE_HASHKEY;
+  static constexpr std::size_t KEYSIZE_MIN  = sodium::KEYSIZE_HASHKEY_MIN;
+  static constexpr std::size_t KEYSIZE_MAX  = sodium::KEYSIZE_HASHKEY_MAX;
   static constexpr std::size_t HASHSIZE     = crypto_generichash_BYTES;
   static constexpr std::size_t HASHSIZE_MIN = crypto_generichash_BYTES_MIN;
   static constexpr std::size_t HASHSIZE_MAX = crypto_generichash_BYTES_MAX;
 
   using key_type  = KeyVar;
-  using hash_type = data2_t; // of hashsize_ elements
+  using hash_type = sodium::chars; // of hashsize_ elements
   
   /**
    * Construct a blake2b_tee_filter which passes all data through from
@@ -178,14 +173,14 @@ class blake2b_tee_filter : public detail::filter_adapter<Device>
   {
     // Some sanity checks first regarding the key and desired size
     if (key.size() != 0 && key.size() < KEYSIZE_MIN)
-      throw std::runtime_error {"Sodium::blake2b_tee_filter::blake2b_tee_filter() key size too small"};
+      throw std::runtime_error {"sodium::blake2b_tee_filter::blake2b_tee_filter() key size too small"};
     if (key.size() != 0 && key.size() > KEYSIZE_MAX)
-      throw std::runtime_error {"Sodium::blake2b_tee_filter::blake2b_tee_filter() key size too big"};
+      throw std::runtime_error {"sodium::blake2b_tee_filter::blake2b_tee_filter() key size too big"};
 
     if (hashsize < HASHSIZE_MIN)
-      throw std::runtime_error {"Sodium::blake2b_tee_filter::blake2b_tee_filter() hash size too small"};
+      throw std::runtime_error {"sodium::blake2b_tee_filter::blake2b_tee_filter() hash size too small"};
     if (hashsize > HASHSIZE_MAX)
-      throw std::runtime_error {"Sodium::blake2b_tee_filter::blake2b_tee_filter() hash size too big"};
+      throw std::runtime_error {"sodium::blake2b_tee_filter::blake2b_tee_filter() hash size too big"};
 
     // initialize the BLAKE2b state machine
     if (key.size() != 0)
@@ -194,7 +189,7 @@ class blake2b_tee_filter : public detail::filter_adapter<Device>
       crypto_generichash_init(&state_, NULL, 0, hashsize_);
 
 #ifndef NDEBUG
-    std::cerr << "Sodium::blake2b_tee_filter::blake2b_tee_filter() called"
+    std::cerr << "sodium::blake2b_tee_filter::blake2b_tee_filter() called"
 	      << std::endl;
 #endif // ! NDEBUG
   }
@@ -221,15 +216,15 @@ class blake2b_tee_filter : public detail::filter_adapter<Device>
   {
     // Some sanity checks first regarding the desired size
     if (hashsize < HASHSIZE_MIN)
-      throw std::runtime_error {"Sodium::blake2b_tee_filter::blake2b_tee_filter(keyless) hash size too small"};
+      throw std::runtime_error {"sodium::blake2b_tee_filter::blake2b_tee_filter(keyless) hash size too small"};
     if (hashsize > HASHSIZE_MAX)
-      throw std::runtime_error {"Sodium::blake2b_tee_filter::blake2b_tee_filterkeyless) hash size too big"};
+      throw std::runtime_error {"sodium::blake2b_tee_filter::blake2b_tee_filterkeyless) hash size too big"};
 
     // initialize the BLAKE2b state machine (keyless version)
     crypto_generichash_init(&state_, NULL, 0, hashsize_);
 
 #ifndef NDEBUG
-    std::cerr << "Sodium::blake2b_tee_filter::blake2b_tee_filter(keyless) called"
+    std::cerr << "sodium::blake2b_tee_filter::blake2b_tee_filter(keyless) called"
 	      << std::endl;
 #endif // ! NDEBUG
   }
@@ -243,7 +238,7 @@ class blake2b_tee_filter : public detail::filter_adapter<Device>
      * Need to better understand when read() is invoked!
      **/
     
-    throw std::runtime_error {"Sodium::blake2b_tee_filter::read() called. FIXME!"};
+    throw std::runtime_error {"sodium::blake2b_tee_filter::read() called. FIXME!"};
     
     // Read (up to) n chars from src into buffer s
     // and update the BLAKE2b state machine for this chunk
@@ -252,7 +247,7 @@ class blake2b_tee_filter : public detail::filter_adapter<Device>
     std::streamsize result = boost::iostreams::read(src, s, n);
 
 #ifndef NDEBUG
-    std::cerr << "WARNING !!! Sodium::blake2b_tee_filter::read() called "
+    std::cerr << "WARNING !!! sodium::blake2b_tee_filter::read() called "
 	      << "[n=" << n << "] "
 	      << '\n';
     if (result != -1) {
@@ -288,7 +283,7 @@ class blake2b_tee_filter : public detail::filter_adapter<Device>
 
 #ifndef NDEBUG
     std::string s_as_string {s, s+result};
-    std::cerr << "Sodium::blake2b_tee_filter::write() called "
+    std::cerr << "sodium::blake2b_tee_filter::write() called "
 	      << "[n=" << n << "] "
 	      << "[s=" << s_as_string << "] "
 	      << "[result=" << result << "]"
@@ -331,7 +326,7 @@ class blake2b_tee_filter : public detail::filter_adapter<Device>
 #ifndef NDEBUG
     hash_type   out_as_hash_type_var {out, out+hashsize_};
     std::string out_as_hex_string    {tohex(out_as_hash_type_var)};
-    std::cerr << "Sodium::blake2b_tee_filter::close() called "
+    std::cerr << "sodium::blake2b_tee_filter::close() called "
 	      << "[result="   << result << "], "
 	      << "[hashsize=" << hashsize_ << "]" << '\n'
 	      << "  [out="    << out_as_hex_string << "]"
@@ -359,7 +354,7 @@ class blake2b_tee_filter : public detail::filter_adapter<Device>
     bool r2 = boost::iostreams::flush(this->component()); // actually a NO-OP
 
 #ifndef NDEBUG
-    std::cerr << "Sodium::blake2b_tee_filter::flush() called "
+    std::cerr << "sodium::blake2b_tee_filter::flush() called "
 	      << "[r1=" << r1 << ",r2=" << r2 << "]"
 	      << std::endl;
 #endif // ! NDEBUG
@@ -433,8 +428,8 @@ blake2b_tee_filter<Sink> blake2b_tee(const Sink& snk,
  * 
  * namespace io = boost::iostreams;
  * 
- * using Sodium::blake2b_tee_device;
- * using data_t = Sodium::data2_t;
+ * using sodium::blake2b_tee_device;
+ * using chars = sodium::chars;
  * 
  * using hash_array_type = typename blake2b_tee_filter<io::null_sink>::hash_type;
  * using vector_sink    = io::back_insert_device<hash_array_type>;
@@ -446,7 +441,7 @@ blake2b_tee_filter<Sink> blake2b_tee(const Sink& snk,
  * blake2b_to_vector_type::key_type key(blake2b_to_vector_type::KEYSIZE);
  * 
  * std::string plaintext {"the quick brown fox jumps over the lazy dog"};
- * data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+ * chars       plainblob {plaintext.cbegin(), plaintext.cend()};
  *
  * hash_array_type hash; // will grow
  * vector_sink     blake2b_sink(hash);
@@ -536,15 +531,15 @@ public:
     optimally_buffered_tag
       { };
 
-  static constexpr std::size_t KEYSIZE      = Sodium::KEYSIZE_HASHKEY;
-  static constexpr std::size_t KEYSIZE_MIN  = Sodium::KEYSIZE_HASHKEY_MIN;
-  static constexpr std::size_t KEYSIZE_MAX  = Sodium::KEYSIZE_HASHKEY_MAX;
+  static constexpr std::size_t KEYSIZE      = sodium::KEYSIZE_HASHKEY;
+  static constexpr std::size_t KEYSIZE_MIN  = sodium::KEYSIZE_HASHKEY_MIN;
+  static constexpr std::size_t KEYSIZE_MAX  = sodium::KEYSIZE_HASHKEY_MAX;
   static constexpr std::size_t HASHSIZE     = crypto_generichash_BYTES;
   static constexpr std::size_t HASHSIZE_MIN = crypto_generichash_BYTES_MIN;
   static constexpr std::size_t HASHSIZE_MAX = crypto_generichash_BYTES_MAX;
 
   using key_type  = KeyVar;
-  using hash_type = data2_t; // of hashsize_ elements
+  using hash_type = sodium::chars; // of hashsize_ elements
 
   /**
    * Construct a blake2b_tee_device which passes all data through from
@@ -571,14 +566,14 @@ public:
   {
     // Some sanity checks first regarding the key and desired size
     if (key.size() != 0 && key.size() < KEYSIZE_MIN)
-      throw std::runtime_error {"Sodium::blake2b_tee_device::blake2b_tee_device() key size too small"};
+      throw std::runtime_error {"sodium::blake2b_tee_device::blake2b_tee_device() key size too small"};
     if (key.size() != 0 && key.size() > KEYSIZE_MAX)
-      throw std::runtime_error {"Sodium::blake2b_tee_device::blake2b_tee_device() key size too big"};
+      throw std::runtime_error {"sodium::blake2b_tee_device::blake2b_tee_device() key size too big"};
 
     if (hashsize < HASHSIZE_MIN)
-      throw std::runtime_error {"Sodium::blake2b_tee_device::blake2b_tee_device() hash size too small"};
+      throw std::runtime_error {"sodium::blake2b_tee_device::blake2b_tee_device() hash size too small"};
     if (hashsize > HASHSIZE_MAX)
-      throw std::runtime_error {"Sodium::blake2b_tee_device::blake2b_tee_device() hash size too big"};
+      throw std::runtime_error {"sodium::blake2b_tee_device::blake2b_tee_device() hash size too big"};
 
     // initialize the BLAKE2b state machine
     if (key.size() != 0)
@@ -587,7 +582,7 @@ public:
       crypto_generichash_init(&state_, NULL, 0, hashsize_);
 
 #ifndef NDEBUG
-    std::cerr << "Sodium::blake2b_tee_device::blake2b_tee_device() called"
+    std::cerr << "sodium::blake2b_tee_device::blake2b_tee_device() called"
 	      << std::endl;
 #endif // ! NDEBUG
   }
@@ -614,15 +609,15 @@ public:
   {
     // Some sanity checks first regarding the desired size
     if (hashsize < HASHSIZE_MIN)
-      throw std::runtime_error {"Sodium::blake2b_tee_device::blake2b_tee_device(keyless) hash size too small"};
+      throw std::runtime_error {"sodium::blake2b_tee_device::blake2b_tee_device(keyless) hash size too small"};
     if (hashsize > HASHSIZE_MAX)
-      throw std::runtime_error {"Sodium::blake2b_tee_device::blake2b_tee_device(keyless) hash size too big"};
+      throw std::runtime_error {"sodium::blake2b_tee_device::blake2b_tee_device(keyless) hash size too big"};
 
     // initialize the BLAKE2b state machine (keyless version)
     crypto_generichash_init(&state_, NULL, 0, hashsize_);
 
 #ifndef NDEBUG
-    std::cerr << "Sodium::blake2b_tee_device::blake2b_tee_device(keyless) called"
+    std::cerr << "sodium::blake2b_tee_device::blake2b_tee_device(keyless) called"
 	      << std::endl;
 #endif // ! NDEBUG
   }
@@ -641,7 +636,7 @@ public:
      * Need to better understand when read() is invoked!
      **/
 
-    throw std::runtime_error {"Sodium::blake2b_tee_device::read() called. FIXME!"};
+    throw std::runtime_error {"sodium::blake2b_tee_device::read() called. FIXME!"};
 
     // Read (up to) n chars from dev_ into buffer s
     // and update the BLAKE2b state machine for this chunk
@@ -650,7 +645,7 @@ public:
     std::streamsize result1 = boost::iostreams::read(dev_, s, n);
 
 #ifndef NDEBUG
-    std::cerr << "WARNING !!! Sodium::blake2b_tee_device::read() called "
+    std::cerr << "WARNING !!! sodium::blake2b_tee_device::read() called "
 	      << "[n=" << n << "] "
 	      << '\n';
     if (result1 != -1) {
@@ -694,7 +689,7 @@ public:
     
 #ifndef NDEBUG
     std::string s_as_string {s, s+result1};
-    std::cerr << "Sodium::blake2b_tee_device::write() called "
+    std::cerr << "sodium::blake2b_tee_device::write() called "
 	      << "[n=" << n << "] "
 	      << "[s=" << s_as_string << "] "
 	      << "[result1=" << result1 << "]"
@@ -737,7 +732,7 @@ public:
 #ifndef NDEBUG
     hash_type   out_as_hash_type_var {out, out+hashsize_};
     std::string out_as_string        {tohex(out_as_hash_type_var)};
-    std::cerr << "Sodium::blake2b_tee_device::close() called "
+    std::cerr << "sodium::blake2b_tee_device::close() called "
 	      << "[result="   << result << "] "
 	      << "[hashsize=" << hashsize_ << "]" << '\n'
 	      << "  [out="    << out_as_string << "]"
@@ -766,7 +761,7 @@ public:
     bool r2 = boost::iostreams::flush(sink_);
 
 #ifndef NDEBUG
-    std::cerr << "Sodium::blake2b_tee_device::flush() called "
+    std::cerr << "sodium::blake2b_tee_device::flush() called "
 	      << "[r1=" << r1 << ",r2=" << r2 << "]"
 	      << std::endl;
 #endif // ! NDEBUG
@@ -819,6 +814,4 @@ template<typename Device, typename Sink>
 					       const std::size_t hashsize) 
 { return blake2b_tee_device<Device, Sink>(dev, sink, key, hashsize); }
 
-} // namespace Sodium
-
-#endif // _S_BLAKE2B_FILTER_H_
+} // namespace sodium

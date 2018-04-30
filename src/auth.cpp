@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -21,16 +21,16 @@
 
 #include <stdexcept>
 
-using data_t = Sodium::data_t;
-using Sodium::Auth;
-using Sodium::Key;
+using bytes = sodium::bytes;
+using sodium::Auth;
+using sodium::Key;
 
-data_t
-Auth::auth (const data_t   &plaintext,
+bytes
+Auth::auth (const bytes &plaintext,
 	    const key_type &key)
 {
   // make space for MAC
-  data_t mac(Auth::MACSIZE);
+  bytes mac(Auth::MACSIZE);
   
   // let's compute the MAC now!
   crypto_auth (mac.data(),
@@ -42,13 +42,13 @@ Auth::auth (const data_t   &plaintext,
 }
 
 bool
-Auth::verify (const data_t   &plaintext,
-	      const data_t   &mac,
+Auth::verify (const bytes &plaintext,
+	      const bytes &mac,
 	      const key_type &key)
 {
   // some sanity checks before we get started
   if (mac.size() != Auth::MACSIZE)
-    throw std::runtime_error {"Sodium::Auth::verify() mac wrong size"};
+    throw std::runtime_error {"sodium::Auth::verify() mac wrong size"};
 
   // and now verify!
   return crypto_auth_verify (mac.data(),

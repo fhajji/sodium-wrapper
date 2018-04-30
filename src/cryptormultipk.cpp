@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -22,16 +22,16 @@
 #include <stdexcept>
 #include <sodium.h>
 
-using data_t = Sodium::data_t;
-using Sodium::CryptorMultiPK;
+using bytes = sodium::bytes;
+using sodium::CryptorMultiPK;
 
 void
 CryptorMultiPK::set_shared_key (const privkey_type &privkey,
-				const data_t       &pubkey)
+				const bytes       &pubkey)
 {
   // some sanity checks before we get started
   if (pubkey.size() != KEYSIZE_PUBKEY)
-    throw std::runtime_error {"Sodium::CryptorMultiPK::initkey() wrong pubkey size"};
+    throw std::runtime_error {"sodium::CryptorMultiPK::initkey() wrong pubkey size"};
     
   // now, ready to go
   shared_key_.readwrite();
@@ -39,45 +39,45 @@ CryptorMultiPK::set_shared_key (const privkey_type &privkey,
 			  pubkey.data(),
 			  privkey.data()) == -1) {
     shared_key_ready_ = false; // XXX: undefined?
-    throw std::runtime_error {"Sodium::CryptorMultiPK::initkey() crypto_box_beforenm() -1"};
+    throw std::runtime_error {"sodium::CryptorMultiPK::initkey() crypto_box_beforenm() -1"};
   }
   shared_key_.readonly();
   shared_key_ready_ = true;
 }
 
-data_t
-CryptorMultiPK::encrypt(const data_t     &plaintext,
+bytes
+CryptorMultiPK::encrypt(const bytes     &plaintext,
 			const nonce_type &nonce)
 {
   // some sanity checks before we start
   if (! shared_key_ready_)
-    throw std::runtime_error {"CryptorMultiPK::encrypt() shared key not ready"};
+    throw std::runtime_error {"sodium::CryptorMultiPK::encrypt() shared key not ready"};
 
   // make space for ciphertext, i.e. for (MAC || encrypted)
-  data_t ciphertext(MACSIZE + plaintext.size());
+  bytes ciphertext(MACSIZE + plaintext.size());
 
   // and now, encrypt!
   if (crypto_box_easy_afternm(ciphertext.data(),
 			      plaintext.data(), plaintext.size(),
 			      nonce.data(),
 			      shared_key_.data()) == -1)
-    throw std::runtime_error {"CryptorMultiPK::encrypt() crypto_box_easy_afternm() -1"};
+    throw std::runtime_error {"sodium::CryptorMultiPK::encrypt() crypto_box_easy_afternm() -1"};
 
   return ciphertext; // move semantics
 }
 
-data_t
-CryptorMultiPK::decrypt(const data_t     &ciphertext_with_mac,
+bytes
+CryptorMultiPK::decrypt(const bytes &ciphertext_with_mac,
 			const nonce_type &nonce)
 {
   // some sanity checks before we start
   if (ciphertext_with_mac.size() < MACSIZE)
-    throw std::runtime_error {"CryptorMultiPK::decrypt() ciphertext too small for even for MAC"};
+    throw std::runtime_error {"sodium::CryptorMultiPK::decrypt() ciphertext too small for even for MAC"};
   if (! shared_key_ready_)
-    throw std::runtime_error {"CryptorMultiPK::decrypt() shared key not ready"};
+    throw std::runtime_error {"sodium::CryptorMultiPK::decrypt() shared key not ready"};
 
   // make space for decrypted text
-  data_t decrypted(ciphertext_with_mac.size() - MACSIZE);
+  bytes decrypted(ciphertext_with_mac.size() - MACSIZE);
 
   // and now, decrypt!
   if (crypto_box_open_easy_afternm(decrypted.data(),
@@ -85,7 +85,7 @@ CryptorMultiPK::decrypt(const data_t     &ciphertext_with_mac,
 				   ciphertext_with_mac.size(),
 				   nonce.data(),
 				   shared_key_.data()) == -1)
-    throw std::runtime_error {"CryptorMultiPK::decrypt() decryption failed"};
+    throw std::runtime_error {"sodium::CryptorMultiPK::decrypt() decryption failed"};
 
   return decrypted; // move semantics
 }

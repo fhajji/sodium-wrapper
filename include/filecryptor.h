@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,8 +16,7 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef _S_FILECRYPTOR_H_
-#define _S_FILECRYPTOR_H_
+#pragma once
 
 #include "key.h"
 #include "keyvar.h"
@@ -26,7 +25,7 @@
 
 #include <sodium.h>
 
-namespace Sodium {
+namespace sodium {
 
 class FileCryptor {
  public:
@@ -35,7 +34,7 @@ class FileCryptor {
    * We're encrypting with AEAD.
    **/
   
-  constexpr static std::size_t KEYSIZE = Sodium::KEYSIZE_AEAD;
+  constexpr static std::size_t KEYSIZE = sodium::KEYSIZE_AEAD;
   
   /**
    * Each block of plaintext will be encrypted to a block of the same
@@ -52,9 +51,9 @@ class FileCryptor {
    *   - HASHKEYSIZE_MIN is the minimum number of key bytes
    *   - HASHKEYSIZE_MAX is the maximum number of key bytes
    **/
-  constexpr static std::size_t HASHKEYSIZE     = Sodium::KEYSIZE_HASHKEY;
-  constexpr static std::size_t HASHKEYSIZE_MIN = Sodium::KEYSIZE_HASHKEY_MIN;
-  constexpr static std::size_t HASHKEYSIZE_MAX = Sodium::KEYSIZE_HASHKEY_MAX;
+  constexpr static std::size_t HASHKEYSIZE     = sodium::KEYSIZE_HASHKEY;
+  constexpr static std::size_t HASHKEYSIZE_MIN = sodium::KEYSIZE_HASHKEY_MIN;
+  constexpr static std::size_t HASHKEYSIZE_MAX = sodium::KEYSIZE_HASHKEY_MAX;
 
   /**
    * The hash can be stored in so many bytes:
@@ -69,7 +68,7 @@ class FileCryptor {
   
   /**
    * Encrypt/Decrypt a file using a key, an initial nonce, and a
-   * fixed blocksize, using the algorithm of Sodium::StreamCryptor:
+   * fixed blocksize, using the algorithm of sodium::StreamCryptor:
    *
    * Each block is encrypted individually, using the key and a running
    * nonce initialized with the initial nonce; and an authenticated
@@ -99,16 +98,16 @@ class FileCryptor {
   blocksize_ {blocksize}, hashsize_ {hashsize} {
     // some sanity checks, before we start
     if (blocksize < 1)
-      throw std::runtime_error {"Sodium::FileCryptor::FileCryptor(): wrong blocksize"};
+      throw std::runtime_error {"sodium::FileCryptor::FileCryptor(): wrong blocksize"};
     if (hashkey.size() < HASHKEYSIZE_MIN)
-      throw std::runtime_error {"Sodium::FileCryptor::FileCryptor(): hash key too small"};
+      throw std::runtime_error {"sodium::FileCryptor::FileCryptor(): hash key too small"};
     if (hashkey.size() > HASHKEYSIZE_MAX)
-      throw std::runtime_error {"Sodium::FileCryptor::FileCryptor(): hash key too big"};
+      throw std::runtime_error {"sodium::FileCryptor::FileCryptor(): hash key too big"};
   }
 
   /**
    * Encrypt the input stream ISTR in a blockwise fashion, using the
-   * algorithm described in Sodium::CryptorAEAD, and write the result
+   * algorithm described in sodium::CryptorAEAD, and write the result
    * in output stream OSTR.
    * 
    * At the same time, compute a generic hash over the resulting
@@ -121,7 +120,7 @@ class FileCryptor {
 
   /**
    * Decrypt the input _file_ stream IFS in a blockwise fashion, using
-   * the algorithm described in Sodium::CrytorAEAD, and write the result
+   * the algorithm described in sodium::CryptorAEAD, and write the result
    * in output _stream_ OSTR.
    *
    * At the same time, compute a generic authenticated hash of
@@ -152,12 +151,10 @@ class FileCryptor {
   CryptorAEAD::key_type   key_;
   KeyVar                  hashkey_;
   CryptorAEAD::nonce_type nonce_;
-  data_t                  header_;
+  bytes                   header_;
   std::size_t             blocksize_, hashsize_;
   
   CryptorAEAD             sc_aead_;
 };
 
-} // namespace Sodium
-
-#endif // _S_FILECRYPTOR_H_
+} // namespace sodium

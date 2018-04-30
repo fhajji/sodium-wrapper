@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,8 +16,7 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef _S_CRYPTORMULTIPK_H_
-#define _S_CRYPTORMULTIPK_H_
+#pragma once
 
 #include "common.h"
 #include "key.h"
@@ -28,16 +27,16 @@
 
 #include <sodium.h>
 
-namespace Sodium {
+namespace sodium {
 
 class CryptorMultiPK {
 
  public:
 
-  static constexpr unsigned int NSZPK             = Sodium::NONCESIZE_PK;
-  static constexpr std::size_t  KEYSIZE_PUBKEY    = Sodium::KEYSIZE_PUBKEY;
-  static constexpr std::size_t  KEYSIZE_PRIVKEY   = Sodium::KEYSIZE_PRIVKEY;
-  static constexpr std::size_t  KEYSIZE_SHAREDKEY = Sodium::KEYSIZE_SHAREDKEY;
+  static constexpr unsigned int NSZPK             = sodium::NONCESIZE_PK;
+  static constexpr std::size_t  KEYSIZE_PUBKEY    = sodium::KEYSIZE_PUBKEY;
+  static constexpr std::size_t  KEYSIZE_PRIVKEY   = sodium::KEYSIZE_PRIVKEY;
+  static constexpr std::size_t  KEYSIZE_SHAREDKEY = sodium::KEYSIZE_SHAREDKEY;
   static constexpr std::size_t  MACSIZE           = crypto_box_MACBYTES;
 
   using privkey_type = Key<KEYSIZE_PRIVKEY>;
@@ -69,7 +68,7 @@ class CryptorMultiPK {
    **/
   
   CryptorMultiPK(const privkey_type &privkey,
-		 const data_t       &pubkey)
+		 const bytes       &pubkey)
     : shared_key_(false),
       shared_key_ready_(false)
   {
@@ -99,7 +98,7 @@ class CryptorMultiPK {
    **/
   
   void set_shared_key(const privkey_type &privkey,
-		      const data_t       &pubkey);
+		      const bytes &pubkey);
 
   /**
    * Destroy the shared key by zeroing its contents after it is no
@@ -152,7 +151,7 @@ class CryptorMultiPK {
    *  - the shared key is not ready
    **/
 
-  data_t encrypt(const data_t     &plaintext,
+  bytes encrypt(const bytes &plaintext,
 		 const nonce_type &nonce);
   
   /**
@@ -177,7 +176,7 @@ class CryptorMultiPK {
    *  - the shared key isn't ready
    **/
 
-  data_t decrypt(const data_t     &ciphertext_with_mac,
+  bytes decrypt(const bytes &ciphertext_with_mac,
 		 const nonce_type &nonce);
 
  private:
@@ -185,6 +184,4 @@ class CryptorMultiPK {
   bool                   shared_key_ready_;
 };
 
-} // namespace Sodium
- 
-#endif // _S_CRYPTORMULTIPK_H_
+} // namespace sodium

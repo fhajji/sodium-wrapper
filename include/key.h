@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,16 +16,18 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef _S_KEY_H_
-#define _S_KEY_H_
+#pragma once
+
+#include "common.h"
+#include "alloc.h"
 
 #include <vector>
 #include <string>
 #include <utility>
-#include "common.h"
-#include "alloc.h"
 
-namespace Sodium {
+#include <sodium.h>
+
+namespace sodium {
 
   // Some common constants for typical key sizes from <sodium.h>
   static constexpr std::size_t KEYSIZE_SECRETBOX      = crypto_secretbox_KEYBYTES;
@@ -53,7 +55,7 @@ template <std::size_t KEYSIZE=0>
 class Key
 {
   /**
-   * The class Sodium::Key<KEYSIZE> represents a Key used in various
+   * The class sodium::Key<KEYSIZE> represents a Key used in various
    * functions of the libsodium library.  Key material, being
    * particulary sensitive, is stored in "protected memory" using a
    * special allocator.
@@ -74,14 +76,14 @@ class Key
  public:
   
   /**
-   * key_t is protected memory for bytes of key material (see: sodiumkey.h)
+   * key_t is protected memory for bytes of key material.
    *   * key_t memory will self-destruct/zero when out-of-scope / throws
    *   * key_t memory can be made readonly or temporarily non-accessible
    *   * key_t memory is stored in virtual pages protected by canary,
    *     guard pages, and access to those pages is granted with mprotect().
    **/
   
-  using key_t      = std::vector<unsigned char, SodiumAlloc<unsigned char>>;
+  using key_t      = std::vector<byte, SodiumAlloc<byte>>;
   
   // The strengh of the key derivation efforts for setpass()
   using strength_t = enum class Strength { low, medium, high };
@@ -184,7 +186,7 @@ class Key
    * _after_ the constructor has finished constructing *this! (XXX).
    **/
 
-  const      unsigned char *data() const { return keydata.data(); }
+  const      byte          *data() const { return keydata.data(); }
   constexpr  std::size_t    size() const { return keydata.size(); }
 
   /**
@@ -203,7 +205,7 @@ class Key
    *   - CryptorMultiPK
    **/
 
-  unsigned char *setdata() { return keydata.data(); }
+  byte *setdata() { return keydata.data(); }
     
   /**
    * Derive key material from the string password, and the salt
@@ -220,7 +222,7 @@ class Key
    **/
 
   void setpass (const std::string &password,
-		const data_t &salt,
+		const bytes &salt,
 		const strength_t strength = strength_t::high) {
     // check strength and set appropriate parameters
     std::size_t strength_mem;
@@ -239,12 +241,12 @@ class Key
       strength_cpu = crypto_pwhash_OPSLIMIT_SENSITIVE;
       break;
     default:
-      throw std::runtime_error {"Sodium::Key<KEYSIZE>::setpass() wrong strength"};
+      throw std::runtime_error {"sodium::Key<KEYSIZE>::setpass() wrong strength"};
     }
 
     // check salt length
     if (salt.size() != KEYSIZE_SALT)
-      throw std::runtime_error {"Sodium::Key<KEYSIZE>::setpass() wrong salt size"};
+      throw std::runtime_error {"sodium::Key<KEYSIZE>::setpass() wrong salt size"};
 
     // derive a key from the hash of the password, and store it!
     readwrite(); // temporarily unlock the key (if not already)
@@ -254,7 +256,7 @@ class Key
 		       strength_cpu,
 		       strength_mem,
 		       crypto_pwhash_ALG_DEFAULT) != 0)
-      throw std::runtime_error {"Sodium::Key<KEYSIZE>::setpass() crypto_pwhash()"};
+      throw std::runtime_error {"sodium::Key<KEYSIZE>::setpass() crypto_pwhash()"};
     readonly(); // relock the key
   }
 
@@ -336,11 +338,11 @@ class Key
   key_t keydata; // the bytes of the key are stored in protected memory
 };
  
-} // namespace Sodium
+} // namespace sodium
 
 template <std::size_t KEYSIZE1, std::size_t KEYSIZE2>
-  bool operator== (const Sodium::Key<KEYSIZE1> &k1,
-		   const Sodium::Key<KEYSIZE2> &k2)
+  bool operator== (const sodium::Key<KEYSIZE1> &k1,
+		   const sodium::Key<KEYSIZE2> &k2)
 {
   // Don't do this (side channel attack):
   // std::equal(k1.data(), k1.data() + k1.size(),
@@ -353,10 +355,8 @@ template <std::size_t KEYSIZE1, std::size_t KEYSIZE2>
 }
 
 template <std::size_t KEYSIZE1, std::size_t KEYSIZE2>
-  bool operator!= (const Sodium::Key<KEYSIZE1> &k1,
-		   const Sodium::Key<KEYSIZE2> &k2)
+  bool operator!= (const sodium::Key<KEYSIZE1> &k1,
+		   const sodium::Key<KEYSIZE2> &k2)
 {
   return (! (k1 == k2));
 }
-
-#endif // _S_KEY_H_

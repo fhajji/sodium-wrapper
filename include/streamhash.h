@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,10 +16,7 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef _S_STREAMHASH_H_
-#define _S_STREAMHASH_H_
-
-#include <sodium.h>
+#pragma once
 
 #include "common.h"
 #include "key.h"     // key sizes
@@ -30,7 +27,9 @@
 #include <istream>
 #include <ostream>
 
-namespace Sodium {
+#include <sodium.h>
+
+namespace sodium {
 
 class StreamHash {
  public:
@@ -41,9 +40,9 @@ class StreamHash {
    * Boost::Iostreams.
    **/
   
-  static constexpr std::size_t KEYSIZE      = Sodium::KEYSIZE_HASHKEY;
-  static constexpr std::size_t KEYSIZE_MIN  = Sodium::KEYSIZE_HASHKEY_MIN;
-  static constexpr std::size_t KEYSIZE_MAX  = Sodium::KEYSIZE_HASHKEY_MAX;
+  static constexpr std::size_t KEYSIZE      = sodium::KEYSIZE_HASHKEY;
+  static constexpr std::size_t KEYSIZE_MIN  = sodium::KEYSIZE_HASHKEY_MIN;
+  static constexpr std::size_t KEYSIZE_MAX  = sodium::KEYSIZE_HASHKEY_MAX;
 
   static constexpr std::size_t HASHSIZE     = crypto_generichash_BYTES;
   static constexpr std::size_t HASHSIZE_MIN = crypto_generichash_BYTES_MIN;
@@ -74,16 +73,16 @@ class StreamHash {
     hashsize_ {hashsize}, blocksize_ {blocksize} {
 
       if (key.size() < KEYSIZE_MIN)
-	throw std::runtime_error {"Sodium::StreamHash::StreamHash() key too small"};
+	throw std::runtime_error {"sodium::StreamHash::StreamHash() key too small"};
       if (key.size() > KEYSIZE_MAX)
-       	throw std::runtime_error {"Sodium::StreamHash::StreamHash() key too big"};
+       	throw std::runtime_error {"sodium::StreamHash::StreamHash() key too big"};
       
       if (hashsize < HASHSIZE_MIN)
-	throw std::runtime_error {"Sodium::StreamHash::StreamHash() hash size too small"};
+	throw std::runtime_error {"sodium::StreamHash::StreamHash() hash size too small"};
       if (hashsize > HASHSIZE_MAX)
-	throw std::runtime_error {"Sodium::StreamHash::StreamHash() hash size too big"};
+	throw std::runtime_error {"sodium::StreamHash::StreamHash() hash size too big"};
       if (blocksize < 1)
-	throw std::runtime_error {"Sodium::StreamHash::StreamHash() wrong blocksize"};
+	throw std::runtime_error {"sodium::StreamHash::StreamHash() wrong blocksize"};
 
       crypto_generichash_init(&state_, key.data(), key.size(), hashsize);
   }
@@ -99,11 +98,11 @@ class StreamHash {
     key_ {0, false},
     hashsize_ {hashsize}, blocksize_ {blocksize} {
       if (hashsize < HASHSIZE_MIN)
-	throw std::runtime_error {"Sodium::StreamHash::StreamHash() hash size too small"};
+	throw std::runtime_error {"sodium::StreamHash::StreamHash() hash size too small"};
       if (hashsize > HASHSIZE_MAX)
-	throw std::runtime_error {"Sodium::StreamHash::StreamHash() hash size too big"};
+	throw std::runtime_error {"sodium::StreamHash::StreamHash() hash size too big"};
       if (blocksize < 1)
-	throw std::runtime_error {"Sodium::StreamHash::StreamHash() wrong blocksize"};
+	throw std::runtime_error {"sodium::StreamHash::StreamHash() wrong blocksize"};
 
       crypto_generichash_init(&state_, NULL, 0, hashsize);
   }
@@ -122,7 +121,7 @@ class StreamHash {
    * hash() will throw a std::runtime_error if the istr fails.
    **/
   
-  data_t hash(std::istream &istr);
+  bytes hash(std::istream &istr);
 
   /**
    * Return-by-reference version of the hash() function above.
@@ -138,7 +137,7 @@ class StreamHash {
    **/
   
   void   hash(std::istream &istr,
-	      data_t       &outHash);
+	      bytes       &outHash);
   
  private:
   key_type     key_;
@@ -148,6 +147,4 @@ class StreamHash {
   crypto_generichash_state state_;
 };
 
-} // namespace Sodium
-
-#endif // _S_STREAMHASH_H_
+} // namespace sodium

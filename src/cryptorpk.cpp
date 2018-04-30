@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,75 +16,75 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#include "cryptorpk.h"
 #include "common.h"
+#include "cryptorpk.h"
 
 #include <stdexcept>
 #include <sodium.h>
 
-using data_t = Sodium::data_t;
-using Sodium::CryptorPK;
-using Sodium::KeyPair;
+using bytes = sodium::bytes;
+using sodium::CryptorPK;
+using sodium::KeyPair;
 
-data_t
-CryptorPK::encrypt (const data_t       &plaintext,
-		    const data_t       &pubkey,
+bytes
+CryptorPK::encrypt (const bytes       &plaintext,
+		    const bytes       &pubkey,
 		    const privkey_type &privkey,
 		    const nonce_type   &nonce)
 {
   // some sanity checks before we get started
   if (pubkey.size() != CryptorPK::KEYSIZE_PUBKEY)
-    throw std::runtime_error {"Sodium::CryptorPK::encrypt() wrong pubkey size"};
+    throw std::runtime_error {"sodium::CryptorPK::encrypt() wrong pubkey size"};
 
   // make space for MAC and encrypted message, i.e. for (MAC || encrypted)
-  data_t ciphertext_with_mac(CryptorPK::MACSIZE + plaintext.size());
+  bytes ciphertext_with_mac(CryptorPK::MACSIZE + plaintext.size());
 
   // let's encrypt now! (combined mode, no precalculation of shared key)
   if (crypto_box_easy(ciphertext_with_mac.data(),
 		      plaintext.data(), plaintext.size(),
 		      nonce.data(),
 		      pubkey.data(), privkey.data()) == -1)
-    throw std::runtime_error {"Sodium::CryptorPK::encrypt() crypto_box_easy() failed (-1)"};
+    throw std::runtime_error {"sodium::CryptorPK::encrypt() crypto_box_easy() failed (-1)"};
 
   // return with move semantics
   return ciphertext_with_mac;
 }
 
-data_t
-CryptorPK::encrypt (const data_t     &plaintext,
+bytes
+CryptorPK::encrypt (const bytes     &plaintext,
 		    const KeyPair    &keypair,
 		    const nonce_type &nonce)
 {
   // no sanity checks necessary before we get started
 
   // make space for MAC and encrypted message, i.e. for (MAC || encrypted)
-  data_t ciphertext_with_mac(CryptorPK::MACSIZE + plaintext.size());
+  bytes ciphertext_with_mac(CryptorPK::MACSIZE + plaintext.size());
 
   // let's encrypt now! (combined mode, no precalculation of shared key)
   if (crypto_box_easy(ciphertext_with_mac.data(),
 		      plaintext.data(), plaintext.size(),
 		      nonce.data(),
 		      keypair.pubkey().data(), keypair.privkey().data()) == -1)
-    throw std::runtime_error {"Sodium::CryptorPK::encrypt(keypair...) crypto_box_easy() failed (-1)"};
+    throw std::runtime_error {"sodium::CryptorPK::encrypt(keypair...) crypto_box_easy() failed (-1)"};
 
   // return with move semantics
   return ciphertext_with_mac;
 }
 
-data_t
-CryptorPK::decrypt (const data_t       &ciphertext_with_mac,
+bytes
+CryptorPK::decrypt (const bytes       &ciphertext_with_mac,
 		    const privkey_type &privkey,
-		    const data_t       &pubkey,
+		    const bytes        &pubkey,
 		    const nonce_type   &nonce)
 {
   // some sanity checks before we get started
   if (ciphertext_with_mac.size() < CryptorPK::MACSIZE)
-    throw std::runtime_error {"CryptorPK::decrypt() ciphertext too small for MAC"};
+    throw std::runtime_error {"sodium::CryptorPK::decrypt() ciphertext too small for MAC"};
   if (pubkey.size()  != KEYSIZE_PUBKEY)
-    throw std::runtime_error {"CryptorPK::decrypt() pubkey wrong size"};
+    throw std::runtime_error {"sodium::CryptorPK::decrypt() pubkey wrong size"};
 
   // make room for decrypted text
-  data_t decrypted(ciphertext_with_mac.size() - CryptorPK::MACSIZE);
+  bytes decrypted(ciphertext_with_mac.size() - CryptorPK::MACSIZE);
 
   // let's try to decrypt
   if (crypto_box_open_easy(decrypted.data(),
@@ -92,22 +92,22 @@ CryptorPK::decrypt (const data_t       &ciphertext_with_mac,
 			   ciphertext_with_mac.size(),
 			   nonce.data(),
 			   pubkey.data(), privkey.data()) == -1)
-    throw std::runtime_error {"CryptorPK::decrypt() decryption or verification failed"};
+    throw std::runtime_error {"sodium::CryptorPK::decrypt() decryption or verification failed"};
   
   return decrypted;    			       
 }
 
-data_t
-CryptorPK::decrypt (const data_t     &ciphertext_with_mac,
+bytes
+CryptorPK::decrypt (const bytes     &ciphertext_with_mac,
 		    const KeyPair    &keypair,
 		    const nonce_type &nonce)
 {
   // some sanity checks before we get started
   if (ciphertext_with_mac.size() < CryptorPK::MACSIZE)
-    throw std::runtime_error {"CryptorPK::decrypt() ciphertext too small for MAC"};
+    throw std::runtime_error {"sodium::CryptorPK::decrypt() ciphertext too small for MAC"};
 
   // make room for decrypted text
-  data_t decrypted(ciphertext_with_mac.size() - CryptorPK::MACSIZE);
+  bytes decrypted(ciphertext_with_mac.size() - CryptorPK::MACSIZE);
 
   // let's try to decrypt
   if (crypto_box_open_easy(decrypted.data(),
@@ -116,7 +116,7 @@ CryptorPK::decrypt (const data_t     &ciphertext_with_mac,
 			   nonce.data(),
 			   keypair.pubkey().data(),
 			   keypair.privkey().data()) == -1)
-    throw std::runtime_error {"CryptorPK::decrypt(keypair...) decryption or verification failed"};
+    throw std::runtime_error {"sodium::CryptorPK::decrypt(keypair...) decryption or verification failed"};
   
   return decrypted;    			       
 }

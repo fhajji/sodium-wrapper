@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,26 +16,23 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef _S_COMMON_H_
-#define _S_COMMON_H_
+#pragma once
 
 #include <vector>
 #include <string>
 
 #include "alloc.h"
 
-namespace Sodium {
+namespace sodium {
+	// libsodium treats all bytes as unsigned char
+	using byte = unsigned char;
 
-  // data_t is a binary blob of bytes (plaintext, ciphertext, nonces, etc...)
-  using data_t  = std::vector<unsigned char>;
-  
-  // data2_t is a binary blob of bytes, interpreted as char instead of bytes
-  using data2_t = std::vector<char>;
-  
-  std::string tohex (const data_t &in);  // in: utils.cpp
-  std::string tohex (const data2_t &in); // in: utils.cpp
-  
-} // namespace Sodium
+	// a contiguous collection of bytes in unprotected memory
+	using bytes = std::vector<byte>;
 
-
-#endif // _S_COMMON_H_
+	// a contiguous collection of bytes, interpreted as char
+	using chars = std::vector<char>;
+  
+	std::string tohex (const bytes &in); // in: utils.cpp
+	std::string tohex (const chars &in); // in: utils.cpp
+} // namespace sodium

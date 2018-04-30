@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,12 +16,9 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef _S_POLY1305_FILTER_H_
-#define _S_POLY1305_FILTER_H_
+#pragma once
 
-#if defined(_MSC_VER)
-# pragma once
-#endif
+#include "key.h"
 
 #include <boost/assert.hpp>
 #include <boost/config.hpp>  // BOOST_DEDUCE_TYPENAME.
@@ -38,8 +35,6 @@
 #include <boost/type_traits/is_convertible.hpp>
 #include <boost/type_traits/is_same.hpp>
 
-#include "key.h"
-
 #include <stdexcept>     // std::runtime_error
 #include <sodium.h>
 
@@ -50,7 +45,7 @@
 
 using namespace boost::iostreams;
 
-namespace Sodium {
+namespace sodium {
 
 /**
  * poly1305_tee_filter<Device>
@@ -82,8 +77,8 @@ namespace Sodium {
  * 
  * namespace io = boost::iostreams;
  * 
- * using Sodium::poly1305_tee_filter;
- * using data_t = Sodium::data2_t;
+ * using sodium::poly1305_tee_filter;
+ * using chars = sodium::chars;
  * 
  * // a filter which outputs to io::file_sink and tee-s to io::file_sink
  * using poly1305_to_file_type  = poly1305_tee_filter<io::file_sink>;
@@ -91,7 +86,7 @@ namespace Sodium {
  * poly1305_to_vector_type::key_type key; // generate a random key for Poly1305
  * 
  * std::string plaintext {"the quick brown fox jumps over the lazy dog"};
- * data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+ * chars plainblob {plaintext.cbegin(), plaintext.cend()};
  * 
  * io::file_sink poly1305file {"/var/tmp/poly1305.mac",
  *                             std::ios_base::out | std::ios_base::binary };
@@ -140,11 +135,11 @@ class poly1305_tee_filter : public detail::filter_adapter<Device>
                          >::value
   ));
 
-  static constexpr std::size_t KEYSIZE = Sodium::KEYSIZE_POLY1305;
+  static constexpr std::size_t KEYSIZE = sodium::KEYSIZE_POLY1305;
   static constexpr std::size_t MACSIZE = crypto_onetimeauth_BYTES;
   
   using key_type = Key<KEYSIZE>;
-  using mac_type = data2_t; // of MACSIZE elements...
+  using mac_type = chars; // of MACSIZE elements...
   
   /**
    * Construct a poly1305_tee_filter which passes all data through
@@ -160,7 +155,7 @@ class poly1305_tee_filter : public detail::filter_adapter<Device>
     crypto_onetimeauth_init(&state_, key_.data());
 
 #ifndef NDEBUG
-    std::cerr << "Sodium::poly1305_tee_filter::poly1305_tee_filter() called"
+    std::cerr << "sodium::poly1305_tee_filter::poly1305_tee_filter() called"
 	      << std::endl;
 #endif // ! NDEBUG
   }
@@ -175,7 +170,7 @@ class poly1305_tee_filter : public detail::filter_adapter<Device>
      * Need to better understand when read() is invoked!
      **/
     
-    throw std::runtime_error {"Sodium::poly1305_tee_filter::read() called. FIXME!"};
+    throw std::runtime_error {"sodium::poly1305_tee_filter::read() called. FIXME!"};
     
     // Read (up to) n chars from src into buffer s
     // and update the Poly1305 state machine for this chunk
@@ -184,7 +179,7 @@ class poly1305_tee_filter : public detail::filter_adapter<Device>
     std::streamsize result = boost::iostreams::read(src, s, n);
 
 #ifndef NDEBUG
-    std::cerr << "WARNING !!! Sodium::poly1305_tee_filter::read() called "
+    std::cerr << "WARNING !!! sodium::poly1305_tee_filter::read() called "
 	      << "[n=" << n << "] "
 	      << '\n';
     if (result != -1) {
@@ -220,7 +215,7 @@ class poly1305_tee_filter : public detail::filter_adapter<Device>
 
 #ifndef NDEBUG
     std::string s_as_string {s, s+result};
-    std::cerr << "Sodium::poly1305_tee_filter::write() called "
+    std::cerr << "sodium::poly1305_tee_filter::write() called "
 	      << "[n=" << n << "] "
 	      << "[s=" << s_as_string << "] "
 	      << "[result=" << result << "]"
@@ -262,7 +257,7 @@ class poly1305_tee_filter : public detail::filter_adapter<Device>
 #ifndef NDEBUG
     mac_type    out_as_mac_type_var {out, out+MACSIZE};
     std::string out_as_string       {tohex(out_as_mac_type_var)};
-    std::cerr << "Sodium::poly1305_tee_filter::close() called "
+    std::cerr << "sodium::poly1305_tee_filter::close() called "
 	      << "[result=" << result << "], "
 	      << "[MACSIZE=" << MACSIZE << "]" << '\n'
 	      << "  [out=" << out_as_string << "]"
@@ -285,7 +280,7 @@ class poly1305_tee_filter : public detail::filter_adapter<Device>
     bool r2 = boost::iostreams::flush(this->component()); // actually a NO-OP
 
 #ifndef NDEBUG
-    std::cerr << "Sodium::poly1305_tee_filter::flush() called "
+    std::cerr << "sodium::poly1305_tee_filter::flush() called "
 	      << "[r1=" << r1 << ",r2=" << r2 << "]"
 	      << std::endl;
 #endif // ! NDEBUG
@@ -355,8 +350,8 @@ poly1305_tee_filter<Sink> poly1305_tee(const Sink& snk,
  * 
  * namespace io = boost::iostreams;
  * 
- * using Sodium::poly1305_tee_device;
- * using data_t = Sodium::data2_t;
+ * using sodium::poly1305_tee_device;
+ * using chars = sodium::chars;
  * 
  * using mac_array_type = typename poly1305_tee_filter<io::null_sink>::mac_type;
  * using vector_sink    = io::back_insert_device<mac_array_type>;
@@ -367,7 +362,7 @@ poly1305_tee_filter<Sink> poly1305_tee(const Sink& snk,
  * poly1305_to_vector_type::key_type key; // generate a random key for Poly1305
  * 
  * std::string plaintext {"the quick brown fox jumps over the lazy dog"};
- * data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+ * chars       plainblob {plaintext.cbegin(), plaintext.cend()};
  *
  * mac_array_type mac; // will grow
  * vector_sink    poly1305_sink(mac);
@@ -456,11 +451,11 @@ public:
       { };
 
 
-  static constexpr std::size_t KEYSIZE = Sodium::KEYSIZE_POLY1305;
+  static constexpr std::size_t KEYSIZE = sodium::KEYSIZE_POLY1305;
   static constexpr std::size_t MACSIZE = crypto_onetimeauth_BYTES;
   
   using key_type = Key<KEYSIZE>;
-  using mac_type = data2_t; // of size MACSIZE
+  using mac_type = chars; // of size MACSIZE
   
   poly1305_tee_device(device_param device, sink_param sink,
 		      const key_type &key)
@@ -470,7 +465,7 @@ public:
     crypto_onetimeauth_init(&state_, key_.data());
 
 #ifndef NDEBUG
-    std::cerr << "Sodium::poly1305_tee_device::poly1305_tee_device() called"
+    std::cerr << "sodium::poly1305_tee_device::poly1305_tee_device() called"
 	      << std::endl;
 #endif // ! NDEBUG
   }
@@ -489,7 +484,7 @@ public:
      * Need to better understand when read() is invoked!
      **/
 
-    throw std::runtime_error {"Sodium::poly1305_tee_device::read() called. FIXME!"};
+    throw std::runtime_error {"sodium::poly1305_tee_device::read() called. FIXME!"};
 
     // Read (up to) n chars from dev_ into buffer s
     // and update the Poly1305 state machine for this chunk
@@ -498,7 +493,7 @@ public:
     std::streamsize result1 = boost::iostreams::read(dev_, s, n);
 
 #ifndef NDEBUG
-    std::cerr << "WARNING !!! Sodium::poly1305_tee_device::read() called "
+    std::cerr << "WARNING !!! sodium::poly1305_tee_device::read() called "
 	      << "[n=" << n << "] "
 	      << '\n';
     if (result1 != -1) {
@@ -542,7 +537,7 @@ public:
     
 #ifndef NDEBUG
     std::string s_as_string {s, s+result1};
-    std::cerr << "Sodium::poly1305_tee_device::write() called "
+    std::cerr << "sodium::poly1305_tee_device::write() called "
 	      << "[n=" << n << "] "
 	      << "[s=" << s_as_string << "] "
 	      << "[result1=" << result1 << "]"
@@ -584,7 +579,7 @@ public:
 #ifndef NDEBUG
     mac_type    out_as_mac_type_var {out, out+MACSIZE};
     std::string out_as_string       {tohex(out_as_mac_type_var)};
-    std::cerr << "Sodium::poly1305_tee_device::close() called "
+    std::cerr << "sodium::poly1305_tee_device::close() called "
 	      << "[result=" << result << "] "
 	      << "[MACSIZE=" << MACSIZE << "]" << '\n'
 	      << "  [out=" << out_as_string << "]"
@@ -607,7 +602,7 @@ public:
     bool r2 = boost::iostreams::flush(sink_);
 
 #ifndef NDEBUG
-    std::cerr << "Sodium::poly1305_tee_device::flush() called "
+    std::cerr << "sodium::poly1305_tee_device::flush() called "
 	      << "[r1=" << r1 << ",r2=" << r2 << "]"
 	      << std::endl;
 #endif // ! NDEBUG
@@ -655,6 +650,4 @@ template<typename Device, typename Sink>
 						 const typename poly1305_tee_device<Device, Sink>::key_type &key) 
 { return poly1305_tee_device<Device, Sink>(dev, sink, key); }
  
-} // namespace Sodium
-
-#endif // _S_POLY1305_FILTER_H_
+} // namespace sodium

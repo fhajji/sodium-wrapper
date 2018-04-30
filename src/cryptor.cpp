@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -20,17 +20,17 @@
 
 #include <stdexcept>
 
-using data_t = Sodium::data_t;
-using Sodium::Cryptor;
+using bytes = sodium::bytes;
+using sodium::Cryptor;
 
-data_t
-Cryptor::encrypt (const data_t     &plaintext,
+bytes
+Cryptor::encrypt (const bytes &plaintext,
 		  const key_type   &key,
 		  const nonce_type &nonce)
 {
   // make space for MAC and encrypted message,
   // combined form, i.e. (MAC || encrypted)
-  data_t ciphertext(MACSIZE + plaintext.size());
+  bytes ciphertext(MACSIZE + plaintext.size());
   
   // let's encrypt now!
   crypto_secretbox_easy (ciphertext.data(),
@@ -42,19 +42,19 @@ Cryptor::encrypt (const data_t     &plaintext,
   return ciphertext;
 }
 
-data_t
-Cryptor::encrypt (const data_t     &plaintext,
+bytes
+Cryptor::encrypt (const bytes &plaintext,
 		  const key_type   &key,
 		  const nonce_type &nonce,
-		  data_t           &mac)
+		  bytes            &mac)
 {
   // some sanity checks before we get started
   if (mac.size() != MACSIZE)
-    throw std::runtime_error {"Sodium::Cryptor::encrypt(detached) wrong mac size"};
+    throw std::runtime_error {"sodium::Cryptor::encrypt(detached) wrong mac size"};
   
   // make space for encrypted message
   // detached form, stream cipher => same size as plaintext.
-  data_t ciphertext(plaintext.size());
+  bytes ciphertext(plaintext.size());
   
   // let's encrypt now!
   crypto_secretbox_detached (ciphertext.data(),
@@ -67,41 +67,41 @@ Cryptor::encrypt (const data_t     &plaintext,
   return ciphertext; // by move semantics
 }
 
-data_t
-Cryptor::decrypt (const data_t     &ciphertext,
+bytes
+Cryptor::decrypt (const bytes &ciphertext,
 		  const key_type   &key,
 		  const nonce_type &nonce)
 {
   // some sanity checks before we get started
   if (ciphertext.size() < MACSIZE)
-    throw std::runtime_error {"Sodium::Cryptor::decrypt(combined) ciphertext too small for mac"};
+    throw std::runtime_error {"sodium::Cryptor::decrypt(combined) ciphertext too small for mac"};
 
   // make space for decrypted buffer
-  data_t decryptedtext(ciphertext.size() - MACSIZE);
+  bytes decryptedtext(ciphertext.size() - MACSIZE);
 
   // and now decrypt!
   if (crypto_secretbox_open_easy (decryptedtext.data(),
 				  ciphertext.data(), ciphertext.size(),
 				  nonce.data(),
 				  key.data()) != 0)
-    throw std::runtime_error {"Sodium::Cryptor::decrypt(combined) can't decrypt"};
+    throw std::runtime_error {"sodium::Cryptor::decrypt(combined) can't decrypt"};
 
   return decryptedtext;
 }
 
-data_t
-Cryptor::decrypt (const data_t     &ciphertext,
-		  const data_t     &mac,
+bytes
+Cryptor::decrypt (const bytes &ciphertext,
+		  const bytes      &mac,
 		  const key_type   &key,
 		  const nonce_type &nonce)
 {
   // some sanity checks before we get started
   if (mac.size() != MACSIZE)
-    throw std::runtime_error {"Sodium::Cryptor::decrypt(detached) wrong mac size"};
+    throw std::runtime_error {"sodium::Cryptor::decrypt(detached) wrong mac size"};
 
   // make space for decrypted buffer;
   // detached mode. stream cipher => decryptedtext size == ciphertext size
-  data_t decryptedtext(ciphertext.size());
+  bytes decryptedtext(ciphertext.size());
 
   // and now decrypt!
   if (crypto_secretbox_open_detached (decryptedtext.data(),
@@ -110,7 +110,7 @@ Cryptor::decrypt (const data_t     &ciphertext,
 				      ciphertext.size(),
 				      nonce.data(),
 				      key.data()) != 0)
-    throw std::runtime_error {"Sodium::Cryptor::decrypt(detached) can't decrypt"};
+    throw std::runtime_error {"sodium::Cryptor::decrypt(detached) can't decrypt"};
 
   return decryptedtext; // by move semantics
 }

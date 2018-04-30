@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -23,14 +23,14 @@
 
 #include <sodium.h>
 
-using data_t = Sodium::data_t;
-using Sodium::StreamHash;
+using bytes = sodium::bytes;
+using sodium::StreamHash;
 
-data_t
+bytes
 StreamHash::hash(std::istream &istr)
 {
-  data_t plaintext(blocksize_, '\0');
-  data_t outHash(hashsize_);
+  bytes plaintext(blocksize_, '\0');
+  bytes outHash(hashsize_);
 
   if (key_.size() != 0)
     crypto_generichash_init(&state_, key_.data(), key_.size(), hashsize_);
@@ -67,12 +67,12 @@ StreamHash::hash(std::istream &istr)
 
 void
 StreamHash::hash(std::istream &istr,
-		 data_t       &outHash)
+		 bytes       &outHash)
 {
   if (outHash.size() != hashsize_)
-    throw std::runtime_error {"Sodium::StreamHash::hash() wrong outHash size"};
+    throw std::runtime_error {"sodium::StreamHash::hash() wrong outHash size"};
 
-  data_t plaintext(blocksize_, '\0');
+  bytes plaintext(blocksize_, '\0');
 
   if (key_.size() != 0)
     crypto_generichash_init(&state_, key_.data(), key_.size(), hashsize_);

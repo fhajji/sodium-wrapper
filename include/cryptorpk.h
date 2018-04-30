@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,23 +16,22 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef _S_CRYPTORPK_H_
-#define _S_CRYPTORPK_H_
+#pragma once
 
 #include "common.h"
 #include "nonce.h"
 #include "key.h"
 #include "keypair.h"
 
-namespace Sodium {
+namespace sodium {
 
 class CryptorPK {
 
  public:
 
-  static constexpr unsigned int NSZPK               = Sodium::NONCESIZE_PK;
-  static constexpr std::size_t  KEYSIZE_PUBKEY      = Sodium::KEYSIZE_PUBKEY;
-  static constexpr std::size_t  KEYSIZE_PRIVKEY     = Sodium::KEYSIZE_PRIVKEY;
+  static constexpr unsigned int NSZPK               = sodium::NONCESIZE_PK;
+  static constexpr std::size_t  KEYSIZE_PUBKEY      = sodium::KEYSIZE_PUBKEY;
+  static constexpr std::size_t  KEYSIZE_PRIVKEY     = sodium::KEYSIZE_PRIVKEY;
   static constexpr std::size_t  MACSIZE             = crypto_box_MACBYTES;
 
   using privkey_type = Key<KEYSIZE_PRIVKEY>;
@@ -69,8 +68,8 @@ class CryptorPK {
    * bytes long.
    **/
 
-  data_t encrypt(const data_t       &plaintext,
-		 const data_t       &pubkey,
+  bytes encrypt(const bytes       &plaintext,
+		 const bytes        &pubkey,
 		 const privkey_type &privkey,
 		 const nonce_type   &nonce);
 
@@ -86,7 +85,7 @@ class CryptorPK {
    *
    * Otherwise, see encrypt() above.
    **/
-  data_t encrypt(const data_t     &plaintext,
+  bytes encrypt(const bytes     &plaintext,
 		 const KeyPair    &keypair,
 		 const nonce_type &nonce);
   
@@ -105,9 +104,9 @@ class CryptorPK {
    * is even too small to hold the MAC (i.e. less than MACSIZE).
    **/
 
-  data_t decrypt(const data_t       &ciphertext_with_mac,
+  bytes decrypt(const bytes       &ciphertext_with_mac,
 		 const privkey_type &privkey,
-		 const data_t       &pubkey,
+		 const bytes        &pubkey,
 		 const nonce_type   &nonce);
 
   /**
@@ -122,11 +121,9 @@ class CryptorPK {
    * Otherwise, see decrypt() above.
    **/
   
-  data_t decrypt(const data_t     &ciphertext_with_mac,
+  bytes decrypt(const bytes     &ciphertext_with_mac,
 		 const KeyPair    &keypair,
 		 const nonce_type &nonce);
 };
 
-} // namespace Sodium
- 
-#endif // _S_CRYPTORPK_H_
+} // namespace sodium

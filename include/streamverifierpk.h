@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,10 +16,7 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef _S_STREAMVERIFIERPK_H_
-#define _S_STREAMVERIFIERPK_H_
-
-#include <sodium.h>
+#pragma once
 
 #include "common.h"
 #include "key.h"
@@ -29,12 +26,14 @@
 #include <istream>
 #include <ostream>
 
-namespace Sodium {
+#include <sodium.h>
+
+namespace sodium {
 
 class StreamVerifierPK {
  public:
 
-  static constexpr std::size_t KEYSIZE_PUBKEY = Sodium::KEYSIZE_PUBKEY_SIGN;
+  static constexpr std::size_t KEYSIZE_PUBKEY = sodium::KEYSIZE_PUBKEY_SIGN;
   static constexpr std::size_t SIGNATURE_SIZE = crypto_sign_BYTES;
 
   /**
@@ -50,13 +49,13 @@ class StreamVerifierPK {
    * key size isn't corect.
    **/
 
-  StreamVerifierPK(const data_t      &pubkey,
+  StreamVerifierPK(const bytes      &pubkey,
 		   const std::size_t blocksize) :
     pubkey_ {pubkey}, blocksize_ {blocksize} {
       if (pubkey.size() != KEYSIZE_PUBKEY)
-	throw std::runtime_error {"Sodium::StreamVerifierPK() wrong key size"};
+	throw std::runtime_error {"sodium::StreamVerifierPK() wrong key size"};
       if (blocksize < 1)
-	throw std::runtime_error {"Sodium::StreamVerifierPK() wrong blocksize"};
+	throw std::runtime_error {"sodium::StreamVerifierPK() wrong blocksize"};
 
       crypto_sign_init(&state_);
   }
@@ -76,7 +75,7 @@ class StreamVerifierPK {
 		   const std::size_t blocksize) :
     pubkey_ {keypair.pubkey()}, blocksize_ {blocksize} {
       if (blocksize < 1)
-	throw std::runtime_error {"Sodium::StreamVerifierPK() wrong blocksize"};
+	throw std::runtime_error {"sodium::StreamVerifierPK() wrong blocksize"};
       
       crypto_sign_init(&state_);
   }
@@ -98,14 +97,12 @@ class StreamVerifierPK {
    **/
   
   bool verify(std::istream &istr,
-	      const data_t &signature);
+	      const bytes &signature);
   
  private:
-  data_t            pubkey_;
+  bytes             pubkey_;
   crypto_sign_state state_;
   std::size_t       blocksize_;
 };
 
-} // namespace Sodium
-
-#endif // _S_STREAMVERIFIERPK_H_
+} // namespace sodium

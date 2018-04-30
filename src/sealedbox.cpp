@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,22 +16,22 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#include <stdexcept>
 #include "common.h"
 #include "sealedbox.h"
+#include <stdexcept>
 
-using data_t = Sodium::data_t;
-using Sodium::SealedBox;
+using bytes = sodium::bytes;
+using sodium::SealedBox;
 
-data_t
-SealedBox::encrypt(const data_t &plaintext,
-		   const data_t &pubkey)
+bytes
+SealedBox::encrypt(const bytes &plaintext,
+		   const bytes &pubkey)
 {
   // some sanity checks before we get started
   if (pubkey.size() != KEYSIZE_PUBKEY)
-    throw std::runtime_error {"Sodium::SealedBox::encrypt() wrong pubkey size"};
+    throw std::runtime_error {"sodium::SealedBox::encrypt() wrong pubkey size"};
   
-  data_t ciphertext(SEALSIZE + plaintext.size());
+  bytes ciphertext(SEALSIZE + plaintext.size());
   crypto_box_seal(ciphertext.data(),
 		  plaintext.data(), plaintext.size(),
 		  pubkey.data());
@@ -39,24 +39,24 @@ SealedBox::encrypt(const data_t &plaintext,
   return ciphertext; // by move semantics
 }
 
-data_t
-SealedBox::decrypt(const data_t       &ciphertext_with_seal,
+bytes
+SealedBox::decrypt(const bytes &ciphertext_with_seal,
 		   const privkey_type &privkey,
-		   const data_t       &pubkey) {
+		   const bytes        &pubkey) {
   // some sanity checks before we get started
   if (pubkey.size() != KEYSIZE_PUBKEY)
-    throw std::runtime_error {"Sodium::SealedBox::decrypt() wrong pubkey size"};
+    throw std::runtime_error {"sodium::SealedBox::decrypt() wrong pubkey size"};
   if (ciphertext_with_seal.size() < SEALSIZE)
-    throw std::runtime_error {"Sodium::SealedBox::decrypt() sealed ciphertext too small"};
+    throw std::runtime_error {"sodium::SealedBox::decrypt() sealed ciphertext too small"};
   
-  data_t decrypted(ciphertext_with_seal.size() - SEALSIZE);
+  bytes decrypted(ciphertext_with_seal.size() - SEALSIZE);
   
   if (crypto_box_seal_open(decrypted.data(),
 			   ciphertext_with_seal.data(),
 			   ciphertext_with_seal.size(),
 			   pubkey.data(),
 			   privkey.data()) == -1)
-    throw std::runtime_error {"Sodium::SealedBox::decrypt() can't decrypt"};
+    throw std::runtime_error {"sodium::SealedBox::decrypt() can't decrypt"};
   
   return decrypted; // by move semantics
 }

@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -22,29 +22,29 @@
 
 #include <sodium.h>
 
-using data_t = Sodium::data_t;
-using Sodium::KeyVar;
-using Sodium::Hash;
+using bytes = sodium::bytes;
+using sodium::KeyVar;
+using sodium::Hash;
 
-data_t
-Hash::hash (const data_t      &plaintext,
-	    const key_type    &key,
+bytes
+Hash::hash (const bytes &plaintext,
+	    const key_type  &key,
 	    const std::size_t hashsize)
 {
   // some sanity checks before we start
 
   if (key.size() < Hash::KEYSIZE_MIN)
-    throw std::runtime_error {"Sodium::Hash::hash() key size too small"};
+    throw std::runtime_error {"sodium::Hash::hash() key size too small"};
   if (key.size() > Hash::KEYSIZE_MAX)
-    throw std::runtime_error {"Sodium::Hash::hash() key size too big"};
+    throw std::runtime_error {"sodium::Hash::hash() key size too big"};
 
   if (hashsize < Hash::HASHSIZE_MIN)
-    throw std::runtime_error {"Sodium::Hash::hash() hash size too small"};
+    throw std::runtime_error {"sodium::Hash::hash() hash size too small"};
   if (hashsize > Hash::HASHSIZE_MAX)
-    throw std::runtime_error {"Sodium::Hash::hash() hash size too big"};
+    throw std::runtime_error {"sodium::Hash::hash() hash size too big"};
 
   // make space for hash
-  data_t outHash(hashsize);
+  bytes outHash(hashsize);
 
   // now compute the hash!
   crypto_generichash(outHash.data(), outHash.size(),
@@ -55,18 +55,18 @@ Hash::hash (const data_t      &plaintext,
   return outHash; // using move semantics
 }
 
-data_t
-Hash::hash (const data_t      &plaintext,
+bytes
+Hash::hash (const bytes &plaintext,
 	    const std::size_t hashsize)
 {
   // some sanity checks before we start
   if (hashsize < Hash::HASHSIZE_MIN)
-    throw std::runtime_error {"Sodium::Hash::hash() hash size too small"};
+    throw std::runtime_error {"sodium::Hash::hash() hash size too small"};
   if (hashsize > Hash::HASHSIZE_MAX)
-    throw std::runtime_error {"Sodium::Hash::hash() hash size too big"};
+    throw std::runtime_error {"sodium::Hash::hash() hash size too big"};
 
   // make space for hash
-  data_t outHash(hashsize);
+  bytes outHash(hashsize);
 
   // now compute the hash!
   crypto_generichash(outHash.data(), outHash.size(),
@@ -78,21 +78,21 @@ Hash::hash (const data_t      &plaintext,
 }
 
 void
-Hash::hash (const data_t   &plaintext,
+Hash::hash (const bytes &plaintext,
 	    const key_type &key,
-	    data_t         &outHash)
+	    bytes          &outHash)
 {
   // some sanity checks before we start
   
   if (key.size() < Hash::KEYSIZE_MIN)
-    throw std::runtime_error {"Sodium::Hash::hash() key size too small"};
+    throw std::runtime_error {"sodium::Hash::hash() key size too small"};
   if (key.size() > Hash::KEYSIZE_MAX)
-    throw std::runtime_error {"Sodium::Hash::hash() key size too big"};
+    throw std::runtime_error {"sodium::Hash::hash() key size too big"};
   
   if (outHash.size() < Hash::HASHSIZE_MIN)
-    throw std::runtime_error {"Sodium::Hash::hash() hash size too small"};
+    throw std::runtime_error {"sodium::Hash::hash() hash size too small"};
   if (outHash.size() > Hash::HASHSIZE_MAX)
-    throw std::runtime_error {"Sodium::Hash::hash() hash size too big"};
+    throw std::runtime_error {"sodium::Hash::hash() hash size too big"};
 
   // now compute the hash!
   crypto_generichash(outHash.data(), outHash.size(),
@@ -103,14 +103,14 @@ Hash::hash (const data_t   &plaintext,
 }
 
 void
-Hash::hash (const data_t &plaintext,
-	    data_t       &outHash)
+Hash::hash (const bytes &plaintext,
+	    bytes       &outHash)
 {
   // some sanity checks before we start
   if (outHash.size() < Hash::HASHSIZE_MIN)
-    throw std::runtime_error {"Sodium::Hash::hash() hash size too small"};
+    throw std::runtime_error {"sodium::Hash::hash() hash size too small"};
   if (outHash.size() > Hash::HASHSIZE_MAX)
-    throw std::runtime_error {"Sodium::Hash::hash() hash size too big"};
+    throw std::runtime_error {"sodium::Hash::hash() hash size too big"};
 
   // now compute the hash!
   crypto_generichash(outHash.data(), outHash.size(),

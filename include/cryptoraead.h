@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,20 +16,19 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef _S_CRYPTORAEAD_H_
-#define _S_CRYPTORAEAD_H_
+#pragma once
 
 #include "common.h"
 #include "key.h"
 #include "nonce.h"
 
-namespace Sodium {
+namespace sodium {
 
 class CryptorAEAD
 {
  public:
-  static constexpr unsigned int NSZA    = Sodium::NONCESIZE_AEAD;
-  static constexpr std::size_t  KEYSIZE = Sodium::KEYSIZE_AEAD;
+  static constexpr unsigned int NSZA    = sodium::NONCESIZE_AEAD;
+  static constexpr std::size_t  KEYSIZE = sodium::KEYSIZE_AEAD;
   static constexpr std::size_t  MACSIZE = crypto_aead_chacha20poly1305_ABYTES;
 
   using key_type   = Key<KEYSIZE>;
@@ -61,8 +60,8 @@ class CryptorAEAD
    * bytes.
    **/
 
-  data_t encrypt(const data_t     &header,
-		 const data_t     &plaintext,
+  bytes encrypt(const bytes &header,
+		 const bytes      &plaintext,
 		 const key_type   &key,
 		 const nonce_type &nonce);
 
@@ -81,13 +80,10 @@ class CryptorAEAD
    * the same value as those used when encrypting.
    **/
 
-  data_t decrypt(const data_t     &header,
-		 const data_t     &ciphertext_with_mac,
+  bytes decrypt(const bytes &header,
+		 const bytes        &ciphertext_with_mac,
 		 const key_type   &key,
 		 const nonce_type &nonce);
-
 };
 
-} // namespace Sodium
-
-#endif // _S_CRYPTORAEAD_H_
+} // namespace sodium

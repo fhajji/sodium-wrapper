@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,17 +16,17 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef _S_CRYPTOR_ENCRYPT_FILTER_H_
-#define _S_CRYPTOR_ENCRYPT_FILTER_H_
+#pragma once
+
+#include "common.h"
+#include "key.h"
+#include "nonce.h"
+#include "cryptor.h"
 
 #include <boost/iostreams/categories.hpp>       // tags
 #include <boost/iostreams/filter/aggregate.hpp> // aggregate_filter
 
 #include <sodium.h>
-#include "common.h"
-#include "key.h"
-#include "nonce.h"
-#include "cryptor.h"
 
 #ifndef NDEBUG
 #include <iostream>
@@ -34,7 +34,7 @@
 
 namespace io = boost::iostreams;
 
-namespace Sodium {
+namespace sodium {
 
 class cryptor_encrypt_filter : public io::aggregate_filter<char> {
 
@@ -44,11 +44,11 @@ class cryptor_encrypt_filter : public io::aggregate_filter<char> {
    *     #include <boost/iostreams/device/array.hpp>
    *     #include <boost/iostreams/filtering_stream.hpp>
    * 
-   *     using Sodium::cryptor_encrypt_filter;
-   *     using data_t = Sodium::data2_t;
+   *     using sodium::cryptor_encrypt_filter;
+   *     using chars = sodium::chars;
    * 
    *     std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-   *     data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
+   *     chars       plainblob {plaintext.cbegin(), plaintext.cend()};
    *
    * <---- If using as an OutputFilter:
    * 
@@ -58,7 +58,7 @@ class cryptor_encrypt_filter : public io::aggregate_filter<char> {
    *     cryptor_encrypt_filter::nonce_type    nonce;    // create random nonce
    *     cryptor_encrypt_filter encrypt_filter {key, nonce};  // create a cryptor filter
    * 
-   *     data_t ciphertext(encryptor_encrypt_filter::MACSIZE + plainblob.size());
+   *     chars ciphertext(encryptor_encrypt_filter::MACSIZE + plainblob.size());
    * 
    *     io::array_sink        sink {ciphertext.data(), ciphertext.size()};
    *     io::filtering_ostream os   {};
@@ -81,7 +81,7 @@ class cryptor_encrypt_filter : public io::aggregate_filter<char> {
    *     cryptor_encrypt_filter::nonce_type    nonce;    // create random nonce
    *     cryptor_encrypt_filter encrypt_filter {key, nonce};  // create a cryptor filter
    * 
-   *     data_t ciphertext ( cryptor_encrypt_filter::MACSIZE + plaintext.size() );
+   *     chars ciphertext ( cryptor_encrypt_filter::MACSIZE + plaintext.size() );
    *     io::array_source        source {plainblob.data(), plainblob.size()};
    *     io::filtering_istream   is     {};
    *     is.push(encrypt_filter); // encrypt data...
@@ -102,7 +102,7 @@ class cryptor_encrypt_filter : public io::aggregate_filter<char> {
   public:
     typedef typename base_type::char_type   char_type;
     typedef typename base_type::category    category;
-    typedef typename base_type::vector_type vector_type; // data2_t
+    typedef typename base_type::vector_type vector_type; // sodium::chars
 
     static constexpr std::size_t MACSIZE   = Cryptor::MACSIZE;
     
@@ -143,6 +143,4 @@ class cryptor_encrypt_filter : public io::aggregate_filter<char> {
     nonce_type nonce_;
 }; // cryptor_encrypt_filter
 
-} //namespace Sodium
-
-#endif // _S_CRYPTOR_ENCRYPT_FILTER_H_
+} //namespace sodium

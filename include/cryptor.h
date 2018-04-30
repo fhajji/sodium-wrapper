@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,8 +16,7 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef _S_CRYPTOR_H_
-#define _S_CRYPTOR_H_
+#pragma once
 
 #include "common.h"
 #include "key.h"
@@ -25,13 +24,13 @@
 
 #include <sodium.h>
 
-namespace Sodium {
+namespace sodium {
 
 class Cryptor {
 
  public:
-  static constexpr std::size_t NONCESIZE = Sodium::NONCESIZE_SECRETBOX;
-  static constexpr std::size_t KEYSIZE   = Sodium::KEYSIZE_SECRETBOX;
+  static constexpr std::size_t NONCESIZE = sodium::NONCESIZE_SECRETBOX;
+  static constexpr std::size_t KEYSIZE   = sodium::KEYSIZE_SECRETBOX;
   static constexpr std::size_t MACSIZE   = crypto_secretbox_MACBYTES;
 
   using nonce_type = Nonce<NONCESIZE>;
@@ -59,7 +58,7 @@ class Cryptor {
    * and it too won't be stored in protected key_t memory.
    **/
 
-  data_t encrypt(const data_t     &plaintext,
+  bytes encrypt(const bytes &plaintext,
 		 const key_type   &key,
 		 const nonce_type &nonce);
 
@@ -88,10 +87,10 @@ class Cryptor {
    * channel, and they too won't be stored in protected key_t memory.
    **/
   
-  data_t encrypt(const data_t     &plaintext,
+  bytes encrypt(const bytes &plaintext,
 		 const key_type   &key,
 		 const nonce_type &nonce,
-		 data_t           &mac);
+		 bytes            &mac);
   
   /**
    * Decrypt ciphertext using key and nonce, returing decrypted plaintext.
@@ -105,7 +104,7 @@ class Cryptor {
    * the ciphertext is too small to even contain the MAC (MACSIZE bytes).
    **/
 
-  data_t decrypt(const data_t     &ciphertext,
+  bytes decrypt(const bytes &ciphertext,
 		 const key_type   &key,
 		 const nonce_type &nonce);
 
@@ -123,13 +122,10 @@ class Cryptor {
    * the mac isn't MACSIZE.
    **/
   
-  data_t decrypt(const data_t     &ciphertext,
-		 const data_t     &mac,
+  bytes decrypt(const bytes &ciphertext,
+		 const bytes      &mac,
 		 const key_type   &key,
 		 const nonce_type &nonce);
-
 };
 
-} // namespace Sodium
- 
-#endif // _S_CRYPTOR_H_
+} // namespace sodium

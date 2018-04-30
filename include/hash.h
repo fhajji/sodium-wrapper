@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,8 +16,7 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef _S_HASH_H_
-#define _S_HASH_H_
+#pragma once
 
 #include "common.h"
 #include "key.h"     // keysize constants
@@ -25,14 +24,14 @@
 
 #include <sodium.h>
 
-namespace Sodium {
+namespace sodium {
 
 class Hash {
 
  public:
-  static constexpr std::size_t KEYSIZE      = Sodium::KEYSIZE_HASHKEY;
-  static constexpr std::size_t KEYSIZE_MIN  = Sodium::KEYSIZE_HASHKEY_MIN;
-  static constexpr std::size_t KEYSIZE_MAX  = Sodium::KEYSIZE_HASHKEY_MAX;
+  static constexpr std::size_t KEYSIZE      = sodium::KEYSIZE_HASHKEY;
+  static constexpr std::size_t KEYSIZE_MIN  = sodium::KEYSIZE_HASHKEY_MIN;
+  static constexpr std::size_t KEYSIZE_MAX  = sodium::KEYSIZE_HASHKEY_MAX;
   static constexpr std::size_t HASHSIZE     = crypto_generichash_BYTES;
   static constexpr std::size_t HASHSIZE_MIN = crypto_generichash_BYTES_MIN;
   static constexpr std::size_t HASHSIZE_MAX = crypto_generichash_BYTES_MAX;
@@ -56,7 +55,7 @@ class Hash {
    * The computed and returned hash will be hashsize bytes long.
    **/
   
-  data_t hash(const data_t      &plaintext,
+  bytes hash(const bytes    &plaintext,
 	      const key_type    &key,
 	      const std::size_t hashsize=HASHSIZE);
 
@@ -69,7 +68,7 @@ class Hash {
    * Otherwise, see hash() above.
    **/
 
-  data_t hash(const data_t      &plaintext,
+  bytes hash(const bytes &plaintext,
 	      const std::size_t hashsize=HASHSIZE);
   
   
@@ -92,9 +91,9 @@ class Hash {
    * the key will very likely result in a different hash.
    **/
 
-  void   hash(const data_t   &plaintext,
+  void   hash(const bytes &plaintext,
 	      const key_type &key,
-	      data_t         &outHash);
+	      bytes          &outHash);
 
   /**
    * Hash a plaintext into a hash of the size outHash.size().
@@ -105,11 +104,9 @@ class Hash {
    * Otherwise, see hash() above.
    **/
   
-  void   hash(const data_t &plaintext,
-	      data_t       &outHash);
+  void   hash(const bytes &plaintext,
+	      bytes       &outHash);
   
 };
 
-} // namespace Sodium
- 
-#endif // _S_HASH_H_
+} // namespace sodium

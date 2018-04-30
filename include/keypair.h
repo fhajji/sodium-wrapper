@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,21 +16,20 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef _S_KEYPAIR_H_
-#define _S_KEYPAIR_H_
+#pragma once
 
 #include "key.h"
 
-namespace Sodium {
+namespace sodium {
 
 class KeyPair
 {
   /**
-   * The class Sodium::KeyPair represents a pair of Public Key /
-   * Private Key used in various public key cryptography functions of
+   * The class sodium::KeyPair represents a pair of public key /
+   * private key used in various public key cryptography functions of
    * the libsodium library.
    *
-   * The public key is stored in unprotected (data_t) memory, while
+   * The public key is stored in unprotected (bytes) memory, while
    * the private key, being sensitive, is stored in protected (key_t) 
    * memory, i.e. in an internal Key object.
    *
@@ -47,9 +46,9 @@ class KeyPair
 
  public:
   // common constants for typical key and seed sizes
-  static constexpr std::size_t KEYSIZE_PUBKEY      = Sodium::KEYSIZE_PUBKEY;
-  static constexpr std::size_t KEYSIZE_PRIVKEY     = Sodium::KEYSIZE_PRIVKEY;
-  static constexpr std::size_t KEYSIZE_SEEDBYTES   = Sodium::KEYSIZE_SEEDBYTES;
+  static constexpr std::size_t KEYSIZE_PUBKEY      = sodium::KEYSIZE_PUBKEY;
+  static constexpr std::size_t KEYSIZE_PRIVKEY     = sodium::KEYSIZE_PRIVKEY;
+  static constexpr std::size_t KEYSIZE_SEEDBYTES   = sodium::KEYSIZE_SEEDBYTES;
 
   using privkey_type = Key<KEYSIZE_PRIVKEY>;
   
@@ -66,7 +65,7 @@ class KeyPair
    * key_t memory (readonly). It will be wiped clean when the KeyPair
    * goes out of scope or is destroyed.
    *
-   * The public key is stored in an internal data_t object in
+   * The public key is stored in an internal bytes object in
    * unprotected (readwrite) memory.
    **/
   
@@ -88,10 +87,10 @@ class KeyPair
    * Otherwise, see KeyPair().
    **/
   
-  KeyPair(const data_t &seed)
+  KeyPair(const bytes &seed)
     : pubkey_(KEYSIZE_PUBKEY, '\0'), privkey_(false) {
     if (seed.size() != KEYSIZE_SEEDBYTES)
-      throw std::runtime_error {"Sodium::KeyPair::KeyPair(seed) wrong seed size"};
+      throw std::runtime_error {"sodium::KeyPair::KeyPair(seed) wrong seed size"};
     crypto_box_seed_keypair(pubkey_.data(), privkey_.setdata(),
 			    seed.data());
     privkey_.readonly();
@@ -117,10 +116,10 @@ class KeyPair
    * Otherwise, see KeyPair().
    **/
   
-  KeyPair(const unsigned char *privkey_data, const std::size_t privkey_size)
+  KeyPair(const byte *privkey_data, const std::size_t privkey_size)
     : pubkey_(KEYSIZE_PUBKEY, '\0'), privkey_(false) {
     if (privkey_size != KEYSIZE_PRIVKEY)
-      throw std::runtime_error {"Sodium::KeyPair::KeyPair(privkey_data, privkey_size) wrong privkey_size"};
+      throw std::runtime_error {"sodium::KeyPair::KeyPair(privkey_data, privkey_size) wrong privkey_size"};
     std::copy(privkey_data, privkey_data+privkey_size,
 	      privkey_.setdata()); // constant time
     
@@ -149,16 +148,14 @@ class KeyPair
    *  <SOME_KEYPAIR>.pubkey().data(), <SOME_KEYPAIR>.pubkey().size()
    **/
 
-  const data_t& pubkey() const { return pubkey_; }
+  const bytes& pubkey() const { return pubkey_; }
   
  private:
-  data_t       pubkey_;
+  bytes        pubkey_;
   privkey_type privkey_;
 };
 
-} // namespace Sodium
+} // namespace sodium
 
-extern bool operator== (const Sodium::KeyPair &kp1, const Sodium::KeyPair &kp2);
-extern bool operator!= (const Sodium::KeyPair &kp1, const Sodium::KeyPair &kp2);
-
-#endif // _S_KEYPAIR_H_
+extern bool operator== (const sodium::KeyPair &kp1, const sodium::KeyPair &kp2);
+extern bool operator!= (const sodium::KeyPair &kp1, const sodium::KeyPair &kp2);

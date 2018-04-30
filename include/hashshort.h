@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,20 +16,19 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef _S_HASHSHORT_H_
-#define _S_HASHSHORT_H_
+#pragma once
 
 #include "common.h"
 #include "key.h"     // keysize constants
 
 #include <sodium.h>
 
-namespace Sodium {
+namespace sodium {
 
 class HashShort {
 
  public:
-  static constexpr std::size_t KEYSIZE      = Sodium::KEYSIZE_HASHSHORTKEY;
+  static constexpr std::size_t KEYSIZE      = sodium::KEYSIZE_HASHSHORTKEY;
   static constexpr std::size_t HASHSIZE     = crypto_shorthash_BYTES;
 
   using key_type = Key<KEYSIZE>;
@@ -48,9 +47,9 @@ class HashShort {
    * The computed and returned hash will be HASHSIZE bytes long.
    **/
   
-  data_t hash(const data_t   &plaintext,
+  bytes hash(const bytes &plaintext,
 	      const key_type &key) {
-    data_t outHash(HASHSIZE);
+    bytes outHash(HASHSIZE);
     crypto_shorthash(outHash.data(),
 		     plaintext.data(), plaintext.size(),
 		     key.data());
@@ -78,11 +77,11 @@ class HashShort {
    * the same hash.
    **/
 
-  void   hash(const data_t   &plaintext,
+  void   hash(const bytes &plaintext,
 	      const key_type &key,
-	      data_t         &outHash) {
+	      bytes         &outHash) {
     if (outHash.size() != HASHSIZE)
-      throw std::runtime_error {"Sodium::HashShort::hash() outHash wrong size"};
+      throw std::runtime_error {"sodium::HashShort::hash() outHash wrong size"};
     crypto_shorthash(outHash.data(),
 		     plaintext.data(), plaintext.size(),
 		     key.data());
@@ -91,6 +90,4 @@ class HashShort {
 
 };
 
-} // namespace Sodium
- 
-#endif // _S_HASHSHORT_H_
+} // namespace sodium

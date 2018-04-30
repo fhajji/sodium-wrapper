@@ -2,7 +2,7 @@
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -16,23 +16,21 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#ifndef _S_SIGNORPK_H_
-#define _S_SIGNORPK_H_
-
-#include <stdexcept>
-
-#include <sodium.h>
+#pragma once
 
 #include "common.h"
 #include "key.h"
 #include "keypairsign.h"
 
-namespace Sodium {
+#include <stdexcept>
+#include <sodium.h>
+
+namespace sodium {
 
 class SignorPK {
 
   /**
-   * The Sodium::SignorPK class provides sign() and verify() functions
+   * The sodium::SignorPK class provides sign() and verify() functions
    * for a sender to sign plaintext messages with her private key; and
    * for a receiver to verify the origin and authenticity of those
    * messages with the public key of the sender.
@@ -64,8 +62,8 @@ class SignorPK {
   
  public:
 
-  static constexpr std::size_t  KEYSIZE_PUBKEY  = Sodium::KEYSIZE_PUBKEY_SIGN;
-  static constexpr std::size_t  KEYSIZE_PRIVKEY = Sodium::KEYSIZE_PRIVKEY_SIGN;
+  static constexpr std::size_t  KEYSIZE_PUBKEY  = sodium::KEYSIZE_PUBKEY_SIGN;
+  static constexpr std::size_t  KEYSIZE_PRIVKEY = sodium::KEYSIZE_PRIVKEY_SIGN;
   static constexpr std::size_t  SIGNATURE_SIZE  = crypto_sign_BYTES;
 
   using privkey_type = Key<KEYSIZE_PRIVKEY>;
@@ -76,7 +74,7 @@ class SignorPK {
    * long.
    **/
 
-  data_t sign(const data_t       &plaintext,
+  bytes sign(const bytes       &plaintext,
 	      const privkey_type &privkey);
 
   /**
@@ -84,7 +82,7 @@ class SignorPK {
    * Return (signature || plaintext), where signature is
    * SIGNATURE_SIZE bytes long.
    **/
-  data_t sign(const data_t      &plaintext,
+  bytes sign(const bytes      &plaintext,
 	      const KeyPairSign &keypair) {
     return sign(plaintext, keypair.privkey());
   }
@@ -93,14 +91,14 @@ class SignorPK {
    * Sign the plaintext with the private key privkey. Return the
    * signature, which is SIGNATURE_SIZE bytes long.
    **/
-  data_t sign_detached(const data_t       &plaintext,
+  bytes sign_detached(const bytes       &plaintext,
 		       const privkey_type &privkey);
   
   /**
    * Sign the plaintext with the private key part of the keypair.
    * Return the signature, which is SIGNATURE_SIZE bytes long.
    **/
-  data_t sign_detached(const data_t       &plaintext,
+  bytes sign_detached(const bytes       &plaintext,
 		       const KeyPairSign  &keypair) {
     return sign_detached(plaintext, keypair.privkey());
   }
@@ -114,8 +112,8 @@ class SignorPK {
    * with signature being SIGNATURE_SIZE bytes long.
    **/
 
-  data_t verify(const data_t &plaintext_with_signature,
-		const data_t &pubkey);
+  bytes verify(const bytes &plaintext_with_signature,
+		const bytes &pubkey);
 
   /**
    * Verify the signature contained in plaintext_with_signature
@@ -127,7 +125,7 @@ class SignorPK {
    * with signature being SIGNATURE_SIZE bytes long.
    **/
   
-  data_t verify(const data_t      &plaintext_with_signature,
+  bytes verify(const bytes      &plaintext_with_signature,
 		const KeyPairSign &keypair) {
     return verify(plaintext_with_signature, keypair.pubkey());
   }
@@ -139,9 +137,9 @@ class SignorPK {
    * signature isn't SIGNATURE_SIZE bytes, throw std::runtime_error.
    **/
   
-  bool verify_detached(const data_t &plaintext,
-		       const data_t &signature,
-		       const data_t &pubkey);
+  bool verify_detached(const bytes &plaintext,
+		       const bytes &signature,
+		       const bytes &pubkey);
 
   /**
    * Verify the signature of the plaintext against the public key part
@@ -149,14 +147,12 @@ class SignorPK {
    * false.  If size of signature isn't SIGNATURE_SIZE bytes, throw
    * std::runtime_error.
    **/
-  bool verify_detached(const data_t      &plaintext,
-		       const data_t      &signature,
+  bool verify_detached(const bytes      &plaintext,
+		       const bytes       &signature,
 		       const KeyPairSign &keypair) {
     return verify_detached(plaintext, signature, keypair.pubkey());
   }
   
 };
 
-} // namespace Sodium
- 
-#endif // _S_SIGNORPK_H_
+} // namespace sodium
