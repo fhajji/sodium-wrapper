@@ -24,6 +24,7 @@
 #include "common.h"
 
 #include <string>
+#include <cstdio> // std::remove()
 
 #include <boost/iostreams/device/file.hpp>
 #include <boost/iostreams/device/back_inserter.hpp>
@@ -58,6 +59,14 @@ struct SodiumFixture {
     BOOST_TEST_MESSAGE("~SodiumFixture(): teardown -- no-op.");
   }
 };
+
+void
+delete_file(const char *fname)
+{
+	int result = std::remove(fname);
+
+	BOOST_CHECK(result == 0);
+}
 
 void
 pipeline_output_device (const std::string &plaintext,
@@ -260,8 +269,8 @@ BOOST_AUTO_TEST_CASE( sodium_test_poly1305_filter_poly1305_to_file )
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
 
-  const std::string macfile_name {"/var/tmp/poly1305macfile.data"};
-  const std::string outfile_name {"/var/tmp/poly1305outfile.data"};
+  const std::string macfile_name {"poly1305macfile.data"};
+  const std::string outfile_name {"poly1305outfile.data"};
   
   pipeline_output_device(plaintext,
 			 key,
@@ -274,6 +283,8 @@ BOOST_AUTO_TEST_CASE( sodium_test_poly1305_filter_poly1305_to_file )
 			   outfile_name);
 
   BOOST_CHECK(result);
+
+  delete_file("poly1305macfile.data");
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_poly1305_filter_poly1305_to_vector )
@@ -282,18 +293,22 @@ BOOST_AUTO_TEST_CASE( sodium_test_poly1305_filter_poly1305_to_vector )
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
 
-  const std::string outfile_name {"/var/tmp/poly1305outfile.data"};
+  const std::string outfile_name {"poly1305outfile.data"};
   
   mac_array_type mac {pipeline_output_device(plaintext,
 					     key,
 					     outfile_name)};
 
+  // XXX: FAIL on MSVC -- this call results in an exception,
+  // because mac is an EMPTY vector.
   auto result = verify_mac(plaintext,
 			   key,
 			   mac,
 			   outfile_name);
 
   BOOST_CHECK(result);
+
+  delete_file("poly1305outfile.data");
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_poly1305_filter_poly1305_to_vector_null )

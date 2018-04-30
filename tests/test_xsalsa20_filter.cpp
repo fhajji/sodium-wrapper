@@ -27,6 +27,7 @@
 #include <stdexcept>    // std::runtime_error
 #include <algorithm>    // std::equal(), std::copy()
 #include <iterator>     // std::back_inserter
+#include <cstdio>       // std::remove()
 
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/device/file.hpp>
@@ -48,6 +49,14 @@ struct SodiumFixture {
     BOOST_TEST_MESSAGE("~SodiumFixture(): teardown -- no-op.");
   }
 };
+
+void
+delete_file(const char *fname)
+{
+	int result = std::remove(fname);
+
+	BOOST_CHECK(result == 0);
+}
 
 bool
 test_of_correctness_combined_output_filter(const std::string &plaintext)
@@ -553,18 +562,22 @@ BOOST_AUTO_TEST_CASE( sodium_test_xsalsa20_filter_pipeline_output_device )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   pipeline_output_device(plaintext,
-			 "/var/tmp/outfile4.enc",
-			 "/var/tmp/outfile4.dec");
+			 "outfile4.enc",
+			 "outfile4.dec");
 
-  // Test succeeds if /var/tmp/outfile.dec contains plaintext
+  // Test succeeds if outfile.dec contains plaintext
   data_t plainblob {plaintext.cbegin(), plaintext.cend()};
   
-  io::file_source is("/var/tmp/outfile4.dec",
+  io::file_source is("outfile4.dec",
 		     std::ios_base::in | std::ios_base::binary);
   data_t decrypted(plaintext.size());
   is.read(decrypted.data(), decrypted.size());
+  is.close(); // so we can delete file before is goes out of scope
 
   BOOST_CHECK(decrypted == plainblob);
+
+  delete_file("outfile4.enc");
+  delete_file("outfile4.dec");
 }
 
 // NYI: add test cases to prove that we used xsalsa20 correctly...

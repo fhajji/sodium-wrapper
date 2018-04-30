@@ -24,6 +24,7 @@
 #include "common.h"
 
 #include <string>
+#include <cstdio> // std::remove()
 
 #include <boost/iostreams/device/file.hpp>
 #include <boost/iostreams/device/back_inserter.hpp>
@@ -58,6 +59,14 @@ struct SodiumFixture {
     BOOST_TEST_MESSAGE("~SodiumFixture(): teardown -- no-op.");
   }
 };
+
+void
+delete_file(const char *fname)
+{
+	int result = std::remove(fname);
+
+	BOOST_CHECK(result == 0);
+}
 
 void
 pipeline_output_device (const std::string &plaintext,
@@ -296,8 +305,8 @@ BOOST_AUTO_TEST_CASE( sodium_test_blake2b_filter_blake2b_to_file )
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
 
-  const std::string hashfile_name {"/var/tmp/blake2bmacfile.data"};
-  const std::string outfile_name  {"/var/tmp/blake2boutfile.data"};
+  const std::string hashfile_name {"blake2bmacfile.data"};
+  const std::string outfile_name  {"blake2boutfile.data"};
   
   pipeline_output_device(plaintext,
 			 key,
@@ -310,6 +319,9 @@ BOOST_AUTO_TEST_CASE( sodium_test_blake2b_filter_blake2b_to_file )
 			    outfile_name);
 
   BOOST_CHECK(result);
+
+  delete_file("blake2bmacfile.data");
+  delete_file("blake2boutfile.data");
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_blake2b_filter_blake2b_to_file_keyless )
@@ -319,8 +331,8 @@ BOOST_AUTO_TEST_CASE( sodium_test_blake2b_filter_blake2b_to_file_keyless )
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
 
-  const std::string hashfile_name {"/var/tmp/blake2bmacfile.data"};
-  const std::string outfile_name  {"/var/tmp/blake2boutfile.data"};
+  const std::string hashfile_name {"blake2bmacfile.data"};
+  const std::string outfile_name  {"blake2boutfile.data"};
   
   pipeline_output_device(plaintext,
 			 key,
@@ -333,6 +345,9 @@ BOOST_AUTO_TEST_CASE( sodium_test_blake2b_filter_blake2b_to_file_keyless )
 			    outfile_name);
 
   BOOST_CHECK(result);
+
+  delete_file("blake2bmacfile.data");
+  delete_file("blake2boutfile.data");
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_blake2b_filter_blake2b_to_vector )
@@ -342,7 +357,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_blake2b_filter_blake2b_to_vector )
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
 
-  const std::string outfile_name {"/var/tmp/blake2boutfile.data"};
+  const std::string outfile_name {"blake2boutfile.data"};
   
   hash_array_type hash {pipeline_output_device(plaintext,
 					       key,
@@ -354,6 +369,8 @@ BOOST_AUTO_TEST_CASE( sodium_test_blake2b_filter_blake2b_to_vector )
 			    outfile_name);
 
   BOOST_CHECK(result);
+
+  delete_file("blake2boutfile.data");
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_blake2b_filter_blake2b_to_vector_keyless )
@@ -363,7 +380,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_blake2b_filter_blake2b_to_vector_keyless )
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
 
-  const std::string outfile_name {"/var/tmp/blake2boutfile.data"};
+  const std::string outfile_name {"blake2boutfile.data"};
   
   hash_array_type hash {pipeline_output_device(plaintext,
 					       key,
@@ -375,6 +392,8 @@ BOOST_AUTO_TEST_CASE( sodium_test_blake2b_filter_blake2b_to_vector_keyless )
 			    outfile_name);
 
   BOOST_CHECK(result);
+
+  delete_file("blake2boutfile.data");
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_blake2b_filter_blake2b_to_vector_null )

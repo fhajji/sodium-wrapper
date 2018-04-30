@@ -56,7 +56,8 @@ endif()
 
 # --------------- Crank up warnings to the max --------------------------------
 if (MSVC)
-    add_compile_options (/Wall)
+    # add_compile_options (/Wall)
+	add_compile_options (/W2) # /Wall is too much for now.
 else()
     add_compile_options (-Wall -Wextra -Wpedantic)
 endif()
@@ -67,7 +68,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
         add_compile_options (-stdlib=libc++)
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         # message("FreeBSD:g++ ${CMAKE_CXX_COMPILER_VERSION}")
-	add_compile_options (-nostdinc++ -I/usr/include/c++/v1)
+		add_compile_options (-nostdinc++ -I/usr/include/c++/v1)
         set (CMAKE_EXE_LINKER_FLAGS "-nodefaultlibs -lc++ -lm -lc -lgcc_s -lgcc")
         # if multiple g++ versions are installed, pick the right libraries
         # XXX this is brittle: update for g++7, g++8, ...
@@ -133,6 +134,6 @@ foreach (testSrc ${TEST_SRCS})
         # Finally add it to test execution - 
         # Notice the WORKING_DIRECTORY and COMMAND
         add_test (NAME ${testName} 
-                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/testBin 
-                  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/testBin/${testName} )
+                  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+                  COMMAND ${CMAKE_BINARY_DIR}/tests/${testName} )
 endforeach(testSrc)
