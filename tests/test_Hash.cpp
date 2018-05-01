@@ -1,4 +1,4 @@
-// test_Hash.cpp -- Test Sodium::Hash
+// test_Hash.cpp -- Test sodium::Hash
 //
 // ISC License
 // 
@@ -17,18 +17,18 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE Sodium::Hash Test
+#define BOOST_TEST_MODULE sodium::Hash Test
 #include <boost/test/included/unit_test.hpp>
 
-#include <sodium.h>
 #include "hash.h"
 #include <string>
 #include <stdexcept>
+#include <sodium.h>
 
-using Sodium::Hash;
-using Sodium::KeyVar;
+using sodium::Hash;
+using sodium::KeyVar;
 
-using data_t = Sodium::data_t;
+using bytes = sodium::bytes;
 
 bool
 test_hash_size(const std::string &plaintext,
@@ -37,10 +37,10 @@ test_hash_size(const std::string &plaintext,
   Hash::key_type key(hashsize);
   Hash           hasher {};
   
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   try {
-    data_t outHash = hasher.hash(plainblob, key, hashsize);
+    bytes outHash = hasher.hash(plainblob, key, hashsize);
     
     return outHash.size() == hashsize;
   }
@@ -61,14 +61,14 @@ test_key_size(const std::string &plaintext,
   Hash::key_type key    (keysize);
   Hash           hasher {};
 
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   try {
     if (return_hash_as_value) {
-      data_t outHash = hasher.hash(plainblob, key /* , Hash::HASHSIZE */ );
+      bytes outHash = hasher.hash(plainblob, key /* , Hash::HASHSIZE */ );
     }
     else {
-      data_t outHash(Hash::HASHSIZE);
+      bytes outHash(Hash::HASHSIZE);
       hasher.hash(plainblob, key, outHash);
     }
 
@@ -90,11 +90,11 @@ test_different_keys(const std::string &plaintext)
   Hash::key_type key2(Hash::KEYSIZE);
   Hash           hasher {};
   
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   try {
-    data_t outHash1 = hasher.hash(plainblob, key1 /* , Hash::HASHSIZE */);
-    data_t outHash2 = hasher.hash(plainblob, key2 /* , Hash::HASHSIZE */);
+    bytes outHash1 = hasher.hash(plainblob, key1 /* , Hash::HASHSIZE */);
+    bytes outHash2 = hasher.hash(plainblob, key2 /* , Hash::HASHSIZE */);
     
     return (key1 != key2) && (outHash1 != outHash2);
   }
@@ -112,11 +112,11 @@ test_keyless_hashing(const std::string &plaintext)
 {
   Hash   hasher {};
 
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   try {
-    data_t outHash1 = hasher.hash(plainblob /* , Hash::HASHSIZE */); // keyless
-    data_t outHash2(Hash::HASHSIZE);
+    bytes outHash1 = hasher.hash(plainblob /* , Hash::HASHSIZE */); // keyless
+    bytes outHash2(Hash::HASHSIZE);
     hasher.hash(plainblob, outHash2); // keyless
 
     return outHash1 == outHash2;
@@ -253,12 +253,12 @@ BOOST_AUTO_TEST_CASE( sodium_hash_test_falsify_plaintext )
   Hash           hasher {};
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  data_t      plainblob { plaintext.cbegin(), plaintext.cend() };
-  data_t      falsified { plainblob };
+  bytes       plainblob { plaintext.cbegin(), plaintext.cend() };
+  bytes       falsified { plainblob };
   ++falsified[0];
   
-  data_t hash1 = hasher.hash(plainblob, key /* , Hash::HASHSIZE */);
-  data_t hash2 = hasher.hash(falsified, key /* , Hash::HASHSIZE */);
+  bytes hash1 = hasher.hash(plainblob, key /* , Hash::HASHSIZE */);
+  bytes hash2 = hasher.hash(falsified, key /* , Hash::HASHSIZE */);
 
   // unless there is a collision (very unlikely),
   // both hashes must be different for test to succeed

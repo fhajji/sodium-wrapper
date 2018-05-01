@@ -1,8 +1,8 @@
-// test_SealedBox.cpp -- Test Sodium::SealedBox
+// test_SealedBox.cpp -- Test sodium::SealedBox
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -17,17 +17,17 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE Sodium::SealedBox Test
+#define BOOST_TEST_MODULE sodium::SealedBox Test
 #include <boost/test/included/unit_test.hpp>
 
-#include <sodium.h>
 #include "sealedbox.h"
 #include "keypair.h"
 #include <string>
+#include <sodium.h>
 
-using Sodium::KeyPair;
-using Sodium::SealedBox;
-using data_t = Sodium::data_t;
+using sodium::KeyPair;
+using sodium::SealedBox;
+using bytes = sodium::bytes;
 
 bool
 test_of_correctness(const std::string &plaintext)
@@ -36,17 +36,17 @@ test_of_correctness(const std::string &plaintext)
   KeyPair   keypair_alice {};
   KeyPair   keypair_bob   {};
 
-  data_t    plainblob     {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // 1. alice gets the public key from bob, and sends him a message
   
-  data_t ciphertext_from_alice_to_bob =
+  bytes ciphertext_from_alice_to_bob =
     sb.encrypt(plainblob,
 	       keypair_bob.pubkey());
 
   // 2. bob decrypts the message
   
-  data_t decrypted_by_bob_from_someone =
+  bytes decrypted_by_bob_from_someone =
     sb.decrypt(ciphertext_from_alice_to_bob,
 	       keypair_bob.privkey(),
 	       keypair_bob.pubkey());
@@ -60,12 +60,12 @@ test_of_correctness(const std::string &plaintext)
   
   // 4. bob echoes the messages back to alice.
 
-  data_t ciphertext_from_bob_to_alice =
+  bytes ciphertext_from_bob_to_alice =
     sb.encrypt(decrypted_by_bob_from_someone,
 	       keypair_alice);
 
   // 5. alice attempts to decrypt again
-  data_t decrypted_by_alice_from_someone =
+  bytes decrypted_by_alice_from_someone =
     sb.decrypt(ciphertext_from_bob_to_alice,
 	       keypair_alice);
 
@@ -84,10 +84,10 @@ falsify_seal(const std::string &plaintext)
   SealedBox sb            {};
   KeyPair   keypair_alice {};
 
-  data_t    plainblob     {plaintext.cbegin(), plaintext.cend()};
+  bytes    plainblob     {plaintext.cbegin(), plaintext.cend()};
 
   // encrypt to self
-  data_t ciphertext = sb.encrypt(plainblob,
+  bytes ciphertext = sb.encrypt(plainblob,
 				 keypair_alice);
 
   BOOST_CHECK(ciphertext.size() >= SealedBox::SEALSIZE);
@@ -96,7 +96,7 @@ falsify_seal(const std::string &plaintext)
   ++ciphertext[0];
 
   try {
-    data_t decrypted = sb.decrypt(ciphertext,
+    bytes decrypted = sb.decrypt(ciphertext,
 				  keypair_alice);
   }
   catch (std::exception & /* e */) {
@@ -121,10 +121,10 @@ falsify_ciphertext(const std::string &plaintext)
   SealedBox sb            {};
   KeyPair   keypair_alice {};
 
-  data_t    plainblob     {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // encrypt to self
-  data_t ciphertext = sb.encrypt(plainblob,
+  bytes ciphertext = sb.encrypt(plainblob,
 				 keypair_alice);
 
   BOOST_CHECK(ciphertext.size() > SealedBox::SEALSIZE);
@@ -133,7 +133,7 @@ falsify_ciphertext(const std::string &plaintext)
   ++ciphertext[SealedBox::SEALSIZE];
 
   try {
-    data_t decrypted = sb.decrypt(ciphertext,
+    bytes decrypted = sb.decrypt(ciphertext,
 				  keypair_alice);
   }
   catch (std::exception & /* e */) {
@@ -155,12 +155,12 @@ falsify_recipient(const std::string &plaintext)
   KeyPair   keypair_bob   {}; // intended recipient
   KeyPair   keypair_oscar {}; // real recipient
 
-  data_t    plainblob     {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // 1. Alice encrypts a plaintext intended to be sent to bob,
   // with bob's public key.
   
-  data_t ciphertext = sb.encrypt(plainblob,
+  bytes ciphertext = sb.encrypt(plainblob,
 				 keypair_bob);
 
   // 2. Alice sends the sealed ciphertext to bob. Not shown here.
@@ -169,7 +169,7 @@ falsify_recipient(const std::string &plaintext)
   // his own private key. This is the place where decryption MUST fail.
   
   try {
-    data_t decrypted = sb.decrypt(ciphertext,
+    bytes decrypted = sb.decrypt(ciphertext,
 				  keypair_oscar);
 
     // if decryption succeeded, Oscar was successful in impersonating Bob.
@@ -220,16 +220,16 @@ BOOST_AUTO_TEST_CASE( sodium_sealedbox_test_encrypt_to_self )
   KeyPair   keypair_alice {};
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // encrypt to self
-  data_t ciphertext = sb.encrypt(plainblob,
+  bytes ciphertext = sb.encrypt(plainblob,
 				 keypair_alice);
 
   BOOST_CHECK_EQUAL(ciphertext.size(),
 		    plainblob.size() + SealedBox::SEALSIZE);
 
-  data_t decrypted = sb.decrypt(ciphertext,
+  bytes decrypted = sb.decrypt(ciphertext,
 				keypair_alice);
 
   // if the ciphertext (with MAC) was modified, or came from another

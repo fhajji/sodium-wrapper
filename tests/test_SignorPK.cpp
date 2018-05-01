@@ -1,8 +1,8 @@
-// test_SignorPK.cpp -- Test Sodium::SignorPK
+// test_SignorPK.cpp -- Test sodium::SignorPK
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -17,18 +17,18 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE Sodium::SignorPK Test
+#define BOOST_TEST_MODULE sodium::SignorPK Test
 #include <boost/test/included/unit_test.hpp>
 
-#include <sodium.h>
 #include "signorpk.h"
 #include "keypairsign.h"
 #include <string>
 #include <algorithm>
+#include <sodium.h>
 
-using Sodium::KeyPairSign;
-using Sodium::SignorPK;
-using data_t = Sodium::data_t;
+using sodium::KeyPairSign;
+using sodium::SignorPK;
+using bytes = sodium::bytes;
 
 constexpr static std::size_t sigsize = SignorPK::SIGNATURE_SIZE;
 
@@ -39,17 +39,17 @@ test_of_correctness(const std::string &plaintext)
   KeyPairSign keypair_alice {};
   KeyPairSign keypair_bob   {};
 
-  data_t      plainblob     {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // 1. alice signs a message with her private key and sends it to bob
   
-  data_t plaintext_from_alice_to_bob_with_signature =
+  bytes plaintext_from_alice_to_bob_with_signature =
     sc.sign(plainblob,
 	    keypair_alice.privkey());
 
   // 2. bob gets the public key from alice, and verifies the signature
   
-  data_t message_to_bob_from_alice =
+  bytes message_to_bob_from_alice =
     sc.verify(plaintext_from_alice_to_bob_with_signature,
 	      keypair_alice.pubkey());
 
@@ -63,13 +63,13 @@ test_of_correctness(const std::string &plaintext)
   // 4. bob echoes the messages back to alice, after signing it
   // himself with his private key.
 
-  data_t plaintext_with_signature_from_bob_to_alice =
+  bytes plaintext_with_signature_from_bob_to_alice =
     sc.sign(message_to_bob_from_alice,
 	    keypair_bob.privkey());
 
   // 5. alice attempts to verify that the message came from bob
   // using bob's public key.
-  data_t plaintext_from_bob_to_alice =
+  bytes plaintext_from_bob_to_alice =
     sc.verify(plaintext_with_signature_from_bob_to_alice,
 	      keypair_bob.pubkey());
 
@@ -89,12 +89,12 @@ test_of_correctness_with_detached_signatures(const std::string &plaintext)
   KeyPairSign keypair_alice {};
   KeyPairSign keypair_bob   {};
 
-  data_t      plainblob     {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // 1. alice signs a message with her private key and sends it (plainblob)
   // and the signature (signature_from_alice) to bob.
   
-  data_t signature_from_alice =
+  bytes signature_from_alice =
     sc.sign_detached(plainblob,
 		     keypair_alice.privkey());
 
@@ -115,7 +115,7 @@ test_of_correctness_with_detached_signatures(const std::string &plaintext)
   // himself with his private key. He sends both the message plainblob,
   // as well as the signature signature_from_bob to alice.
 
-  data_t signature_from_bob =
+  bytes signature_from_bob =
     sc.sign_detached(plainblob,
 		     keypair_bob.privkey());
 
@@ -142,10 +142,9 @@ falsify_signature(const std::string &plaintext)
   SignorPK    sc            {};
   KeyPairSign keypair_alice {};
 
-  data_t      plainblob     {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
-  data_t      signedtext  = sc.sign(plainblob,
-				    keypair_alice);
+  bytes signedtext  = sc.sign(plainblob, keypair_alice);
 
   BOOST_CHECK(signedtext.size() >= SignorPK::SIGNATURE_SIZE);
 
@@ -153,7 +152,7 @@ falsify_signature(const std::string &plaintext)
   ++signedtext[0];
 
   try {
-    data_t message_without_signature = sc.verify(signedtext,
+    bytes message_without_signature = sc.verify(signedtext,
 						 keypair_alice);
   }
   catch (std::exception & /* e */) {
@@ -173,10 +172,9 @@ falsify_detached_signature(const std::string &plaintext)
   SignorPK    sc            {};
   KeyPairSign keypair_alice {};
 
-  data_t      plainblob     {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
-  data_t      signature =   sc.sign_detached(plainblob,
-					     keypair_alice);
+  bytes signature = sc.sign_detached(plainblob, keypair_alice);
   
   BOOST_CHECK_EQUAL(signature.size(), sigsize);
 
@@ -201,11 +199,10 @@ falsify_signedtext(const std::string &plaintext)
   SignorPK    sc            {};
   KeyPairSign keypair_alice {};
 
-  data_t      plainblob     {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // sign to self
-  data_t      signedtext =  sc.sign(plainblob,
-				    keypair_alice);
+  bytes signedtext = sc.sign(plainblob, keypair_alice);
 
   BOOST_CHECK(signedtext.size() > SignorPK::SIGNATURE_SIZE);
 
@@ -213,7 +210,7 @@ falsify_signedtext(const std::string &plaintext)
   ++signedtext[SignorPK::SIGNATURE_SIZE];
 
   try {
-    data_t plaintext_without_signature = sc.verify(signedtext,
+    bytes plaintext_without_signature = sc.verify(signedtext,
 						   keypair_alice);
   }
   catch (std::exception & /* e */) {
@@ -238,11 +235,10 @@ falsify_plaintext(const std::string &plaintext)
   SignorPK    sc            {};
   KeyPairSign keypair_alice {};
 
-  data_t      plainblob     {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // sign to self
-  data_t      signature =   sc.sign_detached(plainblob,
-					     keypair_alice);
+  bytes signature = sc.sign_detached(plainblob, keypair_alice);
 
   BOOST_CHECK_EQUAL(signature.size(), sigsize);
 
@@ -263,12 +259,11 @@ falsify_sender(const std::string &plaintext)
   KeyPairSign keypair_bob   {}; // impersonated sender
   KeyPairSign keypair_oscar {}; // real sender
 
-  data_t      plainblob     {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // 1. Oscar signs a plaintext that looks as if it was written by Bob.
   
-  data_t      signedtext =  sc.sign(plainblob,
-				    keypair_oscar.privkey()); // !!!
+  bytes signedtext = sc.sign(plainblob, keypair_oscar.privkey()); // !!!
 
   // 2. Oscar prepends forged headers to the signedtext, making it appear
   // as if the message (= headers + signedtext) came indeed from Bob,
@@ -282,7 +277,7 @@ falsify_sender(const std::string &plaintext)
   // key. This is the place where verification MUST fail.
 
   try {
-    data_t plaintext_without_signature = sc.verify(signedtext,
+    bytes plaintext_without_signature = sc.verify(signedtext,
 						   keypair_bob.pubkey()); // !!!
     // if verification succeeded, Oscar was successful in impersonating Bob.
     // The test therefore failed!
@@ -310,11 +305,11 @@ falsify_sender_detached(const std::string &plaintext)
   KeyPairSign keypair_bob   {}; // impersonated sender
   KeyPairSign keypair_oscar {}; // real sender
 
-  data_t      plainblob     {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // 1. Oscar signs a plaintext that looks as if it was written by Bob.
   
-  data_t      signature =   sc.sign_detached(plainblob,
+  bytes signature = sc.sign_detached(plainblob,
 					     keypair_oscar.privkey()); // !!!
 
   // 2. Oscar prepends forged headers to the plainblob and signature,
@@ -376,15 +371,14 @@ BOOST_AUTO_TEST_CASE( sodium_signorpk_test_sign_to_self )
   KeyPairSign keypair_alice {};
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
-  data_t signedtext = sc.sign(plainblob,
-			      keypair_alice);
+  bytes signedtext = sc.sign(plainblob, keypair_alice);
 
   BOOST_CHECK_EQUAL(signedtext.size(),
 		    plainblob.size() + SignorPK::SIGNATURE_SIZE);
 
-  data_t message_without_signature = sc.verify(signedtext,
+  bytes message_without_signature = sc.verify(signedtext,
 					       keypair_alice);
 
   // if the signedtext was modified, or came from another
@@ -399,9 +393,9 @@ BOOST_AUTO_TEST_CASE( sodium_signorpk_test_sign_to_self_detached )
   KeyPairSign keypair_alice {};
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
-  data_t signature = sc.sign_detached(plainblob,
+  bytes signature = sc.sign_detached(plainblob,
 				      keypair_alice);
 
   BOOST_CHECK_EQUAL(signature.size(), sigsize);
@@ -492,11 +486,10 @@ BOOST_AUTO_TEST_CASE( sodium_signorpk_test_plaintext_remains_plaintext )
   SignorPK    sc            {};
   KeyPairSign keypair_alice {};
 
-  data_t      plainblob     {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // sign to self
-  data_t      signedtext =  sc.sign(plainblob,
-				    keypair_alice);
+  bytes signedtext = sc.sign(plainblob, keypair_alice);
 
   BOOST_CHECK_EQUAL(signedtext.size(),
 		    plainblob.size() + SignorPK::SIGNATURE_SIZE);

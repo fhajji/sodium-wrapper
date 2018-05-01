@@ -1,8 +1,8 @@
-// test_CryptorMultiPK.cpp -- Test Sodium::CryptorMultiPK
+// test_CryptorMultiPK.cpp -- Test sodium::CryptorMultiPK
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -20,10 +20,9 @@
 //   ./test_CryptorMultiPK --log_level=message
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE Sodium::CryptorMultiPK Test
+#define BOOST_TEST_MODULE sodium::CryptorMultiPK Test
 #include <boost/test/included/unit_test.hpp>
 
-#include <sodium.h>
 #include "cryptorpk.h"
 #include "cryptormultipk.h"
 #include "keypair.h"
@@ -32,13 +31,15 @@
 #include <sstream>
 #include <chrono>
 
+#include <sodium.h>
+
 using namespace std::chrono;
 
-using Sodium::KeyPair;
-using Sodium::CryptorPK;
-using Sodium::CryptorMultiPK;
+using sodium::KeyPair;
+using sodium::CryptorPK;
+using sodium::CryptorMultiPK;
 
-using data_t = Sodium::data_t;
+using bytes = sodium::bytes;
 
 bool
 test_of_correctness(const std::string &plaintext)
@@ -52,18 +53,18 @@ test_of_correctness(const std::string &plaintext)
   CryptorMultiPK          sc_bob(keypair_bob.privkey(),
 				 keypair_alice.pubkey());
 
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // 1. alice uses the shared key with bob to encrypt and sign
   //    a message:
   
-  data_t ciphertext_from_alice_to_bob =
+  bytes ciphertext_from_alice_to_bob =
     sc_alice.encrypt(plainblob, nonce);
 
   // 2. bob uses the shared key with alice to decrypt the message
   //    and verify alice's signature:
   
-  data_t decrypted_by_bob_from_alice =
+  bytes decrypted_by_bob_from_alice =
     sc_bob.decrypt(ciphertext_from_alice_to_bob, nonce);
 
   // 3. if decryption (MAC or signature) fails, decrypt() would throw,
@@ -75,11 +76,11 @@ test_of_correctness(const std::string &plaintext)
 
   nonce.increment(); // IMPORTANT! before calling encrypt() again
 
-  data_t ciphertext_from_bob_to_alice =
+  bytes ciphertext_from_bob_to_alice =
     sc_bob.encrypt(decrypted_by_bob_from_alice, nonce);
 
   // 5. alice attempts to decrypt again (also with the incremented nonce)
-  data_t decrypted_by_alice_from_bob =
+  bytes decrypted_by_alice_from_bob =
     sc_alice.decrypt(ciphertext_from_bob_to_alice, nonce);
 
   // 6. if decryption (MAC or signature) fails, decrypt() would throw,
@@ -98,9 +99,9 @@ falsify_mac(const std::string &plaintext)
   CryptorMultiPK::nonce_type nonce         {};
   CryptorMultiPK             sc(keypair_alice);
   
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
-  data_t ciphertext = sc.encrypt(plainblob, nonce);
+  bytes ciphertext = sc.encrypt(plainblob, nonce);
 
   BOOST_CHECK(ciphertext.size() >= CryptorMultiPK::MACSIZE);
 
@@ -108,7 +109,7 @@ falsify_mac(const std::string &plaintext)
   ++ciphertext[0];
 
   try {
-    data_t decrypted = sc.decrypt(ciphertext, nonce);
+    bytes decrypted = sc.decrypt(ciphertext, nonce);
   }
   catch (std::exception & /* e */) {
     // decryption failed as expected: test passed.
@@ -133,10 +134,10 @@ falsify_ciphertext(const std::string &plaintext)
   CryptorMultiPK::nonce_type nonce         {};
   CryptorMultiPK             sc(keypair_alice);
   
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // encrypt to self
-  data_t ciphertext = sc.encrypt(plainblob, nonce);
+  bytes ciphertext = sc.encrypt(plainblob, nonce);
 
   BOOST_CHECK(ciphertext.size() > CryptorMultiPK::MACSIZE);
 
@@ -144,7 +145,7 @@ falsify_ciphertext(const std::string &plaintext)
   ++ciphertext[CryptorMultiPK::MACSIZE];
 
   try {
-    data_t decrypted = sc.decrypt(ciphertext, nonce);
+    bytes decrypted = sc.decrypt(ciphertext, nonce);
   }
   catch (std::exception & /* e */) {
     // Exception caught as expected. Test passed.
@@ -172,12 +173,12 @@ falsify_sender(const std::string &plaintext)
   CryptorMultiPK             sc_oscar(keypair_oscar.privkey(),
 				      keypair_alice.pubkey());
 
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // 1. Oscar encrypts a plaintext that looks as if it was written by Bob
   // with Alice's public key, and signs it with his own private key.
   
-  data_t ciphertext = sc_oscar.encrypt(plainblob, nonce);
+  bytes ciphertext = sc_oscar.encrypt(plainblob, nonce);
 
   // 2. Oscar prepends forged headers to the ciphertext, making it appear
   // as if the message (= headers + ciphertext) came indeed from Bob,
@@ -192,7 +193,7 @@ falsify_sender(const std::string &plaintext)
   // the place where decryption MUST fail.
 
   try {
-    data_t decrypted = sc_alice.decrypt(ciphertext, nonce);
+    bytes decrypted = sc_alice.decrypt(ciphertext, nonce);
 
     // if decryption succeeded, Oscar was successful in impersonating Bob.
     // The test therefore failed!
@@ -213,7 +214,7 @@ falsify_sender(const std::string &plaintext)
 }
 
 bool
-destroy_shared_key_then_encrypt(const data_t &plaintext)
+destroy_shared_key_then_encrypt(const bytes &plaintext)
 {
   KeyPair                    keypair_alice {};
   CryptorMultiPK::nonce_type nonce         {};
@@ -223,7 +224,7 @@ destroy_shared_key_then_encrypt(const data_t &plaintext)
   sc_alice.destroy_shared_key();
 
   try {
-    data_t ciphertext = sc_alice.encrypt(plaintext, nonce);
+    bytes ciphertext = sc_alice.encrypt(plaintext, nonce);
 
     // 2. encryption succeeded despite destroyed shared key.
     // test failed.
@@ -240,7 +241,7 @@ destroy_shared_key_then_encrypt(const data_t &plaintext)
 }
 
 bool
-destroy_shared_key_then_decrypt(const data_t                     &ciphertext,
+destroy_shared_key_then_decrypt(const bytes                     &ciphertext,
 				const KeyPair                    &keypair,
 				const CryptorMultiPK::nonce_type &nonce)
 {
@@ -250,7 +251,7 @@ destroy_shared_key_then_decrypt(const data_t                     &ciphertext,
   sc_alice.destroy_shared_key();
 
   try {
-    data_t decrypted = sc_alice.decrypt(ciphertext, nonce);
+    bytes decrypted = sc_alice.decrypt(ciphertext, nonce);
 
     // 2. decryption succeeded despite destroyed shared key.
     // test failed.
@@ -276,9 +277,9 @@ time_encrypt(const unsigned long nr_of_messages)
   CryptorMultiPK             sc_multi_alice  (keypair_alice);
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
-  data_t ciphertext_multi (plaintext.size() + CryptorMultiPK::MACSIZE);
-  data_t ciphertext_single(plaintext.size() + CryptorPK::MACSIZE);
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes ciphertext_multi (plaintext.size() + CryptorMultiPK::MACSIZE);
+  bytes ciphertext_single(plaintext.size() + CryptorPK::MACSIZE);
 
   std::ostringstream os;
   
@@ -312,7 +313,7 @@ time_encrypt(const unsigned long nr_of_messages)
   BOOST_TEST_MESSAGE(os.str());
   
   BOOST_CHECK_MESSAGE(tmulti < tsingle,
-		      "Sodium::CryptorMultiPK::encrypt() slower than Sodium::CryptorPK::encrypt()");
+		      "sodium::CryptorMultiPK::encrypt() slower than sodium::CryptorPK::encrypt()");
 }
 
 void
@@ -325,13 +326,13 @@ time_decrypt(const unsigned long nr_of_messages)
   CryptorMultiPK             sc_multi_alice  (keypair_alice);
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
-  data_t decrypted_multi (plaintext.size());
-  data_t decrypted_single(plaintext.size());
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes decrypted_multi (plaintext.size());
+  bytes decrypted_single(plaintext.size());
 
   // 0. encrypt once the plaintext without timing
-  data_t ciphertext_multi  = sc_multi_alice.encrypt(plainblob, nonce_multi);
-  data_t ciphertext_single = sc_single_alice.encrypt(plainblob,
+  bytes ciphertext_multi  = sc_multi_alice.encrypt(plainblob, nonce_multi);
+  bytes ciphertext_single = sc_single_alice.encrypt(plainblob,
 					      keypair_alice,
 					      nonce_single);
   
@@ -403,14 +404,14 @@ BOOST_AUTO_TEST_CASE( sodium_cryptomultipk_test_encrypt_to_self )
   CryptorMultiPK             sc_alice(keypair_alice);
   
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
-  data_t ciphertext = sc_alice.encrypt(plainblob, nonce);
+  bytes ciphertext = sc_alice.encrypt(plainblob, nonce);
 
   BOOST_CHECK_EQUAL(ciphertext.size(),
 		    plainblob.size() + CryptorMultiPK::MACSIZE);
 
-  data_t decrypted = sc_alice.decrypt(ciphertext, nonce);
+  bytes decrypted = sc_alice.decrypt(ciphertext, nonce);
 
   // if the ciphertext (with MAC) was modified, or came from another
   // source, decryption would have thrown. But we manually check anyway.
@@ -456,7 +457,7 @@ BOOST_AUTO_TEST_CASE( sodium_cryptormultipk_test_falsify_mac_empty )
 BOOST_AUTO_TEST_CASE( sodium_cryptormultipk_test_destroysharedkey_encrypt )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   BOOST_CHECK(destroy_shared_key_then_encrypt(plainblob));
 }
@@ -468,8 +469,8 @@ BOOST_AUTO_TEST_CASE( sodium_cryptormultipk_test_destroysharedkey_decrypt )
   CryptorMultiPK             sc_alice(keypair_alice);
   
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
-  data_t ciphertext = sc_alice.encrypt(plainblob, nonce);
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes ciphertext = sc_alice.encrypt(plainblob, nonce);
 
   BOOST_CHECK(destroy_shared_key_then_decrypt(ciphertext,
 					      keypair_alice,

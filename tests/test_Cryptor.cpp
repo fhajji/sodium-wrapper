@@ -1,8 +1,8 @@
-// test_Cryptor.cpp -- Test Sodium::Cryptor
+// test_Cryptor.cpp -- Test sodium::Cryptor
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -17,16 +17,15 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE Sodium::Cryptor Test
+#define BOOST_TEST_MODULE sodium::Cryptor Test
 #include <boost/test/included/unit_test.hpp>
 
-#include <sodium.h>
 #include "cryptor.h"
 #include <string>
+#include <sodium.h>
 
-using Sodium::Cryptor;
-
-using data_t = Sodium::data_t;
+using sodium::Cryptor;
+using bytes = sodium::bytes;
 
 bool
 test_of_correctness(const std::string &plaintext,
@@ -41,9 +40,9 @@ test_of_correctness(const std::string &plaintext,
   Cryptor::nonce_type nonce {};
   Cryptor::nonce_type nonce2 {};
 
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
-  data_t ciphertext = sc.encrypt(plainblob, key, nonce);
+  bytes ciphertext = sc.encrypt(plainblob, key, nonce);
 
   BOOST_CHECK(ciphertext.size() == Cryptor::MACSIZE + plainblob.size());
   
@@ -58,7 +57,7 @@ test_of_correctness(const std::string &plaintext,
   }
 
   try {
-    data_t decrypted  = sc.decrypt(ciphertext,
+    bytes decrypted  = sc.decrypt(ciphertext,
 				   (falsify_key ? key2 : key),
 				   (falsify_nonce ? nonce2 : nonce));
 
@@ -99,10 +98,10 @@ test_of_correctness_detached(const std::string &plaintext,
   Cryptor::nonce_type nonce {};
   Cryptor::nonce_type nonce2 {};
 
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
-  data_t mac(Cryptor::MACSIZE);
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes mac(Cryptor::MACSIZE);
 
-  data_t ciphertext = sc.encrypt(plainblob, key, nonce, mac);
+  bytes ciphertext = sc.encrypt(plainblob, key, nonce, mac);
 
   BOOST_CHECK(ciphertext.size() == plainblob.size());
   
@@ -113,7 +112,7 @@ test_of_correctness_detached(const std::string &plaintext,
     ++mac[0]; // falsify MAC
 
   try {
-    data_t decrypted  = sc.decrypt(ciphertext,
+    bytes decrypted  = sc.decrypt(ciphertext,
 				   mac,
 				   (falsify_key   ? key2   : key),
 				   (falsify_nonce ? nonce2 : nonce));

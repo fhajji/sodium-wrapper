@@ -1,8 +1,8 @@
-// test_StreamSignorPK.cpp -- Test Sodium::{StreamSignorPK,StreamVerifierPK}
+// test_StreamSignorPK.cpp -- Test sodium::{StreamSignorPK,StreamVerifierPK}
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -17,21 +17,21 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE Sodium::StreamSignorPK_StreamVerifierPK Test
+#define BOOST_TEST_MODULE sodium::StreamSignorPK_StreamVerifierPK Test
 #include <boost/test/included/unit_test.hpp>
 
-#include <sodium.h>
 #include "streamsignorpk.h"
 #include "streamverifierpk.h"
 #include "keypairsign.h"
 #include <string>
 // #include <algorithm>
 #include <sstream>
+#include <sodium.h>
 
-using Sodium::KeyPairSign;
-using Sodium::StreamSignorPK;
-using Sodium::StreamVerifierPK;
-using data_t = Sodium::data_t;
+using sodium::KeyPairSign;
+using sodium::StreamSignorPK;
+using sodium::StreamVerifierPK;
+using bytes = sodium::bytes;
 
 constexpr static std::size_t sigsize   = StreamSignorPK::SIGNATURE_SIZE;
 constexpr static std::size_t blocksize = 8;
@@ -48,7 +48,7 @@ test_of_correctness(const std::string &plaintext)
   
   // 1. alice signs a message with her private key and sends it to bob
   std::istringstream istr_plaintext_alice_to_bob(plaintext);
-  data_t signature_from_alice_to_bob =
+  bytes signature_from_alice_to_bob =
     sc_signor_alice.sign(istr_plaintext_alice_to_bob);
 
   // 2. bob gets the plaintext and signature from alice and verifies the
@@ -67,7 +67,7 @@ test_of_correctness(const std::string &plaintext)
   // himself with his private key. Bob sends plaintext and
   // signature_from_bob_to_alice to alice.
   std::istringstream istr_plaintext_bob_to_alice(plaintext);
-  data_t signature_from_bob_to_alice =
+  bytes signature_from_bob_to_alice =
     sc_signor_bob.sign(istr_plaintext_bob_to_alice);
   
   // 5. alice attempts to verify that the message came from bob
@@ -92,7 +92,7 @@ falsify_signature(const std::string &plaintext)
   StreamVerifierPK sc_verifier   {keypair_alice, blocksize};
 
   std::istringstream istr(plaintext);
-  data_t signature = sc_signor.sign(istr);
+  bytes signature = sc_signor.sign(istr);
 
   BOOST_CHECK_EQUAL(signature.size(), sigsize);
 
@@ -122,7 +122,7 @@ falsify_plaintext(const std::string &plaintext)
   std::istringstream istr(plaintext);
   
   // sign to self
-  data_t signature = sc_signor.sign(istr);
+  bytes signature = sc_signor.sign(istr);
 
   BOOST_CHECK_EQUAL(signature.size(), sigsize);
 
@@ -152,7 +152,7 @@ falsify_sender(const std::string &plaintext)
   
   // 1. Oscar signs a plaintext that looks as if it was written by Bob.
   
-  data_t signature = sc_oscar.sign(istr);
+  bytes signature = sc_oscar.sign(istr);
 
   // 2. Oscar prepends forged headers to the plaintext, making it
   // appear as if the message (= headers + signature + plaintext) came
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE( sodium_streamsignorpk_test_sign_to_self )
   std::string        plaintext {"the quick brown fox jumps over the lazy dog"};
   std::istringstream istr(plaintext);
 
-  data_t signature = sc_signor.sign(istr);
+  bytes signature = sc_signor.sign(istr);
 
   BOOST_CHECK_EQUAL(signature.size(), sigsize);
 
@@ -265,8 +265,8 @@ BOOST_AUTO_TEST_CASE( sodium_streamsignorpk_test_multiple_sign_verify )
   std::istringstream istr1(plaintext1);
   std::istringstream istr2(plaintext2);
 
-  data_t signature1 = sc_signor.sign(istr1);
-  data_t signature2 = sc_signor.sign(istr2); // should reset state internally
+  bytes signature1 = sc_signor.sign(istr1);
+  bytes signature2 = sc_signor.sign(istr2); // should reset state internally
 
   std::istringstream istr1_received(plaintext1);
   std::istringstream istr2_received(plaintext2); 
@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE( sodium_streamsignorpk_test_small_plaintext )
 
   std::istringstream istr(plaintext);
 
-  data_t signature = sc_signor.sign(istr);
+  bytes signature = sc_signor.sign(istr);
 
   std::istringstream istr_received(plaintext);
   

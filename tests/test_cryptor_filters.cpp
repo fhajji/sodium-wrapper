@@ -1,8 +1,8 @@
-// test_cryptor_filters.cpp -- Test Sodium::cryptor_{encrypt,decrypt}_filter
+// test_cryptor_filters.cpp -- Test sodium::cryptor_{encrypt,decrypt}_filter
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -17,7 +17,7 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE Sodium::cryptor_filters Test
+#define BOOST_TEST_MODULE sodium::cryptor_filters Test
 #include <boost/test/included/unit_test.hpp>
 
 #include "cryptor_encrypt_filter.h"
@@ -35,9 +35,9 @@
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 
-using Sodium::cryptor_encrypt_filter;
-using Sodium::cryptor_decrypt_filter;
-using data_t = Sodium::data2_t;
+using sodium::cryptor_encrypt_filter;
+using sodium::cryptor_decrypt_filter;
+using chars = sodium::chars;
 
 namespace io = boost::iostreams;
 
@@ -60,8 +60,8 @@ test_of_correctness_combined_output_filter(const std::string &plaintext)
   cryptor_encrypt_filter encrypt_filter {key, nonce};
   cryptor_decrypt_filter decrypt_filter {key, nonce};
   
-  data_t plainblob { plaintext.cbegin(), plaintext.cend() };
-  data_t decrypted (2 * plaintext.size()); // because of both writes below
+  chars plainblob { plaintext.cbegin(), plaintext.cend() };
+  chars decrypted (2 * plaintext.size()); // because of both writes below
 
   try {
     io::array_sink        sink {decrypted.data(), decrypted.size()};
@@ -102,8 +102,8 @@ test_of_correctness_combined_output_filter(const std::string &plaintext)
 bool
 test_of_correctness_combined_input_filter(const std::string &plaintext)
 {
-  data_t plainblob { plaintext.cbegin(), plaintext.cend() };
-  data_t plainblob2 {plainblob};
+  chars plainblob { plaintext.cbegin(), plaintext.cend() };
+  chars plainblob2 {plainblob};
   std::copy(plainblob.cbegin(), plainblob.cend(),
 	    std::back_inserter(plainblob2)); // plainblob2 = (plainblob || plainblob)
   
@@ -113,7 +113,7 @@ test_of_correctness_combined_input_filter(const std::string &plaintext)
   cryptor_encrypt_filter encrypt_filter {key, nonce};
   cryptor_decrypt_filter decrypt_filter {key, nonce};
   
-  data_t decrypted (2 * plaintext.size()); // because of plainblob2 above
+  chars decrypted (2 * plaintext.size()); // because of plainblob2 above
 
   io::array_source      source {plainblob2.data(), plainblob2.size()};
   io::filtering_istream is   {};
@@ -144,7 +144,7 @@ test_of_correctness_output_filter(const std::string &plaintext,
 				  bool falsify_key=false,
 				  bool falsify_nonce=false)
 {
-  data_t plainblob  { plaintext.cbegin(), plaintext.cend() };
+  chars plainblob  { plaintext.cbegin(), plaintext.cend() };
 
   // 1. encrypt plaintext into ciphertext
 
@@ -157,7 +157,7 @@ test_of_correctness_output_filter(const std::string &plaintext,
   cryptor_decrypt_filter decrypt_filter {(falsify_key   ? key2   : key),
                                          (falsify_nonce ? nonce2 : nonce)};
   
-  data_t ciphertext ( cryptor_encrypt_filter::MACSIZE + plaintext.size() );
+  chars ciphertext ( cryptor_encrypt_filter::MACSIZE + plaintext.size() );
 
   io::array_sink          sink1 {ciphertext.data(), ciphertext.size()};
   io::filtering_ostream   os1   {};
@@ -185,7 +185,7 @@ test_of_correctness_output_filter(const std::string &plaintext,
 
   // 2. now, (attempt to) decrypt ciphertext into decrypted:
 
-  data_t decrypted (ciphertext.size() - cryptor_decrypt_filter::MACSIZE);
+  chars decrypted (ciphertext.size() - cryptor_decrypt_filter::MACSIZE);
   try {
     io::array_sink          sink2 {decrypted.data(), decrypted.size()};
     io::filtering_ostream   os2   {};
@@ -235,7 +235,7 @@ test_of_correctness_input_filter(const std::string &plaintext,
 				 bool falsify_key=false,
 				 bool falsify_nonce=false)
 {
-  data_t plainblob  { plaintext.cbegin(), plaintext.cend() };
+  chars plainblob  { plaintext.cbegin(), plaintext.cend() };
 
   // 1. encrypt plaintext into ciphertext
 
@@ -248,7 +248,7 @@ test_of_correctness_input_filter(const std::string &plaintext,
   cryptor_decrypt_filter decrypt_filter {(falsify_key   ? key2   : key),
                                          (falsify_nonce ? nonce2 : nonce)};
   
-  data_t ciphertext ( cryptor_encrypt_filter::MACSIZE + plaintext.size() );
+  chars ciphertext ( cryptor_encrypt_filter::MACSIZE + plaintext.size() );
 
   io::array_source        source1 {plainblob.data(), plainblob.size()};
   io::filtering_istream   is1     {};
@@ -287,7 +287,7 @@ test_of_correctness_input_filter(const std::string &plaintext,
 
   // 4. now try to decrypt ciphertext into decrypted
   
-  data_t decrypted (ciphertext.size() - cryptor_decrypt_filter::MACSIZE);
+  chars decrypted (ciphertext.size() - cryptor_decrypt_filter::MACSIZE);
 
   io::array_source        source2 {ciphertext.data(), ciphertext.size()};
   io::filtering_istream   is2     {};
@@ -360,8 +360,8 @@ length_test_output_filter(const std::string &plaintext)
 
   cryptor_encrypt_filter encrypt_filter {key, nonce};
   
-  data_t plainblob  { plaintext.cbegin(), plaintext.cend() };
-  data_t ciphertext (cryptor_encrypt_filter::MACSIZE + plainblob.size());
+  chars plainblob  { plaintext.cbegin(), plaintext.cend() };
+  chars ciphertext (cryptor_encrypt_filter::MACSIZE + plainblob.size());
 
   io::array_sink        sink {ciphertext.data(), ciphertext.size()};
   io::filtering_ostream os   {};
@@ -382,14 +382,14 @@ length_test_output_filter(const std::string &plaintext)
 void
 length_test_input_filter(const std::string &plaintext)
 {
-  data_t plainblob  { plaintext.cbegin(), plaintext.cend() };
+  chars plainblob  { plaintext.cbegin(), plaintext.cend() };
 
   cryptor_encrypt_filter::key_type   key;   // Create a random key
   cryptor_encrypt_filter::nonce_type nonce; // Create a random nonce
 
   cryptor_encrypt_filter encrypt_filter {key, nonce};
   
-  data_t ciphertext (cryptor_encrypt_filter::MACSIZE + plainblob.size());
+  chars ciphertext (cryptor_encrypt_filter::MACSIZE + plainblob.size());
 
   io::array_source      source {plainblob.data(), plainblob.size()};
   io::filtering_istream is   {};

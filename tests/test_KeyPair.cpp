@@ -1,8 +1,8 @@
-// test_KeyPair.cpp -- Test Sodium::KeyPair
+// test_KeyPair.cpp -- Test sodium::KeyPair
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -17,18 +17,16 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE Sodium::KeyPair Test
+#define BOOST_TEST_MODULE sodium::KeyPair Test
 #include <boost/test/included/unit_test.hpp>
-
-#include <stdexcept>
-
-#include <sodium.h>
 
 #include "common.h"
 #include "keypair.h"
+#include <stdexcept>
+#include <sodium.h>
 
-using Sodium::KeyPair;
-using data_t = Sodium::data_t;
+using sodium::KeyPair;
+using bytes = sodium::bytes;
 
 static constexpr std::size_t ks_pub  = KeyPair::KEYSIZE_PUBKEY;
 static constexpr std::size_t ks_priv = KeyPair::KEYSIZE_PRIVKEY;
@@ -80,7 +78,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypair_size_ctor_default )
 
 BOOST_AUTO_TEST_CASE( sodium_test_keypair_size_ctor_seed )
 {
-  data_t  seed(ks_seed);
+  bytes  seed(ks_seed);
   randombytes_buf(seed.data(), seed.size());
   
   KeyPair keypair(seed);
@@ -128,7 +126,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypair_nonzero_ctor_default )
 
 BOOST_AUTO_TEST_CASE( sodium_test_keypair_nonzero_ctor_seed )
 {
-  data_t seed(ks_seed);
+  bytes seed(ks_seed);
   randombytes_buf(seed.data(), seed.size());
 
   KeyPair keypair(seed);
@@ -156,7 +154,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypair_different_ctor_default )
 
 BOOST_AUTO_TEST_CASE( sodium_test_keypair_different_ctor_seed )
 {
-  data_t seed(ks_seed);
+  bytes seed(ks_seed);
   randombytes_buf(seed.data(), seed.size());
 
   KeyPair keypair(seed);
@@ -176,7 +174,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypair_different_ctor_privkey )
 
 BOOST_AUTO_TEST_CASE( sodium_test_keypair_seedcompare_ctor_same_seed )
 {
-  data_t seed(ks_seed);
+  bytes seed(ks_seed);
   randombytes_buf(seed.data(), seed.size());
 
   KeyPair keypair1(seed);
@@ -192,9 +190,9 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypair_seedcompare_ctor_same_seed )
 
 BOOST_AUTO_TEST_CASE( sodium_test_keypair_seedcompare_ctor_different_seed )
 {
-  data_t seed1(ks_seed);
+  bytes seed1(ks_seed);
   randombytes_buf(seed1.data(), seed1.size());
-  data_t seed2(ks_seed);
+  bytes seed2(ks_seed);
   randombytes_buf(seed2.data(), seed2.size());
 
   BOOST_CHECK(seed1 != seed2); // very unlikely that they are the same

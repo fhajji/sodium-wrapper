@@ -1,8 +1,8 @@
-// test_KeyVar.cpp -- Test Sodium::KeyVar
+// test_KeyVar.cpp -- Test sodium::KeyVar
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -18,7 +18,7 @@
 
 // To see something useful during the tests of the copy vs. move
 // c'tors and assignments, uncomment the line #define NDEBUG in
-// include/alloc.h.
+// include/alloc.h (automatically done in Debug builds).
 //
 // Then, invoke like this:
 //   build_tests/test_KeyVar --run_test=sodium_test_suite/sodium_test_key_copy_ctor
@@ -30,8 +30,12 @@
 //   build/tests/test_KeyVar ---run_test=sodium_test_suite/sodium_test_key_select_copy_or_move --log_level=message
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE Sodium::KeyVar Test
+#define BOOST_TEST_MODULE sodium::KeyVar Test
 #include <boost/test/included/unit_test.hpp>
+
+#include "common.h"
+#include "key.h"
+#include "keyvar.h"
 
 #include <utility>
 #include <stdexcept>
@@ -39,17 +43,13 @@
 
 #include <sodium.h>
 
-#include "common.h"
-#include "key.h"
-#include "keyvar.h"
+using sodium::KeyVar;
+using bytes = sodium::bytes;
 
-using Sodium::KeyVar;
-using data_t = Sodium::data_t;
-
-static constexpr std::size_t ks1     = Sodium::KEYSIZE_SECRETBOX;
-static constexpr std::size_t ks2     = Sodium::KEYSIZE_AUTH;
-static constexpr std::size_t ks3     = Sodium::KEYSIZE_AEAD;
-static constexpr std::size_t ks_salt = Sodium::KEYSIZE_SALT;
+static constexpr std::size_t ks1     = sodium::KEYSIZE_SECRETBOX;
+static constexpr std::size_t ks2     = sodium::KEYSIZE_AUTH;
+static constexpr std::size_t ks3     = sodium::KEYSIZE_AEAD;
+static constexpr std::size_t ks_salt = sodium::KEYSIZE_SALT;
 
 bool isAllZero(const unsigned char *bytes, const std::size_t &size)
 {
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_keyvar_copy_assign )
 
 BOOST_AUTO_TEST_CASE( sodium_test_keyvar_setpass )
 {
-  data_t salt1(ks_salt);
+  bytes salt1(ks_salt);
   randombytes_buf(salt1.data(), salt1.size());
 
   std::string pw1 { "CPE1704TKS" };
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_keyvar_setpass )
 
   // invoking setpass() with same password but different salt
   // must yield different bytes
-  data_t salt2(ks_salt);
+  bytes salt2(ks_salt);
   randombytes_buf(salt2.data(), salt2.size());
   key2.setpass(pw1, salt2, KeyVar::strength_t::medium);
   BOOST_CHECK(! isAllZero(key2.data(), key2.size()));

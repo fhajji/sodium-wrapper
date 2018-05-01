@@ -1,8 +1,8 @@
-// test_chacha20_filter.cpp -- Test Sodium::chacha20_filter
+// test_chacha20_filter.cpp -- Test sodium::chacha20_filter
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -17,7 +17,7 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE Sodium::chacha20_filter Test
+#define BOOST_TEST_MODULE sodium::chacha20_filter Test
 #include <boost/test/included/unit_test.hpp>
 
 #include "chacha20_filter.h"
@@ -34,9 +34,9 @@
 #include <boost/iostreams/tee.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 
-using Sodium::chacha20_filter;
-using Sodium::tohex;
-using data_t = Sodium::data2_t;
+using sodium::chacha20_filter;
+using sodium::tohex;
+using chars = sodium::chars;
 
 namespace io = boost::iostreams;
 
@@ -61,7 +61,7 @@ delete_file(const char *fname)
 bool
 test_of_correctness_combined_output_filter(const std::string &plaintext)
 {
-  data_t plainblob { plaintext.cbegin(), plaintext.cend() };
+  chars plainblob { plaintext.cbegin(), plaintext.cend() };
 
   chacha20_filter::key_type   key;   // Create a random key
   chacha20_filter::nonce_type nonce; // Create a random nonce
@@ -69,7 +69,7 @@ test_of_correctness_combined_output_filter(const std::string &plaintext)
   chacha20_filter encrypt_filter {10, key, nonce};
   chacha20_filter decrypt_filter {12, key, nonce};
   
-  data_t decrypted (2 * plaintext.size()); // because of both writes below
+  chars decrypted (2 * plaintext.size()); // because of both writes below
 
   io::array_sink        sink {decrypted.data(), decrypted.size()};
   io::filtering_ostream os   {};
@@ -107,8 +107,8 @@ test_of_correctness_combined_output_filter(const std::string &plaintext)
 bool
 test_of_correctness_combined_input_filter(const std::string &plaintext)
 {
-  data_t plainblob  { plaintext.cbegin(), plaintext.cend() };
-  data_t plainblob2 {plainblob};
+  chars plainblob  { plaintext.cbegin(), plaintext.cend() };
+  chars plainblob2 {plainblob};
   std::copy(plainblob.cbegin(), plainblob.cend(),
 	    std::back_inserter(plainblob2)); // plainblob2 = (plainblob || plainblob)
   
@@ -118,7 +118,7 @@ test_of_correctness_combined_input_filter(const std::string &plaintext)
   chacha20_filter encrypt_filter {10, key, nonce};
   chacha20_filter decrypt_filter {12, key, nonce};
   
-  data_t decrypted (2 * plaintext.size()); // because of plainblob2 above
+  chars decrypted (2 * plaintext.size()); // because of plainblob2 above
 
   io::array_source      source {plainblob2.data(), plainblob2.size()};
   io::filtering_istream is     {};
@@ -155,7 +155,7 @@ test_of_correctness_output_filter(const std::string &plaintext,
 				  bool falsify_key=false,
 				  bool falsify_nonce=false)
 {
-  data_t plainblob  { plaintext.cbegin(), plaintext.cend() };
+  chars plainblob  { plaintext.cbegin(), plaintext.cend() };
   
   chacha20_filter::key_type   key;    // Create a random key
   chacha20_filter::key_type   key2;   // Create another random key
@@ -169,7 +169,7 @@ test_of_correctness_output_filter(const std::string &plaintext,
 
   // 1. encrypt from source/plainblob into ciphertext:
   
-  data_t ciphertext ( 2*plaintext.size() );
+  chars ciphertext ( 2*plaintext.size() );
 
   io::array_sink          sink1 {ciphertext.data(), ciphertext.size()};
   io::filtering_ostream   os1   {};
@@ -189,7 +189,7 @@ test_of_correctness_output_filter(const std::string &plaintext,
   BOOST_CHECK_EQUAL(ciphertext.size(), 2*plainblob.size());
 
   // plainblob2 != ciphertext if and only if plaintext was not empty!
-  data_t plainblob2 { plainblob };
+  chars plainblob2 { plainblob };
   std::copy(plainblob.cbegin(), plainblob.cend(),
 	    std::back_inserter(plainblob2));
   
@@ -205,7 +205,7 @@ test_of_correctness_output_filter(const std::string &plaintext,
 
   // 2. decrypt from source/ciphertext into decrypted
 
-  data_t decrypted (ciphertext.size());
+  chars decrypted (ciphertext.size());
 
   io::array_sink          sink2 {decrypted.data(), decrypted.size()};
   io::filtering_ostream   os2   {};
@@ -238,8 +238,8 @@ test_of_correctness_input_filter(const std::string &plaintext,
 				 bool falsify_key=false,
 				 bool falsify_nonce=false)
 {
-  data_t plainblob  { plaintext.cbegin(), plaintext.cend() };
-  data_t plainblob2 { plainblob };
+  chars plainblob  { plaintext.cbegin(), plaintext.cend() };
+  chars plainblob2 { plainblob };
   std::copy(plainblob.cbegin(), plainblob.cend(),
 	    std::back_inserter(plainblob2));
   
@@ -255,7 +255,7 @@ test_of_correctness_input_filter(const std::string &plaintext,
 
   // 1. encrypt plainblob2 into ciphertext
   
-  data_t ciphertext ( 2*plaintext.size() );
+  chars ciphertext ( 2*plaintext.size() );
 
   io::array_source        source1 {plainblob2.data(), plainblob2.size()};
   io::filtering_istream   is1   {};
@@ -288,7 +288,7 @@ test_of_correctness_input_filter(const std::string &plaintext,
 
   // 2. decrypt ciphertext into decrypted
 
-  data_t decrypted (ciphertext.size());
+  chars decrypted (ciphertext.size());
 
   io::array_source        source2 {ciphertext.data(), ciphertext.size()};
   io::filtering_istream   is2   {};
@@ -321,14 +321,14 @@ test_of_correctness_input_filter(const std::string &plaintext,
 void
 length_test_output_filter(const std::string &plaintext)
 {
-  data_t plainblob  { plaintext.cbegin(), plaintext.cend() };
+  chars plainblob  { plaintext.cbegin(), plaintext.cend() };
   
   chacha20_filter::key_type   key;   // Create a random key
   chacha20_filter::nonce_type nonce; // Create a random nonce
 
   chacha20_filter encrypt_filter {10, key, nonce};
   
-  data_t ciphertext (plainblob.size());
+  chars ciphertext (plainblob.size());
 
   io::array_sink        sink {ciphertext.data(), ciphertext.size()};
   io::filtering_ostream os   {};
@@ -359,14 +359,14 @@ length_test_output_filter(const std::string &plaintext)
 void
 length_test_input_filter(const std::string &plaintext)
 {
-  data_t plainblob  { plaintext.cbegin(), plaintext.cend() };
+  chars plainblob  { plaintext.cbegin(), plaintext.cend() };
 
   chacha20_filter::key_type   key;   // Create a random key
   chacha20_filter::nonce_type nonce; // Create a random nonce
 
   chacha20_filter encrypt_filter {10, key, nonce};
   
-  data_t ciphertext (plainblob.size());
+  chars ciphertext (plainblob.size());
 
   io::array_source      source {plainblob.data(), plainblob.size()};
   io::filtering_istream is   {};
@@ -401,7 +401,7 @@ pipeline_output_device (const std::string &plaintext,
 			const std::string &encfile_name,
 			const std::string &decfile_name)
 {
-  data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
+  chars plainblob {plaintext.cbegin(), plaintext.cend()};
 
   chacha20_filter::key_type   key;   // Create a random key
   chacha20_filter::nonce_type nonce; // Create a random nonce
@@ -566,11 +566,11 @@ BOOST_AUTO_TEST_CASE( sodium_test_chacha20_filter_pipeline_output_device )
 			 "outfile.dec");
 
   // Test succeeds if outfile.dec contains plaintext
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  chars plainblob {plaintext.cbegin(), plaintext.cend()};
   
   io::file_source is("outfile.dec",
 		     std::ios_base::in | std::ios_base::binary);
-  data_t decrypted(plaintext.size());
+  chars decrypted(plaintext.size());
   is.read(decrypted.data(), decrypted.size());
   is.close(); // so we can delete file before is goes out of scope
 

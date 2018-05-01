@@ -1,8 +1,8 @@
-// test_HashShort.cpp -- Test Sodium::HashShort
+// test_HashShort.cpp -- Test sodium::HashShort
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -17,17 +17,16 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE Sodium::HashShort Test
+#define BOOST_TEST_MODULE sodium::HashShort Test
 #include <boost/test/included/unit_test.hpp>
 
-#include <sodium.h>
 #include "hashshort.h"
 #include <string>
 #include <stdexcept>
+#include <sodium.h>
 
-using Sodium::HashShort;
-
-using data_t = Sodium::data_t;
+using sodium::HashShort;
+using bytes = sodium::bytes;
 
 bool
 test_hash_default_size(const std::string &plaintext)
@@ -35,10 +34,10 @@ test_hash_default_size(const std::string &plaintext)
   HashShort::key_type key;
   HashShort           hasher {};
   
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   try {
-    data_t outHash = hasher.hash(plainblob, key);
+    bytes outHash = hasher.hash(plainblob, key);
     
     return outHash.size() == HashShort::HASHSIZE;
   }
@@ -59,12 +58,12 @@ test_same_hashes(const std::string &plaintext)
   HashShort::key_type key;
   HashShort           hasher {};
 
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
-  data_t outHash(HashShort::HASHSIZE);
+  bytes outHash(HashShort::HASHSIZE);
 
   hasher.hash(plainblob, key, outHash);
-  data_t outHash_returned = hasher.hash(plainblob, key);
+  bytes outHash_returned = hasher.hash(plainblob, key);
 
   return outHash == outHash_returned; // same content of the hashes
 }
@@ -76,9 +75,9 @@ test_hash_size(const std::string &plaintext,
   HashShort::key_type key;
   HashShort           hasher {};
 
-  data_t plainblob { plaintext.cbegin(), plaintext.cend() };
+  bytes plainblob { plaintext.cbegin(), plaintext.cend() };
 
-  data_t outHash(hashsize); // make it too big
+  bytes outHash(hashsize); // make it too big
 
   try {
     hasher.hash(plainblob, key, outHash);
@@ -102,11 +101,11 @@ test_different_keys(const std::string &plaintext)
   HashShort::key_type key2;
   HashShort           hasher {};
   
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   try {
-    data_t outHash1 = hasher.hash(plainblob, key1);
-    data_t outHash2 = hasher.hash(plainblob, key2);
+    bytes outHash1 = hasher.hash(plainblob, key1);
+    bytes outHash2 = hasher.hash(plainblob, key2);
     
     return (key1 != key2) && (outHash1 != outHash2);
   }
@@ -167,12 +166,12 @@ BOOST_AUTO_TEST_CASE( sodium_hashshort_test_falsify_plaintext )
   HashShort           hasher {};
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  data_t      plainblob { plaintext.cbegin(), plaintext.cend() };
-  data_t      falsified { plainblob };
+  bytes       plainblob { plaintext.cbegin(), plaintext.cend() };
+  bytes       falsified { plainblob };
   ++falsified[0];
   
-  data_t hash1 = hasher.hash(plainblob, key);
-  data_t hash2 = hasher.hash(falsified, key);
+  bytes hash1 = hasher.hash(plainblob, key);
+  bytes hash2 = hasher.hash(falsified, key);
 
   // unless there is a collision (somewhat, but not entirely unlikely),
   // both hashes must be different for test to succeed

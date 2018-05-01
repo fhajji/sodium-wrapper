@@ -1,8 +1,8 @@
-// test_StreamHash.cpp -- Test Sodium::StreamHash
+// test_StreamHash.cpp -- Test sodium::StreamHash
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -17,19 +17,19 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE Sodium::StreamHash Test
+#define BOOST_TEST_MODULE sodium::StreamHash Test
 #include <boost/test/included/unit_test.hpp>
 
-#include <sodium.h>
 #include "streamhash.h"
 #include "keyvar.h"
 #include <string>
 #include <algorithm>
 #include <sstream>
+#include <sodium.h>
 
-using Sodium::KeyVar;
-using Sodium::StreamHash;
-using data_t = Sodium::data_t;
+using sodium::KeyVar;
+using sodium::StreamHash;
+using bytes = sodium::bytes;
 
 constexpr static std::size_t hashsize  = StreamHash::HASHSIZE;
 constexpr static std::size_t blocksize = 8;
@@ -48,7 +48,7 @@ falsify_plaintext(const std::string &plaintext)
   std::istringstream istr(plaintext);
   
   // hash that stream
-  data_t hash1 = hasher.hash(istr);
+  bytes hash1 = hasher.hash(istr);
 
   BOOST_CHECK_EQUAL(hash1.size(), hashsize);
 
@@ -61,7 +61,7 @@ falsify_plaintext(const std::string &plaintext)
   // with the same key and hashsize
   // MUST NOT yield the same hashes for the test to succeed.
 
-  data_t hash2(hashsize);
+  bytes hash2(hashsize);
   hasher.hash(istr_falsified, hash2);
 
   return hash1 != hash2;
@@ -76,7 +76,7 @@ falsify_key(const std::string &plaintext)
   std::istringstream istr(plaintext);
   
   // hash that stream
-  data_t hash1 = hasher.hash(istr);
+  bytes hash1 = hasher.hash(istr);
 
   BOOST_CHECK_EQUAL(hash1.size(), hashsize);
 
@@ -90,7 +90,7 @@ falsify_key(const std::string &plaintext)
   // with a different / falsified key (and same hashsize)
   // MUST NOT yield the same hashes for the test to succeed.
 
-  data_t hash2(hashsize);
+  bytes hash2(hashsize);
   hasher_falsified.hash(istr_copy, hash2);
 
   return hash1 != hash2;
@@ -106,8 +106,8 @@ compare_both_hashes(const std::string &plaintext)
   std::istringstream istr_copy(plaintext);
   
   // hash that stream both ways
-  data_t hash1 = hasher.hash(istr);
-  data_t hash2(hashsize);
+  bytes hash1 = hasher.hash(istr);
+  bytes hash2(hashsize);
   hasher.hash(istr_copy, hash2);
 
   // test succeeded if both hashes are equal

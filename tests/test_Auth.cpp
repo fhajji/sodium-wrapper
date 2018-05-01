@@ -1,8 +1,8 @@
-// test_Auth.cpp -- Test Sodium::Auth
+// test_Auth.cpp -- Test sodium::Auth
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -17,7 +17,7 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE Sodium::Auth Test
+#define BOOST_TEST_MODULE sodium::Auth Test
 #include <boost/test/included/unit_test.hpp>
 
 #include "auth.h"
@@ -25,8 +25,8 @@
 
 #include <string>
 
-using Sodium::Auth;
-using data_t = Sodium::data_t;
+using sodium::Auth;
+using bytes = sodium::bytes;
 
 static constexpr std::size_t macsize = Auth::MACSIZE;
 
@@ -48,10 +48,10 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_size )
   Auth::key_type key;   // Create a random key
   
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes       plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // compute the MAC
-  data_t      mac { sa.auth(plainblob, key) };
+  bytes       mac { sa.auth(plainblob, key) };
 
   BOOST_CHECK_EQUAL(mac.size(), macsize);
 }
@@ -62,10 +62,10 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_full )
   Auth::key_type key;
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes       plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // compute the MAC
-  data_t      mac { sa.auth(plainblob, key) };
+  bytes       mac { sa.auth(plainblob, key) };
 
   // the MAC must verify
   BOOST_CHECK(sa.verify(plainblob, mac, key));
@@ -77,10 +77,10 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_empty )
   Auth::key_type key;
 
   std::string plaintext {};
-  data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes       plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // compute the MAC
-  data_t      mac { sa.auth(plainblob, key) };
+  bytes       mac { sa.auth(plainblob, key) };
 
   // the MAC must verify
   BOOST_CHECK(sa.verify(plainblob, mac, key));
@@ -92,10 +92,10 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_falsify_plaintext )
   Auth::key_type key;
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes       plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // compute the MAC
-  data_t      mac { sa.auth(plainblob, key) };
+  bytes       mac { sa.auth(plainblob, key) };
 
   // falsify the plaintext
   if (plainblob.size() != 0)
@@ -111,10 +111,10 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_full_falsify_mac )
   Auth::key_type key;
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes       plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // compute the MAC
-  data_t      mac { sa.auth(plainblob, key) };
+  bytes       mac { sa.auth(plainblob, key) };
 
   // falsify the MAC
   if (mac.size() != 0)
@@ -130,10 +130,10 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_empty_falsify_mac )
   Auth::key_type key;
 
   std::string plaintext {};
-  data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes       plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // compute the MAC
-  data_t      mac { sa.auth(plainblob, key) };
+  bytes       mac { sa.auth(plainblob, key) };
 
   // falsify the MAC
   if (mac.size() != 0)
@@ -150,10 +150,10 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_full_falsify_key )
   Auth::key_type key;
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes       plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // compute the MAC
-  data_t      mac { sa.auth(plainblob, key) };
+  bytes       mac { sa.auth(plainblob, key) };
 
   // create another key
   Auth::key_type key2;
@@ -169,10 +169,10 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_empty_falsify_key )
   Auth::key_type key;
 
   std::string plaintext {};
-  data_t      plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes       plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // compute the MAC
-  data_t      mac { sa.auth(plainblob, key) };
+  bytes       mac { sa.auth(plainblob, key) };
 
   // create another key
   Auth::key_type key2;

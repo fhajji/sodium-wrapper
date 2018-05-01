@@ -1,8 +1,8 @@
-// test_poly1305_tee_filter.cpp -- Test Sodium::poly1305_tee_{filter,device}
+// test_poly1305_tee_filter.cpp -- Test sodium::poly1305_tee_{filter,device}
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -17,7 +17,7 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE Sodium::poly1305_tee_filter Test
+#define BOOST_TEST_MODULE sodium::poly1305_tee_filter Test
 #include <boost/test/included/unit_test.hpp>
 
 #include "poly1305_tee_filter.h"
@@ -33,10 +33,10 @@
 
 namespace io = boost::iostreams;
 
-using Sodium::poly1305_tee_filter;
-using Sodium::poly1305_tee_device;
-using Sodium::tohex;
-using data_t = Sodium::data2_t;
+using sodium::poly1305_tee_filter;
+using sodium::poly1305_tee_device;
+using sodium::tohex;
+using chars = sodium::chars;
 
 using mac_array_type = typename poly1305_tee_filter<io::null_sink>::mac_type;
 using vector_sink    = io::back_insert_device<mac_array_type>;
@@ -74,7 +74,7 @@ pipeline_output_device (const std::string &plaintext,
 			const std::string &poly1305file_name,
 			const std::string &outfile_name)
 {
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  chars plainblob {plaintext.cbegin(), plaintext.cend()};
 
   io::file_sink poly1305file {poly1305file_name,
                               std::ios_base::out | std::ios_base::binary };
@@ -97,11 +97,11 @@ verify_mac(const std::string &plaintext,
 	   const std::string &outfile_name)
 {
   // 1. Test succeeds only if file outfile_name contains plaintext
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  chars plainblob {plaintext.cbegin(), plaintext.cend()};
   
   io::file_source is(outfile_name,
 		     std::ios_base::in | std::ios_base::binary);
-  data_t read_back(plaintext.size());
+  chars read_back(plaintext.size());
   is.read(read_back.data(), read_back.size());
   is.close();
   
@@ -142,7 +142,7 @@ pipeline_output_device (const std::string &plaintext,
 			const typename poly1305_to_vector_type::key_type key,
 			const std::string &outfile_name)
 {
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  chars plainblob {plaintext.cbegin(), plaintext.cend()};
 
   mac_array_type mac; // will grow
   vector_sink    poly1305_sink(mac);
@@ -170,11 +170,11 @@ verify_mac(const std::string &plaintext,
 	   const std::string &infile_name)
 {
   // 1. Test succeeds only if file infile_name contains plaintext
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  chars plainblob {plaintext.cbegin(), plaintext.cend()};
   
   io::file_source is(infile_name,
 		     std::ios_base::in | std::ios_base::binary);
-  data_t read_back(plaintext.size());
+  chars read_back(plaintext.size());
   is.read(read_back.data(), read_back.size());
   is.close();
   
@@ -210,7 +210,7 @@ mac_array_type
 pipeline_output_device (const std::string &plaintext,
 			const typename poly1305_to_vector_null_type::key_type key)
 {
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  chars plainblob {plaintext.cbegin(), plaintext.cend()};
 
   mac_array_type mac; // will grow
   vector_sink    poly1305_sink(mac);
@@ -235,7 +235,7 @@ verify_mac(const std::string &plaintext,
 	   const mac_array_type &mac)
 {
   // 1. Fetch data to check from parameter:
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  chars plainblob {plaintext.cbegin(), plaintext.cend()};
   
   BOOST_TEST_MESSAGE(plaintext);
 

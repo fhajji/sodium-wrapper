@@ -1,8 +1,8 @@
-// test_CryptorAEAD.cpp -- Test Sodium::CryptorAEAD
+// test_CryptorAEAD.cpp -- Test sodium::CryptorAEAD
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -17,16 +17,15 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE Sodium::CryptorAEAD Test
+#define BOOST_TEST_MODULE sodium::CryptorAEAD Test
 #include <boost/test/included/unit_test.hpp>
 
-#include <sodium.h>
 #include "cryptoraead.h"
 #include <string>
+#include <sodium.h>
 
-using Sodium::CryptorAEAD;
-
-using data_t = Sodium::data_t;
+using sodium::CryptorAEAD;
+using bytes = sodium::bytes;
 
 bool
 test_of_correctness(const std::string &header,
@@ -39,17 +38,17 @@ test_of_correctness(const std::string &header,
   CryptorAEAD::key_type   key;
   CryptorAEAD::nonce_type nonce {};
 
-  data_t plainblob    {plaintext.cbegin(), plaintext.cend()};
-  data_t headerblob   {header.cbegin(), header.cend()};
+  bytes plainblob    {plaintext.cbegin(), plaintext.cend()};
+  bytes headerblob   {header.cbegin(), header.cend()};
 
-  data_t ciphertext = sc.encrypt(headerblob, plainblob, key, nonce);
+  bytes ciphertext = sc.encrypt(headerblob, plainblob, key, nonce);
 
   if (falsify_ciphertext && ciphertext.size() != 0)
     ++ciphertext[0];
 
   ciphertext_size = ciphertext.size();
   
-  data_t decrypted;
+  bytes decrypted;
 
   // falsify the header AFTER encryption!
   if (falsify_header && headerblob.size() != 0)

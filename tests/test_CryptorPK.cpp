@@ -1,8 +1,8 @@
-// test_CryptorPK.cpp -- Test Sodium::CryptorPK
+// test_CryptorPK.cpp -- Test sodium::CryptorPK
 //
 // ISC License
 // 
-// Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+// Copyright (C) 2018 Farid Hajji <farid@hajji.name>
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -17,17 +17,17 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE Sodium::CryptorPK Test
+#define BOOST_TEST_MODULE sodium::CryptorPK Test
 #include <boost/test/included/unit_test.hpp>
 
-#include <sodium.h>
 #include "cryptorpk.h"
 #include "keypair.h"
 #include <string>
+#include <sodium.h>
 
-using Sodium::KeyPair;
-using Sodium::CryptorPK;
-using data_t = Sodium::data_t;
+using sodium::KeyPair;
+using sodium::CryptorPK;
+using bytes = sodium::bytes;
 
 bool
 test_of_correctness(const std::string &plaintext)
@@ -37,11 +37,11 @@ test_of_correctness(const std::string &plaintext)
   KeyPair               keypair_bob   {};
   CryptorPK::nonce_type nonce         {};
 
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // 1. alice gets the public key from bob, and sends him a message
   
-  data_t ciphertext_from_alice_to_bob =
+  bytes ciphertext_from_alice_to_bob =
     sc.encrypt(plainblob,
 	       keypair_bob.pubkey(),
 	       keypair_alice.privkey(),
@@ -49,7 +49,7 @@ test_of_correctness(const std::string &plaintext)
 
   // 2. bob gets the public key from alice, and decrypts the message
   
-  data_t decrypted_by_bob_from_alice =
+  bytes decrypted_by_bob_from_alice =
     sc.decrypt(ciphertext_from_alice_to_bob,
 	       keypair_bob.privkey(),
 	       keypair_alice.pubkey(),
@@ -64,14 +64,14 @@ test_of_correctness(const std::string &plaintext)
 
   nonce.increment(); // IMPORTANT! before calling encrypt() again
 
-  data_t ciphertext_from_bob_to_alice =
+  bytes ciphertext_from_bob_to_alice =
     sc.encrypt(decrypted_by_bob_from_alice,
 	       keypair_alice.pubkey(),
 	       keypair_bob.privkey(),
 	       nonce);
 
   // 5. alice attempts to decrypt again (also with the incremented nonce)
-  data_t decrypted_by_alice_from_bob =
+  bytes decrypted_by_alice_from_bob =
     sc.decrypt(ciphertext_from_bob_to_alice,
 	       keypair_alice.privkey(),
 	       keypair_bob.pubkey(),
@@ -93,10 +93,10 @@ falsify_mac(const std::string &plaintext)
   KeyPair               keypair_alice {};
   CryptorPK::nonce_type nonce         {};
 
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // encrypt to self
-  data_t ciphertext = sc.encrypt(plainblob,
+  bytes ciphertext = sc.encrypt(plainblob,
 				 keypair_alice,
 				 nonce);
 
@@ -106,7 +106,7 @@ falsify_mac(const std::string &plaintext)
   ++ciphertext[0];
 
   try {
-    data_t decrypted = sc.decrypt(ciphertext,
+    bytes decrypted = sc.decrypt(ciphertext,
 				  keypair_alice,
 				  nonce);
   }
@@ -133,10 +133,10 @@ falsify_ciphertext(const std::string &plaintext)
   KeyPair               keypair_alice {};
   CryptorPK::nonce_type nonce         {};
 
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // encrypt to self
-  data_t ciphertext = sc.encrypt(plainblob,
+  bytes ciphertext = sc.encrypt(plainblob,
 				 keypair_alice,
 				 nonce);
 
@@ -146,7 +146,7 @@ falsify_ciphertext(const std::string &plaintext)
   ++ciphertext[CryptorPK::MACSIZE];
 
   try {
-    data_t decrypted = sc.decrypt(ciphertext,
+    bytes decrypted = sc.decrypt(ciphertext,
 				  keypair_alice,
 				  nonce);
   }
@@ -170,12 +170,12 @@ falsify_sender(const std::string &plaintext)
   KeyPair               keypair_oscar {}; // real sender
   CryptorPK::nonce_type nonce         {};
 
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // 1. Oscar encrypts a plaintext that looks as if it was written by Bob
   // with Alice's public key, and signs it with his own private key.
   
-  data_t ciphertext = sc.encrypt(plainblob,
+  bytes ciphertext = sc.encrypt(plainblob,
 				 keypair_alice.pubkey(),
 				 keypair_oscar.privkey(), // !!!
 				 nonce);
@@ -193,7 +193,7 @@ falsify_sender(const std::string &plaintext)
   // the place where decryption MUST fail.
 
   try {
-    data_t decrypted = sc.decrypt(ciphertext,
+    bytes decrypted = sc.decrypt(ciphertext,
 				  keypair_alice.privkey(),
 				  keypair_bob.pubkey(),  // !!!
 				  nonce);
@@ -247,16 +247,16 @@ BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_encrypt_to_self )
   CryptorPK::nonce_type nonce         {};
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  data_t plainblob {plaintext.cbegin(), plaintext.cend()};
+  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // encrypt to self
-  data_t ciphertext = sc.encrypt(plainblob,
+  bytes ciphertext = sc.encrypt(plainblob,
 				 keypair_alice,
 				 nonce);
 
   BOOST_CHECK_EQUAL(ciphertext.size(), plainblob.size() + CryptorPK::MACSIZE);
 
-  data_t decrypted = sc.decrypt(ciphertext,
+  bytes decrypted = sc.decrypt(ciphertext,
 				keypair_alice,
 				nonce);
 
