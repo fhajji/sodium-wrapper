@@ -28,7 +28,7 @@
 using sodium::authenticator;
 using bytes = sodium::bytes;
 
-static constexpr std::size_t macsize = authenticator::MACSIZE;
+static constexpr std::size_t macsize = authenticator<>::MACSIZE;
 
 struct SodiumFixture {
   SodiumFixture()  {
@@ -44,87 +44,87 @@ BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture )
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_size )
 {
-  authenticator sa {}; // Secret Key Authenticator/Verifier
+  authenticator<> sa {}; // Secret Key Authenticator/Verifier
   
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  bytes       plainblob {plaintext.cbegin(), plaintext.cend()};
+  authenticator<>::bytes_type plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // compute the MAC
-  bytes       mac { sa.mac(plainblob) };
+  authenticator<>::bytes_type mac { sa.mac(plainblob) };
 
   BOOST_CHECK_EQUAL(mac.size(), macsize);
 }
 
 BOOST_AUTO_TEST_CASE(sodium_test_auth_mac_size_key_copy)
 {
-	authenticator::key_type key{}; // create secret key
-	authenticator sa{key}; // Secret Key Authenticator/Verifier
+	authenticator<>::key_type key{}; // create secret key
+	authenticator<> sa{key}; // Secret Key Authenticator/Verifier
 
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
-	bytes       plainblob{ plaintext.cbegin(), plaintext.cend() };
+	authenticator<>::bytes_type plainblob{ plaintext.cbegin(), plaintext.cend() };
 
 	// compute the MAC
-	bytes       mac{ sa.mac(plainblob) };
+	authenticator<>::bytes_type mac{ sa.mac(plainblob) };
 
 	BOOST_CHECK_EQUAL(mac.size(), macsize);
 }
 
 BOOST_AUTO_TEST_CASE(sodium_test_auth_mac_size_key_move2)
 {
-	authenticator sa{ authenticator::key_type() }; // Secret Key Authenticator/Verifier
+	authenticator<> sa{ authenticator<>::key_type() }; // Secret Key Authenticator/Verifier
 
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
-	bytes       plainblob{ plaintext.cbegin(), plaintext.cend() };
+	authenticator<>::bytes_type plainblob{ plaintext.cbegin(), plaintext.cend() };
 
 	// compute the MAC
-	bytes       mac{ sa.mac(plainblob) };
+	authenticator<>::bytes_type mac{ sa.mac(plainblob) };
 
 	BOOST_CHECK_EQUAL(mac.size(), macsize);
 }
 
 BOOST_AUTO_TEST_CASE(sodium_test_auth_auth_copy)
 {
-	authenticator sa1{ authenticator::key_type() }; // Secret Key Authenticator/Verifier
-	authenticator sa2{ sa1 }; // copy
+	authenticator<> sa1;        // with random key
+	authenticator<> sa2{ sa1 }; // copy
 
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
-	bytes       plainblob{ plaintext.cbegin(), plaintext.cend() };
+	authenticator<>::bytes_type plainblob{ plaintext.cbegin(), plaintext.cend() };
 
 	// compute the MAC
-	bytes       mac1{ sa1.mac(plainblob) };
-	bytes       mac2{ sa2.mac(plainblob) };
+	auto mac1{ sa1.mac(plainblob) };
+	auto mac2{ sa2.mac(plainblob) };
 
 	BOOST_CHECK(mac1 == mac2);
 }
 
 BOOST_AUTO_TEST_CASE(sodium_test_auth_auth_move)
 {
-	authenticator sa1{}; // Secret Key Authenticator/Verifier
+	authenticator<> sa1{}; // with random key
 
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
-	bytes       plainblob{ plaintext.cbegin(), plaintext.cend() };
+	authenticator<>::bytes_type plainblob{ plaintext.cbegin(), plaintext.cend() };
 
 	// compute the MAC
-	bytes       mac1{ sa1.mac(plainblob) };
+	auto mac1{ sa1.mac(plainblob) };
 
 	// move sa1 to a new authenticator
-	authenticator sa2{ std::move(sa1) };
+	authenticator<> sa2{ std::move(sa1) };
 
 	// recompute the MAC with the new authenticator
-	bytes       mac2{ sa2.mac(plainblob) };
+	auto mac2{ sa2.mac(plainblob) };
 
 	BOOST_CHECK(mac1 == mac2);
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_full )
 {
-  authenticator sa {};
+  authenticator<> sa {};
 
   std::string   plaintext {"the quick brown fox jumps over the lazy dog"};
-  bytes         plainblob {plaintext.cbegin(), plaintext.cend()};
+  authenticator<>::bytes_type plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // compute the MAC
-  bytes         mac { sa.mac(plainblob) };
+  auto mac { sa.mac(plainblob) };
 
   // the MAC must verify
   BOOST_CHECK(sa.verify(plainblob, mac));
@@ -132,13 +132,13 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_full )
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_empty )
 {
-  authenticator sa {};
+  authenticator<> sa;
 
   std::string   plaintext {};
-  bytes         plainblob {plaintext.cbegin(), plaintext.cend()};
+  authenticator<>::bytes_type plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // compute the MAC
-  bytes         mac { sa.mac(plainblob) };
+  auto mac { sa.mac(plainblob) };
 
   // the MAC must verify
   BOOST_CHECK(sa.verify(plainblob, mac));
@@ -146,13 +146,13 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_empty )
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_falsify_plaintext )
 {
-  authenticator sa {};
+  authenticator<> sa {};
 
   std::string   plaintext {"the quick brown fox jumps over the lazy dog"};
-  bytes         plainblob {plaintext.cbegin(), plaintext.cend()};
+  authenticator<>::bytes_type plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // compute the MAC
-  bytes         mac { sa.mac(plainblob) };
+  auto mac { sa.mac(plainblob) };
 
   // falsify the plaintext
   if (plainblob.size() != 0)
@@ -164,13 +164,13 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_falsify_plaintext )
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_full_falsify_mac )
 {
-  authenticator sa {};
+  authenticator<> sa {};
 
   std::string   plaintext {"the quick brown fox jumps over the lazy dog"};
-  bytes         plainblob {plaintext.cbegin(), plaintext.cend()};
+  authenticator<>::bytes_type plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // compute the MAC
-  bytes         mac { sa.mac(plainblob) };
+  auto mac { sa.mac(plainblob) };
 
   // falsify the MAC
   if (mac.size() != 0)
@@ -182,13 +182,13 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_full_falsify_mac )
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_empty_falsify_mac )
 {
-  authenticator sa {};
+  authenticator<> sa {};
 
   std::string   plaintext {};
-  bytes         plainblob {plaintext.cbegin(), plaintext.cend()};
+  authenticator<>::bytes_type plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // compute the MAC
-  bytes         mac { sa.mac(plainblob) };
+  auto mac { sa.mac(plainblob) };
 
   // falsify the MAC
   if (mac.size() != 0)
@@ -201,20 +201,20 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_empty_falsify_mac )
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_full_falsify_key )
 {
-  authenticator::key_type key;
-  authenticator           sa1 { key };
+  authenticator<>::key_type key;
+  authenticator<>           sa1 { key };
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  bytes       plainblob {plaintext.cbegin(), plaintext.cend()};
+  authenticator<>::bytes_type plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // compute the MAC
-  bytes       mac1 { sa1.mac(plainblob) };
+  auto mac1 { sa1.mac(plainblob) };
 
   // create another key
-  authenticator::key_type key2;
+  authenticator<>::key_type key2;
   BOOST_CHECK(key != key2); // very unlikely that they are equal!
 
-  authenticator sa2{ std::move(key2) };
+  authenticator<> sa2{ std::move(key2) };
   
   // the MAC must NOT verify with key2
   BOOST_CHECK(! sa2.verify(plainblob, mac1));
@@ -222,20 +222,20 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_full_falsify_key )
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_empty_falsify_key )
 {
-  authenticator::key_type key;
-  authenticator           sa1{ key };
+  authenticator<>::key_type key;
+  authenticator<>           sa1{ key };
 
   std::string plaintext {};
-  bytes       plainblob {plaintext.cbegin(), plaintext.cend()};
+  authenticator<>::bytes_type plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // compute the MAC
-  bytes       mac { sa1.mac(plainblob) };
+  auto mac { sa1.mac(plainblob) };
 
   // create another key
-  authenticator::key_type key2;
+  authenticator<>::key_type key2;
   BOOST_CHECK(key != key2); // very unlikely that they are equal!
   
-  authenticator sa2{ std::move(key2) };
+  authenticator<> sa2{ std::move(key2) };
 
   // the MAC must NOT verify with key2
   BOOST_CHECK(! sa2.verify(plainblob, mac));

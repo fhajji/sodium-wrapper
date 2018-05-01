@@ -53,9 +53,9 @@ class auth_mac_filter : public io::aggregate_filter<char> {
    * 
    *     namespace io = boost::iostreams;
    * 
-   *     auth_mac_filter::key_type  key;               // create a random key
-   *     authenticator   auth {std::move(key)};        // create an authenticator
-   *     auth_mac_filter mac_filter {std::move(auth)}; // create a MAC creator filter
+   *     auth_mac_filter::key_type key;                   // create a random key
+   *     authenticator<chars>      auth {std::move(key)}; // create an authenticator
+   *     auth_mac_filter           mac_filter {std::move(auth)}; // create a MAC creator filter
    * 
    *     chars mac(auth_mac_filter::MACSIZE);  // where to store MAC
    * 
@@ -79,9 +79,9 @@ class auth_mac_filter : public io::aggregate_filter<char> {
    * 
    *     namespace io = boost::iostreams;
    * 
-   *     auth_mac_filter::key_type  key;               // create a random key
-   *     authenticator   auth {std::move(key)};        // create an authenticator
-   *     auth_mac_filter mac_filter {std::move(auth)}; // create a MAC creator filter
+   *     auth_mac_filter::key_type key;                   // create a random key
+   *     authenticator<chars>      auth {std::move(key)}; // create an authenticator
+   *     auth_mac_filter           mac_filter {std::move(auth)}; // create a MAC creator filter
    *
    *     chars mac(auth_mac_filter::MACSIZE);  // where to store MAC
    * 
@@ -109,14 +109,14 @@ class auth_mac_filter : public io::aggregate_filter<char> {
     typedef typename base_type::category    category;
     typedef typename base_type::vector_type vector_type; // sodium::chars
   
-    static constexpr std::size_t MACSIZE = authenticator::MACSIZE;
-    using key_type = authenticator::key_type;
+    static constexpr std::size_t MACSIZE = authenticator<chars>::MACSIZE;
+    using key_type = authenticator<chars>::key_type;
     
-    auth_mac_filter(const authenticator &auth) :
+    auth_mac_filter(const authenticator<vector_type> &auth) :
       auth_ {auth}
     { }
 
-	auth_mac_filter(authenticator &&auth) :
+	auth_mac_filter(authenticator<vector_type> &&auth) :
 		auth_{ std::move(auth) }
 	{ }
 
@@ -140,7 +140,7 @@ class auth_mac_filter : public io::aggregate_filter<char> {
     }
     
   private:
-    authenticator auth_;
+    authenticator<vector_type> auth_;
 }; // auth_mac_filter
 
 } //namespace sodium

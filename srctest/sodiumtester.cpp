@@ -131,32 +131,46 @@ SodiumTester::test0(const std::string &plaintext)
 bool
 SodiumTester::test1(const std::string &plaintext)
 {
-  authenticator::key_type key;       // Create a random key
-  authenticator           sa1 {key}; // Secret Key Authenticator/Verifier
+  // THIS IS CURRENTLY WRONG:
+  // we can even use std::string, since it has a
+  // data() and size() interface!
+  // authenticator<std::string> sa1;
+  
+  authenticator<bytes> sa1;
 
-  
-  // transfer plaintext into a binary blob
-  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
-  
+  bytes plainblob{ plaintext.cbegin(), plaintext.cend() };
+
   // compute the MAC:
-  bytes mac { sa1.mac(plainblob) };
+  auto mac { sa1.mac(plainblob) };
 
   // verify the MAC with unchanged data
   if (! sa1.verify(plainblob, mac))
     throw std::runtime_error {"SodiumTester::test1() identical MAC failed"};
 
   // 2. change plaintext, and re-verify MAC:
-  if (plainblob.size() > 0 &&
-      (plainblob[0] = static_cast<unsigned char>('!')) &&
-      sa1.verify(plainblob, mac))
-    throw std::runtime_error {"SodiumTester::test1() different MAC verify"};
+  
+  // bytes plaintext2{ plaintext };
+  // if (plaintext2.size() != 0 &&
+  //     (plaintext2[0] = '!') &&
+  //     sa1.verify(plaintext2, mac))
+  //   throw std::runtime_error {"SodiumTester::test1() different MAC verify"};
 
-  // 3. restore plaintext, then change key and reverify MAC
-  plainblob.assign(plaintext.cbegin(), plaintext.cend());
-  key.readwrite();
-  key.initialize();
-  key.readonly();
-  authenticator sa2{ std::move(key) };
+  bytes plainblob2{ plaintext.cbegin(), plaintext.cend() };
+  if (plainblob2.size() != 0 &&
+	  (plainblob2[0] = static_cast<sodium::byte>('!')) &&
+	  sa1.verify(plainblob2, mac))
+	throw std::runtime_error{ "SodiumTester::test1() different MAC verify" };
+
+  // 3. reverify plaintext with a different key/authenticator
+
+  // create a new authenticator with a (hopefully) different key.
+  // the probability that we randomly pick the same key is negligible.
+  
+  // authenticator<std::string> sa2; // with new random key.
+  // if (sa2.verify(plaintext, mac))
+  //   throw std::runtime_error {"SodiumTester::test1() different KEYS verify"};
+
+  authenticator<bytes> sa2; // with new random key.
   if (sa2.verify(plainblob, mac))
     throw std::runtime_error {"SodiumTester::test1() different KEYS verify"};
 

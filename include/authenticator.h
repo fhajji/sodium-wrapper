@@ -20,10 +20,12 @@
 
 #include "common.h"
 #include "key.h"
+#include <stdexcept>
 #include <sodium.h>
 
 namespace sodium {
 
+template <class BT=bytes>
 class authenticator
 {
  public:
@@ -33,6 +35,7 @@ class authenticator
   static constexpr std::size_t MACSIZE      = crypto_auth_BYTES;
 
   // Member type aliases
+  using bytes_type = BT;
   using key_type = Key<KEYSIZE_AUTH>;
   
   // An authenticator with a new random key
@@ -63,8 +66,7 @@ class authenticator
    * The returned MAC is MACSIZE bytes long.
    **/
 
-  bytes mac(const bytes &plaintext);
-  chars mac(const chars &plaintext);
+  BT mac(const BT &plaintext);
 
   /**
    * Verify MAC of plaintext using the current authentication key,
@@ -77,11 +79,40 @@ class authenticator
    * of the mac don't make sense.
    **/
 
-  bool verify(const bytes &plaintext, const bytes &mac);
-  bool verify(const chars &plaintext, const chars &mac);
+  bool verify(const BT &plaintext, const BT &mac);
 
 private:
 	key_type auth_key_;
 };
+
+template<class BT>
+BT
+authenticator<BT>::mac(const BT &plaintext)
+{
+	// make space for MAC
+	BT mac(authenticator<BT>::MACSIZE);
+
+	// let's compute the MAC now!
+	crypto_auth(reinterpret_cast<unsigned char *>(mac.data()),
+		reinterpret_cast<const unsigned char *>(plaintext.data()), plaintext.size(),
+		auth_key_.data());
+
+	// return the MAC bytes
+	return mac;
+}
+
+template<class BT>
+bool
+authenticator<BT>::verify(const BT &plaintext, const BT &mac)
+{
+	// some sanity checks before we get started
+	if (mac.size() != authenticator<BT>::MACSIZE)
+		throw std::runtime_error{ "sodium::authenticator::verify() mac wrong size" };
+
+	// and now verify!
+	return crypto_auth_verify(reinterpret_cast<const unsigned char *>(mac.data()),
+		reinterpret_cast<const unsigned char *>(plaintext.data()), plaintext.size(),
+		auth_key_.data()) == 0;
+}
 
 } // namespace sodium

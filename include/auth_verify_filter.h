@@ -57,7 +57,7 @@ class auth_verify_filter : public io::aggregate_filter<char> {
    * 
    *     namespace io = boost::iostreams;
    * 
-   *     authenticator      auth          {std::move(key)};
+   *     authenticator<chars> auth        {std::move(key)};
    *     auth_verify_filter verify_filter {std::move {auth}, mac}; // create a MAC verifier filter
    *    
    *     chars result(1); // where to store result
@@ -85,8 +85,8 @@ class auth_verify_filter : public io::aggregate_filter<char> {
    * 
    *     namespace io = boost::iostreams;
    * 
-   *     authenticator      auth { std::move(key) };
-   *     auth_verify_filter verify_filter {std::move(auth), mac}; // create a MAC verifier filter
+   *     authenticator<chars> auth { std::move(key) };
+   *     auth_verify_filter   verify_filter {std::move(auth), mac}; // create a MAC verifier filter
    * 
    *     io::array_source      source {plainblob.data(), plainblob.size()};
    *     io::filtering_istream is   {};
@@ -115,17 +115,17 @@ class auth_verify_filter : public io::aggregate_filter<char> {
     typedef typename base_type::category    category;
     typedef typename base_type::vector_type vector_type; // sodium::chars
 
-    static constexpr std::size_t MACSIZE = authenticator::MACSIZE;
-    using key_type = authenticator::key_type;
+    static constexpr std::size_t MACSIZE = authenticator<vector_type>::MACSIZE;
+    using key_type = authenticator<vector_type>::key_type;
   
-    auth_verify_filter(const authenticator &auth, const vector_type &mac) :
+    auth_verify_filter(const authenticator<vector_type> &auth, const vector_type &mac) :
       auth_ {auth}, mac_ {mac}
     {
       if (mac.size() != MACSIZE)
 	throw std::runtime_error {"sodium::auth_verify_filter::auth_verify_filter() wrong MAC size"};
     }
 
-	auth_verify_filter(authenticator &&auth, const vector_type &mac) :
+	auth_verify_filter(authenticator<vector_type> &&auth, const vector_type &mac) :
 		auth_{ std::move(auth) }, mac_{ mac }
 	{
 		if (mac.size() != MACSIZE)
@@ -155,7 +155,7 @@ class auth_verify_filter : public io::aggregate_filter<char> {
     }
     
   private:
-    authenticator auth_;
+    authenticator<vector_type> auth_;
     vector_type   mac_;
 }; // auth_verify_filter
 
