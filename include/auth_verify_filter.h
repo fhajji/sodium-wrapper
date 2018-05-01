@@ -20,7 +20,7 @@
 
 #include "common.h"
 #include "key.h"
-#include "auth.h"
+#include "authenticator.h"
 
 #include <stdexcept>
 #include <sodium.h>
@@ -113,8 +113,8 @@ class auth_verify_filter : public io::aggregate_filter<char> {
     typedef typename base_type::category    category;
     typedef typename base_type::vector_type vector_type; // sodium::chars
 
-    static constexpr std::size_t MACSIZE = Auth::MACSIZE;
-    using key_type = Auth::key_type;
+    static constexpr std::size_t MACSIZE = authenticator::MACSIZE;
+    using key_type = authenticator::key_type;
   
     auth_verify_filter(const key_type &key, const vector_type &mac) :
       key_ {key}, mac_ {mac}
@@ -122,6 +122,13 @@ class auth_verify_filter : public io::aggregate_filter<char> {
       if (mac.size() != MACSIZE)
 	throw std::runtime_error {"sodium::auth_verify_filter::auth_verify_filter() wrong MAC size"};
     }
+
+	auth_verify_filter(key_type &&key, const vector_type &mac) :
+		key_{ std::move(key) }, mac_{ mac }
+	{
+		if (mac.size() != MACSIZE)
+			throw std::runtime_error{ "sodium::auth_verify_filter::auth_verify_filter() wrong MAC size" };
+	}
 
     virtual ~auth_verify_filter()
     { }

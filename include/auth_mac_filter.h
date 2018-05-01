@@ -23,7 +23,7 @@
 
 #include "common.h"
 #include "key.h"
-#include "auth.h"
+#include "authenticator.h"
 
 #include <sodium.h>
 
@@ -107,12 +107,16 @@ class auth_mac_filter : public io::aggregate_filter<char> {
     typedef typename base_type::category    category;
     typedef typename base_type::vector_type vector_type; // sodium::chars
   
-    static constexpr std::size_t MACSIZE = Auth::MACSIZE;
-    using key_type = Auth::key_type;
+    static constexpr std::size_t MACSIZE = authenticator::MACSIZE;
+    using key_type = authenticator::key_type;
     
     auth_mac_filter(const key_type &key) :
       key_ {key}
     { }
+
+	auth_mac_filter(key_type &&key) :
+		key_{ std::move(key) }
+	{ }
 
     virtual ~auth_mac_filter()
     { }

@@ -1,4 +1,4 @@
-// auth.h -- Secret Key Authentication (MAC)
+// authenticator.h -- Secret Key Authentication (MAC)
 //
 // ISC License
 // 
@@ -24,7 +24,7 @@
 
 namespace sodium {
 
-class Auth
+class authenticator
 {
  public:
 
@@ -35,19 +35,31 @@ class Auth
   // Member type aliases
   using key_type = Key<KEYSIZE_AUTH>;
   
+  // An authenticator with a new random key
+  authenticator() : auth_key_(std::move(key_type())) {}
+
+  // An authenticator with a user-supplied key (copying version)
+  authenticator(const key_type &auth_key) : auth_key_(auth_key) {}
+
+  // An authenticator with a user-supplied key (moving version)
+  authenticator(key_type &&auth_key) : auth_key_(std::move(auth_key)) {}
+
+  // XXX copying and moving constructors?
+  // XXX copying and moving assignment operators?
+
   /**
    * Create and return a Message Authentication Code (MAC) for the supplied
-   * plaintext and secret key.
+   * plaintext, using the current authentication key.
    *
    * The returned MAC is MACSIZE bytes long.
    **/
 
-  bytes auth(const bytes &plaintext,
-	      const key_type &key);
+  bytes mac(const bytes &plaintext);
 
   /**
-   * Verify MAC of plaintext using supplied secret key, returing true
-   * or false whether the plaintext has been tampered with or not.
+   * Verify MAC of plaintext using the current authentication key,
+   * returing true or false whether the plaintext has been tampered
+   * with or not.
    *
    * The MAC must be MACSIZE bytes long.
    *
@@ -56,8 +68,10 @@ class Auth
    **/
 
   bool verify(const bytes &plaintext,
-	      const bytes &mac,
-	      const key_type &key);
+	  const bytes &mac);
+
+private:
+	key_type auth_key_;
 };
 
 } // namespace sodium

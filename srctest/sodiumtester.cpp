@@ -23,7 +23,7 @@
 #include "key.h"
 #include "keyvar.h"
 #include "cryptor.h"
-#include "auth.h"
+#include "authenticator.h"
 #include "cryptoraead.h"
 #include "streamcryptor.h"
 #include "filecryptor.h"
@@ -39,7 +39,7 @@ using sodium::KeyVar;
 using sodium::Nonce;
 using sodium::Cryptor;
 using sodium::CryptorAEAD;
-using sodium::Auth;
+using sodium::authenticator;
 using sodium::StreamCryptor;
 using sodium::FileCryptor;
 
@@ -131,23 +131,24 @@ SodiumTester::test0(const std::string &plaintext)
 bool
 SodiumTester::test1(const std::string &plaintext)
 {
-  Auth           sa {}; // Secret Key Authenticator/Verifier
-  Auth::key_type key;   // Create a random key
+  authenticator::key_type key;       // Create a random key
+  authenticator           sa1 {key}; // Secret Key Authenticator/Verifier
+
   
   // transfer plaintext into a binary blob
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
   
   // compute the MAC:
-  bytes mac { sa.auth(plainblob, key) };
+  bytes mac { sa1.mac(plainblob) };
 
   // verify the MAC with unchanged data
-  if (! sa.verify(plainblob, mac, key))
+  if (! sa1.verify(plainblob, mac))
     throw std::runtime_error {"SodiumTester::test1() identical MAC failed"};
 
   // 2. change plaintext, and re-verify MAC:
   if (plainblob.size() > 0 &&
       (plainblob[0] = static_cast<unsigned char>('!')) &&
-      sa.verify(plainblob, mac, key))
+      sa1.verify(plainblob, mac))
     throw std::runtime_error {"SodiumTester::test1() different MAC verify"};
 
   // 3. restore plaintext, then change key and reverify MAC
@@ -155,11 +156,9 @@ SodiumTester::test1(const std::string &plaintext)
   key.readwrite();
   key.initialize();
   key.readonly();
-  if (sa.verify(plainblob, mac, key))
+  authenticator sa2{ std::move(key) };
+  if (sa2.verify(plainblob, mac))
     throw std::runtime_error {"SodiumTester::test1() different KEYS verify"};
-
-  // not strictly necessary, because we're about to destroy key soon
-  key.noaccess();
 
   return true;
 }

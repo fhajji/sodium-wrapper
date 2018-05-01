@@ -1,4 +1,4 @@
-// auth.cpp -- Secret Key Authentication (MAC)
+// authenticator.cpp -- Secret Key Authentication (MAC)
 //
 // ISC License
 // 
@@ -16,42 +16,40 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#include "auth.h"
+#include "authenticator.h"
 #include "key.h"
 
 #include <stdexcept>
 
 using bytes = sodium::bytes;
-using sodium::Auth;
+using sodium::authenticator;
 using sodium::Key;
 
 bytes
-Auth::auth (const bytes &plaintext,
-	    const key_type &key)
+authenticator::mac (const bytes &plaintext)
 {
   // make space for MAC
-  bytes mac(Auth::MACSIZE);
+  bytes mac(authenticator::MACSIZE);
   
   // let's compute the MAC now!
   crypto_auth (mac.data(),
 	       plaintext.data(), plaintext.size(),
-	       key.data());
+	       auth_key_.data());
 
   // return the MAC bytes
   return mac;
 }
 
 bool
-Auth::verify (const bytes &plaintext,
-	      const bytes &mac,
-	      const key_type &key)
+authenticator::verify (const bytes &plaintext,
+	      const bytes &mac)
 {
   // some sanity checks before we get started
-  if (mac.size() != Auth::MACSIZE)
-    throw std::runtime_error {"sodium::Auth::verify() mac wrong size"};
+  if (mac.size() != authenticator::MACSIZE)
+    throw std::runtime_error {"sodium::authenticator::verify() mac wrong size"};
 
   // and now verify!
   return crypto_auth_verify (mac.data(),
 			     plaintext.data(), plaintext.size(),
-			     key.data()) == 0;
+			     auth_key_.data()) == 0;
 }

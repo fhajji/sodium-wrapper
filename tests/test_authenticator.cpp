@@ -1,4 +1,4 @@
-// test_Auth.cpp -- Test sodium::Auth
+// test_authenticator.cpp -- Test sodium::authenticator
 //
 // ISC License
 // 
@@ -17,18 +17,18 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE sodium::Auth Test
+#define BOOST_TEST_MODULE sodium::authenticator Test
 #include <boost/test/included/unit_test.hpp>
 
-#include "auth.h"
+#include "authenticator.h"
 #include "common.h"
 
 #include <string>
 
-using sodium::Auth;
+using sodium::authenticator;
 using bytes = sodium::bytes;
 
-static constexpr std::size_t macsize = Auth::MACSIZE;
+static constexpr std::size_t macsize = authenticator::MACSIZE;
 
 struct SodiumFixture {
   SodiumFixture()  {
@@ -44,142 +44,140 @@ BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture )
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_size )
 {
-  Auth           sa {}; // Secret Key Authenticator/Verifier
-  Auth::key_type key;   // Create a random key
+  authenticator sa {}; // Secret Key Authenticator/Verifier
   
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   bytes       plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // compute the MAC
-  bytes       mac { sa.auth(plainblob, key) };
+  bytes       mac { sa.mac(plainblob) };
 
   BOOST_CHECK_EQUAL(mac.size(), macsize);
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_full )
 {
-  Auth           sa {};
-  Auth::key_type key;
+  authenticator sa {};
 
-  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  bytes       plainblob {plaintext.cbegin(), plaintext.cend()};
+  std::string   plaintext {"the quick brown fox jumps over the lazy dog"};
+  bytes         plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // compute the MAC
-  bytes       mac { sa.auth(plainblob, key) };
+  bytes         mac { sa.mac(plainblob) };
 
   // the MAC must verify
-  BOOST_CHECK(sa.verify(plainblob, mac, key));
+  BOOST_CHECK(sa.verify(plainblob, mac));
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_empty )
 {
-  Auth           sa {};
-  Auth::key_type key;
+  authenticator sa {};
 
-  std::string plaintext {};
-  bytes       plainblob {plaintext.cbegin(), plaintext.cend()};
+  std::string   plaintext {};
+  bytes         plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // compute the MAC
-  bytes       mac { sa.auth(plainblob, key) };
+  bytes         mac { sa.mac(plainblob) };
 
   // the MAC must verify
-  BOOST_CHECK(sa.verify(plainblob, mac, key));
+  BOOST_CHECK(sa.verify(plainblob, mac));
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_falsify_plaintext )
 {
-  Auth           sa {};
-  Auth::key_type key;
+  authenticator sa {};
 
-  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  bytes       plainblob {plaintext.cbegin(), plaintext.cend()};
+  std::string   plaintext {"the quick brown fox jumps over the lazy dog"};
+  bytes         plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // compute the MAC
-  bytes       mac { sa.auth(plainblob, key) };
+  bytes         mac { sa.mac(plainblob) };
 
   // falsify the plaintext
   if (plainblob.size() != 0)
     ++plainblob[0];
   
   // the MAC must NOT verify
-  BOOST_CHECK(! sa.verify(plainblob, mac, key));
+  BOOST_CHECK(! sa.verify(plainblob, mac));
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_full_falsify_mac )
 {
-  Auth           sa {};
-  Auth::key_type key;
+  authenticator sa {};
 
-  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  bytes       plainblob {plaintext.cbegin(), plaintext.cend()};
+  std::string   plaintext {"the quick brown fox jumps over the lazy dog"};
+  bytes         plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // compute the MAC
-  bytes       mac { sa.auth(plainblob, key) };
+  bytes         mac { sa.mac(plainblob) };
 
   // falsify the MAC
   if (mac.size() != 0)
     ++mac[0];
   
   // the MAC must verify
-  BOOST_CHECK(! sa.verify(plainblob, mac, key));
+  BOOST_CHECK(! sa.verify(plainblob, mac));
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_empty_falsify_mac )
 {
-  Auth           sa {};
-  Auth::key_type key;
+  authenticator sa {};
 
-  std::string plaintext {};
-  bytes       plainblob {plaintext.cbegin(), plaintext.cend()};
+  std::string   plaintext {};
+  bytes         plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // compute the MAC
-  bytes       mac { sa.auth(plainblob, key) };
+  bytes         mac { sa.mac(plainblob) };
 
   // falsify the MAC
   if (mac.size() != 0)
     ++mac[0];
   
   // the MAC must verify
-  BOOST_CHECK(! sa.verify(plainblob, mac, key));
+  BOOST_CHECK(! sa.verify(plainblob, mac));
 }
 
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_full_falsify_key )
 {
-  Auth           sa {};
-  Auth::key_type key;
+  authenticator::key_type key;
+  authenticator           sa1 { key };
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   bytes       plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // compute the MAC
-  bytes       mac { sa.auth(plainblob, key) };
+  bytes       mac1 { sa1.mac(plainblob) };
 
   // create another key
-  Auth::key_type key2;
+  authenticator::key_type key2;
   BOOST_CHECK(key != key2); // very unlikely that they are equal!
+
+  authenticator sa2{ std::move(key2) };
   
   // the MAC must NOT verify with key2
-  BOOST_CHECK(! sa.verify(plainblob, mac, key2));
+  BOOST_CHECK(! sa2.verify(plainblob, mac1));
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_empty_falsify_key )
 {
-  Auth           sa {};
-  Auth::key_type key;
+  authenticator::key_type key;
+  authenticator           sa1{ key };
 
   std::string plaintext {};
   bytes       plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // compute the MAC
-  bytes       mac { sa.auth(plainblob, key) };
+  bytes       mac { sa1.mac(plainblob) };
 
   // create another key
-  Auth::key_type key2;
+  authenticator::key_type key2;
   BOOST_CHECK(key != key2); // very unlikely that they are equal!
   
+  authenticator sa2{ std::move(key2) };
+
   // the MAC must NOT verify with key2
-  BOOST_CHECK(! sa.verify(plainblob, mac, key2));
+  BOOST_CHECK(! sa2.verify(plainblob, mac));
 }
 
 BOOST_AUTO_TEST_SUITE_END ()
