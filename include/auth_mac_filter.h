@@ -53,8 +53,9 @@ class auth_mac_filter : public io::aggregate_filter<char> {
    * 
    *     namespace io = boost::iostreams;
    * 
-   *     auth_mac_filter::key_type  key;       // Create a random key
-   *     auth_mac_filter mac_filter {key};     // create a MAC creator filter
+   *     auth_mac_filter::key_type  key;               // create a random key
+   *     authenticator   auth {std::move(key)};        // create an authenticator
+   *     auth_mac_filter mac_filter {std::move(auth)}; // create a MAC creator filter
    * 
    *     chars mac(auth_mac_filter::MACSIZE);  // where to store MAC
    * 
@@ -78,9 +79,10 @@ class auth_mac_filter : public io::aggregate_filter<char> {
    * 
    *     namespace io = boost::iostreams;
    * 
-   *     auth_mac_filter::key_type  key;       // Create a random key
-   *     auth_mac_filter mac_filter {key};     // create a MAC creator filter
-   * 
+   *     auth_mac_filter::key_type  key;               // create a random key
+   *     authenticator   auth {std::move(key)};        // create an authenticator
+   *     auth_mac_filter mac_filter {std::move(auth)}; // create a MAC creator filter
+   *
    *     chars mac(auth_mac_filter::MACSIZE);  // where to store MAC
    * 
    *     io::array_source      source {plainblob.data(), plainblob.size()};
@@ -110,12 +112,12 @@ class auth_mac_filter : public io::aggregate_filter<char> {
     static constexpr std::size_t MACSIZE = authenticator::MACSIZE;
     using key_type = authenticator::key_type;
     
-    auth_mac_filter(const key_type &key) :
-      key_ {key}
+    auth_mac_filter(const authenticator &auth) :
+      auth_ {auth}
     { }
 
-	auth_mac_filter(key_type &&key) :
-		key_{ std::move(key) }
+	auth_mac_filter(authenticator &&auth) :
+		auth_{ std::move(auth) }
 	{ }
 
     virtual ~auth_mac_filter()
@@ -129,12 +131,8 @@ class auth_mac_filter : public io::aggregate_filter<char> {
 #endif // ! NDEBUG
 
       // Compute MAC:
-      vector_type mac(MACSIZE);
-      crypto_auth(reinterpret_cast<unsigned char *>(mac.data()),
-		  reinterpret_cast<const unsigned char *>(src.data()),
-		  src.size(),
-		  key_.data());
-      
+	  vector_type mac{ auth_.mac(src) }; // uses chars overload
+
       dest.swap(mac);                   // efficiently store it into dest
 
       // old dest elements will be destroyed when do_filter()
@@ -142,7 +140,7 @@ class auth_mac_filter : public io::aggregate_filter<char> {
     }
     
   private:
-    key_type key_;
+    authenticator auth_;
 }; // auth_mac_filter
 
 } //namespace sodium

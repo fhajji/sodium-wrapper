@@ -55,6 +55,67 @@ BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_size )
   BOOST_CHECK_EQUAL(mac.size(), macsize);
 }
 
+BOOST_AUTO_TEST_CASE(sodium_test_auth_mac_size_key_copy)
+{
+	authenticator::key_type key{}; // create secret key
+	authenticator sa{key}; // Secret Key Authenticator/Verifier
+
+	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
+	bytes       plainblob{ plaintext.cbegin(), plaintext.cend() };
+
+	// compute the MAC
+	bytes       mac{ sa.mac(plainblob) };
+
+	BOOST_CHECK_EQUAL(mac.size(), macsize);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_auth_mac_size_key_move2)
+{
+	authenticator sa{ authenticator::key_type() }; // Secret Key Authenticator/Verifier
+
+	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
+	bytes       plainblob{ plaintext.cbegin(), plaintext.cend() };
+
+	// compute the MAC
+	bytes       mac{ sa.mac(plainblob) };
+
+	BOOST_CHECK_EQUAL(mac.size(), macsize);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_auth_auth_copy)
+{
+	authenticator sa1{ authenticator::key_type() }; // Secret Key Authenticator/Verifier
+	authenticator sa2{ sa1 }; // copy
+
+	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
+	bytes       plainblob{ plaintext.cbegin(), plaintext.cend() };
+
+	// compute the MAC
+	bytes       mac1{ sa1.mac(plainblob) };
+	bytes       mac2{ sa2.mac(plainblob) };
+
+	BOOST_CHECK(mac1 == mac2);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_auth_auth_move)
+{
+	authenticator sa1{}; // Secret Key Authenticator/Verifier
+
+	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
+	bytes       plainblob{ plaintext.cbegin(), plaintext.cend() };
+
+	// compute the MAC
+	bytes       mac1{ sa1.mac(plainblob) };
+
+	// move sa1 to a new authenticator
+	authenticator sa2{ std::move(sa1) };
+
+	// recompute the MAC with the new authenticator
+	bytes       mac2{ sa2.mac(plainblob) };
+
+	BOOST_CHECK(mac1 == mac2);
+}
+
 BOOST_AUTO_TEST_CASE( sodium_test_auth_mac_verify_full )
 {
   authenticator sa {};

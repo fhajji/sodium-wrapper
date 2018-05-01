@@ -44,7 +44,16 @@ class authenticator
   // An authenticator with a user-supplied key (moving version)
   authenticator(key_type &&auth_key) : auth_key_(std::move(auth_key)) {}
 
-  // XXX copying and moving constructors?
+  // A copying constructor
+  authenticator(const authenticator &other) :
+	  auth_key_(other.auth_key_)
+  {}
+
+  // A moving constructor
+  authenticator(authenticator &&other) :
+	  auth_key_(std::move(other.auth_key_))
+  {}
+
   // XXX copying and moving assignment operators?
 
   /**
@@ -55,6 +64,7 @@ class authenticator
    **/
 
   bytes mac(const bytes &plaintext);
+  chars mac(const chars &plaintext);
 
   /**
    * Verify MAC of plaintext using the current authentication key,
@@ -67,8 +77,8 @@ class authenticator
    * of the mac don't make sense.
    **/
 
-  bool verify(const bytes &plaintext,
-	  const bytes &mac);
+  bool verify(const bytes &plaintext, const bytes &mac);
+  bool verify(const chars &plaintext, const chars &mac);
 
 private:
 	key_type auth_key_;

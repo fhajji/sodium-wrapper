@@ -57,7 +57,8 @@ class auth_verify_filter : public io::aggregate_filter<char> {
    * 
    *     namespace io = boost::iostreams;
    * 
-   *     auth_verify_filter verify_filter {key, mac};   // create a MAC verifier filter
+   *     authenticator      auth          {std::move(key)};
+   *     auth_verify_filter verify_filter {std::move {auth}, mac}; // create a MAC verifier filter
    *    
    *     chars result(1); // where to store result
    * 
@@ -84,7 +85,8 @@ class auth_verify_filter : public io::aggregate_filter<char> {
    * 
    *     namespace io = boost::iostreams;
    * 
-   *     auth_verify_filter verify_filter {key, mac};     // create a MAC verifier filter
+   *     authenticator      auth { std::move(key) };
+   *     auth_verify_filter verify_filter {std::move(auth), mac}; // create a MAC verifier filter
    * 
    *     io::array_source      source {plainblob.data(), plainblob.size()};
    *     io::filtering_istream is   {};
@@ -116,15 +118,15 @@ class auth_verify_filter : public io::aggregate_filter<char> {
     static constexpr std::size_t MACSIZE = authenticator::MACSIZE;
     using key_type = authenticator::key_type;
   
-    auth_verify_filter(const key_type &key, const vector_type &mac) :
-      key_ {key}, mac_ {mac}
+    auth_verify_filter(const authenticator &auth, const vector_type &mac) :
+      auth_ {auth}, mac_ {mac}
     {
       if (mac.size() != MACSIZE)
 	throw std::runtime_error {"sodium::auth_verify_filter::auth_verify_filter() wrong MAC size"};
     }
 
-	auth_verify_filter(key_type &&key, const vector_type &mac) :
-		key_{ std::move(key) }, mac_{ mac }
+	auth_verify_filter(authenticator &&auth, const vector_type &mac) :
+		auth_{ std::move(auth) }, mac_{ mac }
 	{
 		if (mac.size() != MACSIZE)
 			throw std::runtime_error{ "sodium::auth_verify_filter::auth_verify_filter() wrong MAC size" };
@@ -144,10 +146,7 @@ class auth_verify_filter : public io::aggregate_filter<char> {
 	throw std::runtime_error {"sodium::auth_verify_filter::do_filter() mac wrong size"};
 
       // Verify MAC against src.
-      bool result = crypto_auth_verify(reinterpret_cast<const unsigned char *>(mac_.data()),
-				       reinterpret_cast<const unsigned char *>(src.data()),
-				       src.size(),
-				       key_.data()) == 0;
+	  bool result = auth_.verify(src, mac_); // uses chars overload
       
       vector_type result_vector(1);
       result_vector[0] = (result ? '1' : '0');
@@ -156,8 +155,8 @@ class auth_verify_filter : public io::aggregate_filter<char> {
     }
     
   private:
-    key_type    key_;
-    vector_type mac_;
+    authenticator auth_;
+    vector_type   mac_;
 }; // auth_verify_filter
 
 } //namespace sodium
