@@ -64,9 +64,9 @@ class Nonce
    * default value of bytes, i.e. to zero bytes.
    **/
  
-  Nonce<N>(bool init=true) : noncedata(N) {
+  Nonce<N>(bool init=true) : noncedata_(N) {
     if (init)
-      randombytes_buf(noncedata.data(), noncedata.size());
+      randombytes_buf(noncedata_.data(), noncedata_.size());
   }
 
   // there's nothing special about copy operations: allow them.
@@ -80,27 +80,27 @@ class Nonce
   * data() gives const access to those bytes of which
   * size() bytes (N) are stored in the key.
   *
-  * We don't provide mutable access to the btes by design.
+  * We don't provide mutable access to the bytes by design.
   * The only functions that change those bytes are here:
   *   Nonce(true), increment(), operator+=().
   *
   * !!!! IMPORTANT INVARIANT -- CHECK MANUALLY !!!!
   *
-  * Note that we return N instead of noncedata.size() in size()
+  * Note that we return N instead of noncedata_.size() in size()
   * so that size() can be declared constexpr and used in
   * static_assert() in callers.  We must make sure that the
-  * invariant N == noncedata.size() always holds when modifying
+  * invariant N == noncedata_.size() always holds when modifying
   * this class.
   **/
 
-  const            byte        *data() const { return noncedata.data(); }
+  const            byte        *data() const { return noncedata_.data(); }
   static constexpr std::size_t  size()       { return N; }
 
   /**
-   * Expose noncedata as const bytes for sodium::tohex().
+   * Expose noncedata_ as const bytes for sodium::tohex().
    **/
 
-  const bytes as_data_t() const { return noncedata; }
+  const bytes as_bytes() const { return noncedata_; }
  
   /**
    * Increment the Nonce by 1 in constant time.
@@ -110,7 +110,7 @@ class Nonce
    **/
  
   void increment() {
-    sodium_increment(noncedata.data(), noncedata.size());
+    sodium_increment(noncedata_.data(), noncedata_.size());
   }
 
   /**
@@ -119,7 +119,7 @@ class Nonce
    **/
  
   bool is_zero() {
-    return sodium_is_zero(noncedata.data(), noncedata.size()) == 1;
+    return sodium_is_zero(noncedata_.data(), noncedata_.size()) == 1;
   }
 
   /**
@@ -130,12 +130,12 @@ class Nonce
    * in little endian format.
    **/
   Nonce<N>& operator+= (const Nonce<N> &b) {
-    sodium_add(noncedata.data(), b.noncedata.data(), noncedata.size());
+    sodium_add(noncedata_.data(), b.noncedata_.data(), noncedata_.size());
     return *this;
   }
  
  private:
-  bytes noncedata; // the bytes of the nonce are stored in normal memory
+  bytes noncedata_; // the bytes of the nonce are stored in normal memory
 };
 
 /**
