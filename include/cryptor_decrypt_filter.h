@@ -59,7 +59,8 @@ class cryptor_decrypt_filter : public io::aggregate_filter<char> {
    * 
    *   cryptor_decrypt_filter::key_type   key { ... };   // ... with this key
    *   cryptor_decrypt_filter::nonce_type nonce { ... }; // ... and this nonce.
-   *   cryptor_decrypt_filter             decrypt_filter {key, nonce}; // create a decryptor filter
+   *   cryptor<chars> crypt{std::move(key)};
+   *   cryptor_decrypt_filter decrypt_filter {std::move(crypt), nonce}; // create a decryptor filter
    *   chars decrypted (ciphertext.size() - cryptor_decrypt_filter::MACSIZE);
    * 
    *   try {
@@ -85,7 +86,8 @@ class cryptor_decrypt_filter : public io::aggregate_filter<char> {
    * 
    *   cryptor_decrypt_filter::key_type   key { ... };   // ... with this key
    *   cryptor_decrypt_filter::nonce_type nonce { ... }; // ... and this nonce.
-   *   cryptor_decrypt_filter             decrypt_filter {key, nonce}; // create a decryptor filter
+   *   cryptor crypt {std::move(key)};
+   *   cryptor_decrypt_filter decrypt_filter {std::move(crypt), nonce}; // create a decryptor filter
    *   chars decrypted (ciphertext.size() - cryptor_decrypt_filter::MACSIZE);
    * 
    *   io::array_source      source {ciphertext.data(), ciphertext.size()};
@@ -116,16 +118,18 @@ class cryptor_decrypt_filter : public io::aggregate_filter<char> {
     typedef typename base_type::category    category;
     typedef typename base_type::vector_type vector_type; // sodium::chars
 
-    static constexpr std::size_t MACSIZE   = Cryptor::MACSIZE;
+    static constexpr std::size_t MACSIZE   = cryptor<vector_type>::MACSIZE;
     
-    using key_type   = Cryptor::key_type;
-    using nonce_type = Cryptor::nonce_type;
-  
-    cryptor_decrypt_filter(const key_type &key,
-			   const nonce_type &nonce) :
-      key_ {key}, nonce_ {nonce}
-    {
-    }
+    using key_type   = cryptor<vector_type>::key_type;
+    using nonce_type = cryptor<vector_type>::nonce_type;
+
+	cryptor_decrypt_filter(const cryptor<vector_type> &cryptor, const nonce_type &nonce) :
+		cryptor_{ cryptor }, nonce_{ nonce }
+	{}
+
+	cryptor_decrypt_filter(cryptor<vector_type> &&cryptor, const nonce_type &nonce) :
+		cryptor_{ std::move(cryptor) }, nonce_{ nonce }
+	{}
 
     virtual ~cryptor_decrypt_filter()
     { }
@@ -144,18 +148,13 @@ class cryptor_decrypt_filter : public io::aggregate_filter<char> {
 	  throw std::runtime_error {"sodium::cryptor_decrypt_filter::do_filter() ciphertext too small for mac"};
 
 	// Try to decrypt the (MAC || ciphertext) passed in src.
-	vector_type decrypted(src.size() - MACSIZE);
-	if (crypto_secretbox_open_easy (reinterpret_cast<unsigned char *>(decrypted.data()),
-					reinterpret_cast<const unsigned char *>(src.data()),
-					src.size(),
-					nonce_.data(),
-					key_.data()) != 0)
-	  throw std::runtime_error {"sodium::cryptor_decrypt_filter::do_filter() can't decrypt"};
-      
+	vector_type decrypted{ cryptor_.decrypt(src, nonce_) };
+
 	dest.swap(decrypted); // efficiently store result vector into dest
-      }
-      catch (std::runtime_error &e) {
-	std::string error_message {e.what()};
+    }
+    catch (std::runtime_error &e) {
+	  std::string error_message {e.what()};
+	  error_message.append("\nsodium::cryptor_decrypt_filter::do_filter() can't decrypt");
 
 #ifndef NDEBUG
 	std::cerr << "sodium::cryptor_decrypt_filter::do_filter() "
@@ -163,8 +162,8 @@ class cryptor_decrypt_filter : public io::aggregate_filter<char> {
 		  << std::endl;
 #endif // ! NDEBUG
 
-	throw std::ios_base::failure(error_message);
-      }
+	  throw std::ios_base::failure(error_message);
+    }
 
 #ifndef NDEBUG
       std::string dest_string { dest.cbegin(), dest.cend() };
@@ -174,7 +173,7 @@ class cryptor_decrypt_filter : public io::aggregate_filter<char> {
     }
     
   private:
-    key_type   key_;
+    cryptor<vector_type> cryptor_;
     nonce_type nonce_;
 }; // cryptor_decrypt_filter
 

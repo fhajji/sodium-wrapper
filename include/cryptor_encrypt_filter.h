@@ -56,7 +56,8 @@ class cryptor_encrypt_filter : public io::aggregate_filter<char> {
    * 
    *     cryptor_encrypt_filter::key_type      key;      // Create a random key
    *     cryptor_encrypt_filter::nonce_type    nonce;    // create random nonce
-   *     cryptor_encrypt_filter encrypt_filter {key, nonce};  // create a cryptor filter
+   *     cryptor crypt{ std::move(key) };
+   *     cryptor_encrypt_filter encrypt_filter {std::move(crypt), nonce};  // create a cryptor filter
    * 
    *     chars ciphertext(encryptor_encrypt_filter::MACSIZE + plainblob.size());
    * 
@@ -79,7 +80,8 @@ class cryptor_encrypt_filter : public io::aggregate_filter<char> {
    * 
    *     cryptor_encrypt_filter::key_type      key;      // Create a random key
    *     cryptor_encrypt_filter::nonce_type    nonce;    // create random nonce
-   *     cryptor_encrypt_filter encrypt_filter {key, nonce};  // create a cryptor filter
+   *     cryptor crypt{ std::move(key) };
+   *     cryptor_encrypt_filter encrypt_filter {std::move(crypt), nonce};  // create a cryptor filter
    * 
    *     chars ciphertext ( cryptor_encrypt_filter::MACSIZE + plaintext.size() );
    *     io::array_source        source {plainblob.data(), plainblob.size()};
@@ -104,15 +106,18 @@ class cryptor_encrypt_filter : public io::aggregate_filter<char> {
     typedef typename base_type::category    category;
     typedef typename base_type::vector_type vector_type; // sodium::chars
 
-    static constexpr std::size_t MACSIZE   = Cryptor::MACSIZE;
+    static constexpr std::size_t MACSIZE   = cryptor<vector_type>::MACSIZE;
     
-    using key_type   = Cryptor::key_type;
-    using nonce_type = Cryptor::nonce_type;
-    
-    cryptor_encrypt_filter(const key_type &key,
-			   const nonce_type &nonce) :
-      key_ {key}, nonce_ {nonce}
-    { }
+    using key_type   = cryptor<vector_type>::key_type;
+    using nonce_type = cryptor<vector_type>::nonce_type;
+
+	cryptor_encrypt_filter(const cryptor<vector_type> &cryptor, const nonce_type &nonce) :
+		cryptor_{ cryptor }, nonce_{ nonce }
+	{}
+
+	cryptor_encrypt_filter(cryptor<vector_type> &&cryptor, const nonce_type &nonce) :
+		cryptor_{ std::move(cryptor) }, nonce_{ nonce }
+	{}
 
     virtual ~cryptor_encrypt_filter()
     { }
@@ -125,12 +130,7 @@ class cryptor_encrypt_filter : public io::aggregate_filter<char> {
 #endif // ! NDEBUG
 
       // compute (MAC || ciphertext)
-      vector_type ciphertext_with_mac(MACSIZE + src.size());
-      crypto_secretbox_easy (reinterpret_cast<unsigned char *>(ciphertext_with_mac.data()),
-			     reinterpret_cast<const unsigned char *>(src.data()),
-			     src.size(),
-			     nonce_.data(),
-			     key_.data());
+	  vector_type ciphertext_with_mac{ cryptor_.encrypt(src, nonce_) };
 			     
       dest.swap(ciphertext_with_mac);   // efficiently store it into dest
       
@@ -139,7 +139,7 @@ class cryptor_encrypt_filter : public io::aggregate_filter<char> {
     }
     
   private:
-    key_type   key_;
+    cryptor<vector_type> cryptor_;
     nonce_type nonce_;
 }; // cryptor_encrypt_filter
 

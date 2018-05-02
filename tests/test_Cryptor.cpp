@@ -1,4 +1,4 @@
-// test_Cryptor.cpp -- Test sodium::Cryptor
+// test_cryptor.cpp -- Test sodium::cryptor
 //
 // ISC License
 // 
@@ -17,14 +17,14 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE sodium::Cryptor Test
+#define BOOST_TEST_MODULE sodium::cryptor Test
 #include <boost/test/included/unit_test.hpp>
 
 #include "cryptor.h"
 #include <string>
 #include <sodium.h>
 
-using sodium::Cryptor;
+using sodium::cryptor;
 using bytes = sodium::bytes;
 
 bool
@@ -34,21 +34,23 @@ test_of_correctness(const std::string &plaintext,
 		    bool falsify_key=false,
 		    bool falsify_nonce=false)
 {
-  Cryptor             sc    {};
-  Cryptor::key_type   key;
-  Cryptor::key_type   key2;
-  Cryptor::nonce_type nonce {};
-  Cryptor::nonce_type nonce2 {};
+  cryptor<>::key_type   key;
+  cryptor<>::key_type   key2;
+  cryptor<>::nonce_type nonce {};
+  cryptor<>::nonce_type nonce2 {};
+
+  cryptor<> sc{ std::move(key) };
+  cryptor<> sc2{ std::move(key2) };
 
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
-  bytes ciphertext = sc.encrypt(plainblob, key, nonce);
+  bytes ciphertext = sc.encrypt(plainblob, nonce);
 
-  BOOST_CHECK(ciphertext.size() == Cryptor::MACSIZE + plainblob.size());
+  BOOST_CHECK(ciphertext.size() == cryptor<>::MACSIZE + plainblob.size());
   
   if (! plaintext.empty() && falsify_ciphertext) {
     // ciphertext is of the form: (MAC || actual_ciphertext)
-    ++ciphertext[Cryptor::MACSIZE]; // falsify ciphertext
+    ++ciphertext[cryptor<>::MACSIZE]; // falsify ciphertext
   }
   
   if (falsify_mac) {
@@ -57,10 +59,8 @@ test_of_correctness(const std::string &plaintext,
   }
 
   try {
-    bytes decrypted  = sc.decrypt(ciphertext,
-				   (falsify_key ? key2 : key),
-				   (falsify_nonce ? nonce2 : nonce));
-
+	bytes decrypted = (falsify_key ? sc2 : sc).decrypt(ciphertext, (falsify_nonce ? nonce2 : nonce));
+	
     BOOST_CHECK(decrypted.size()  == plainblob.size());
 
     // decryption succeeded and plainblob == decrypted if and only if
@@ -92,16 +92,16 @@ test_of_correctness_detached(const std::string &plaintext,
 			     bool falsify_key=false,
 			     bool falsify_nonce=false)
 {
-  Cryptor             sc    {};
-  Cryptor::key_type   key;
-  Cryptor::key_type   key2;
-  Cryptor::nonce_type nonce {};
-  Cryptor::nonce_type nonce2 {};
+  cryptor<> sc;  // with random key
+  cryptor<> sc2; // with (another) random key
+  cryptor<>::nonce_type nonce {};
+  cryptor<>::nonce_type nonce2 {};
 
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
-  bytes mac(Cryptor::MACSIZE);
+  cryptor<>::bytes_type mac(cryptor<>::MACSIZE);
 
-  bytes ciphertext = sc.encrypt(plainblob, key, nonce, mac);
+  // encrypt, using detached form
+  bytes ciphertext = sc.encrypt(plainblob, nonce, mac);
 
   BOOST_CHECK(ciphertext.size() == plainblob.size());
   
@@ -112,10 +112,11 @@ test_of_correctness_detached(const std::string &plaintext,
     ++mac[0]; // falsify MAC
 
   try {
-    bytes decrypted  = sc.decrypt(ciphertext,
-				   mac,
-				   (falsify_key   ? key2   : key),
-				   (falsify_nonce ? nonce2 : nonce));
+	bytes decrypted = (falsify_key ? sc2 : sc).decrypt(
+		  ciphertext,
+		  mac,
+		  (falsify_nonce ? nonce2 : nonce)
+	);
 
     BOOST_CHECK(decrypted.size()  == plainblob.size());
 

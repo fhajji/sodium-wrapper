@@ -38,6 +38,7 @@
 using sodium::cryptor_encrypt_filter;
 using sodium::cryptor_decrypt_filter;
 using chars = sodium::chars;
+using cryptor = sodium::cryptor<chars>; // NOT bytes!
 
 namespace io = boost::iostreams;
 
@@ -56,9 +57,10 @@ test_of_correctness_combined_output_filter(const std::string &plaintext)
 {
   cryptor_encrypt_filter::key_type   key;   // Create a random key
   cryptor_encrypt_filter::nonce_type nonce; // Create a random nonce
+  cryptor crypt{ std::move(key) };
 
-  cryptor_encrypt_filter encrypt_filter {key, nonce};
-  cryptor_decrypt_filter decrypt_filter {key, nonce};
+  cryptor_encrypt_filter encrypt_filter {crypt, nonce};            // COPY crypt to...
+  cryptor_decrypt_filter decrypt_filter {std::move(crypt), nonce}; // ... reuse here.
   
   chars plainblob { plaintext.cbegin(), plaintext.cend() };
   chars decrypted (2 * plaintext.size()); // because of both writes below
@@ -110,8 +112,10 @@ test_of_correctness_combined_input_filter(const std::string &plaintext)
   cryptor_encrypt_filter::key_type   key;   // Create a random key
   cryptor_encrypt_filter::nonce_type nonce; // Create a random nonce
 
-  cryptor_encrypt_filter encrypt_filter {key, nonce};
-  cryptor_decrypt_filter decrypt_filter {key, nonce};
+  cryptor crypt{ std::move(key) };
+
+  cryptor_encrypt_filter encrypt_filter {crypt, nonce};
+  cryptor_decrypt_filter decrypt_filter {std::move(crypt), nonce};
   
   chars decrypted (2 * plaintext.size()); // because of plainblob2 above
 
@@ -153,8 +157,11 @@ test_of_correctness_output_filter(const std::string &plaintext,
   cryptor_encrypt_filter::nonce_type nonce;  // Create a random nonce
   cryptor_decrypt_filter::nonce_type nonce2; // Create another random nonce
 
-  cryptor_encrypt_filter encrypt_filter {key, nonce};
-  cryptor_decrypt_filter decrypt_filter {(falsify_key   ? key2   : key),
+  cryptor crypt{ std::move(key) };
+  cryptor crypt2{ std::move(key2) };
+
+  cryptor_encrypt_filter encrypt_filter {crypt, nonce};
+  cryptor_decrypt_filter decrypt_filter {(falsify_key   ? std::move(crypt2) : std::move(crypt)),
                                          (falsify_nonce ? nonce2 : nonce)};
   
   chars ciphertext ( cryptor_encrypt_filter::MACSIZE + plaintext.size() );
@@ -239,13 +246,13 @@ test_of_correctness_input_filter(const std::string &plaintext,
 
   // 1. encrypt plaintext into ciphertext
 
-  cryptor_encrypt_filter::key_type   key;    // Create a random key
-  cryptor_decrypt_filter::key_type   key2;   // Create another random key
+  cryptor crypt;  // create a cryptor with a random key
+  cryptor crypt2; // create a cryptor with another random key
   cryptor_encrypt_filter::nonce_type nonce;  // Create a random nonce
   cryptor_decrypt_filter::nonce_type nonce2; // Create another random nonce
 
-  cryptor_encrypt_filter encrypt_filter {key, nonce};
-  cryptor_decrypt_filter decrypt_filter {(falsify_key   ? key2   : key),
+  cryptor_encrypt_filter encrypt_filter {crypt, nonce};
+  cryptor_decrypt_filter decrypt_filter {(falsify_key   ? std::move(crypt2) : std::move(crypt)),
                                          (falsify_nonce ? nonce2 : nonce)};
   
   chars ciphertext ( cryptor_encrypt_filter::MACSIZE + plaintext.size() );
@@ -355,10 +362,9 @@ test_of_correctness_input_filter(const std::string &plaintext,
 void
 length_test_output_filter(const std::string &plaintext)
 {
-  cryptor_encrypt_filter::key_type   key;   // Create a random key
-  cryptor_encrypt_filter::nonce_type nonce; // Create a random nonce
-
-  cryptor_encrypt_filter encrypt_filter {key, nonce};
+  // create a filter with a random key / random nonce cryptor.
+  // multiple use of std::move semantics behing the curtain.
+  cryptor_encrypt_filter encrypt_filter { cryptor(), cryptor_encrypt_filter::nonce_type() };
   
   chars plainblob  { plaintext.cbegin(), plaintext.cend() };
   chars ciphertext (cryptor_encrypt_filter::MACSIZE + plainblob.size());
@@ -387,7 +393,7 @@ length_test_input_filter(const std::string &plaintext)
   cryptor_encrypt_filter::key_type   key;   // Create a random key
   cryptor_encrypt_filter::nonce_type nonce; // Create a random nonce
 
-  cryptor_encrypt_filter encrypt_filter {key, nonce};
+  cryptor_encrypt_filter encrypt_filter {cryptor(std::move(key)), nonce};
   
   chars ciphertext (cryptor_encrypt_filter::MACSIZE + plainblob.size());
 

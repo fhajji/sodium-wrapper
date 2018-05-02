@@ -26,18 +26,42 @@
 
 namespace sodium {
 
-class Cryptor {
+template <class BT=bytes>
+class cryptor {
 
  public:
   static constexpr std::size_t NONCESIZE = sodium::NONCESIZE_SECRETBOX;
   static constexpr std::size_t KEYSIZE   = sodium::KEYSIZE_SECRETBOX;
   static constexpr std::size_t MACSIZE   = crypto_secretbox_MACBYTES;
 
+  using bytes_type = BT;
   using nonce_type = Nonce<NONCESIZE>;
   using key_type   = Key<KEYSIZE>;
-  
+
+  // A cryptor with a new random key
+  cryptor() : key_(std::move(key_type())) {}
+
+  // A cryptor with a user-supplied key (copying version)
+  cryptor(const key_type &key) : key_(key) {}
+
+  // A cryptor with a user-supplied key (moving version)
+  cryptor(key_type &&key) : key_(std::move(key)) {}
+
+  // A copying constructor
+  cryptor(const cryptor &other) :
+	  key_(other.key_)
+  {}
+
+  // A moving constructor
+  cryptor(cryptor &&other) :
+	  key_(std::move(other.key_))
+  {}
+
+  // XXX copying and moving assignment operators?
+
   /**
-   * Encrypt plaintext using key and nonce, returning ciphertext.
+   * Encrypt plaintext using cryptor's key and supplied nonce,
+   * returning ciphertext.
    *
    * During encryption, a MAC of the plaintext is computed with
    * key/nonce and combined with the ciphertext (combined mode). This
@@ -58,12 +82,12 @@ class Cryptor {
    * and it too won't be stored in protected key_t memory.
    **/
 
-  bytes encrypt(const bytes &plaintext,
-		 const key_type   &key,
+  BT encrypt(const BT &plaintext,
 		 const nonce_type &nonce);
 
   /**
-   * Encrypt plaintext using key and nonce, returning ciphertext.
+   * Encrypt plaintext using cryptor's key and supplied nonce,
+   * returning ciphertext and MAC.
    *
    * During encryption, a MAC of the plaintext is computed with
    * key/nonce and saved in mac, which must be MACSIZE bytes long
@@ -87,13 +111,13 @@ class Cryptor {
    * channel, and they too won't be stored in protected key_t memory.
    **/
   
-  bytes encrypt(const bytes &plaintext,
-		 const key_type   &key,
+  BT encrypt(const BT &plaintext,
 		 const nonce_type &nonce,
-		 bytes            &mac);
+		 BT               &mac);
   
   /**
-   * Decrypt ciphertext using key and nonce, returing decrypted plaintext.
+   * Decrypt ciphertext using cryptor's key and supplied nonce,
+   * returing decrypted plaintext.
    * 
    * The ciphertext is assumed to contain the MAC (combined mode).
    * 
@@ -104,12 +128,12 @@ class Cryptor {
    * the ciphertext is too small to even contain the MAC (MACSIZE bytes).
    **/
 
-  bytes decrypt(const bytes &ciphertext,
-		 const key_type   &key,
+  BT decrypt(const BT &ciphertext,
 		 const nonce_type &nonce);
 
   /**
-   * Decrypt ciphertext using key and nonce, returing decrypted plaintext.
+   * Decrypt ciphertext using cryptor's key and supplied nonce,
+   * returing decrypted plaintext.
    * 
    * The ciphertext is assumed NOT to contain the MAC, which is to be
    * provided separatly in 'mac', a variable with MACSIZE bytes
@@ -122,10 +146,107 @@ class Cryptor {
    * the mac isn't MACSIZE.
    **/
   
-  bytes decrypt(const bytes &ciphertext,
-		 const bytes      &mac,
-		 const key_type   &key,
+  BT decrypt(const BT &ciphertext,
+		 const BT     &mac,
 		 const nonce_type &nonce);
+
+private:
+	key_type key_;
 };
+
+template <class BT>
+BT
+cryptor<BT>::encrypt(const BT &plaintext,
+	const nonce_type &nonce)
+{
+	// make space for MAC and encrypted message,
+	// combined form, i.e. (MAC || encrypted)
+	BT ciphertext(MACSIZE + plaintext.size());
+
+	// let's encrypt now!
+	crypto_secretbox_easy(reinterpret_cast<unsigned char *>(ciphertext.data()),
+		reinterpret_cast<const unsigned char *>(plaintext.data()),
+		plaintext.size(),
+		nonce.data(),
+		key_.data());
+
+	// return the encrypted bytes
+	return ciphertext;
+}
+
+template <class BT>
+BT
+cryptor<BT>::encrypt(const BT &plaintext,
+	const nonce_type &nonce,
+	BT               &mac)
+{
+	// some sanity checks before we get started
+	if (mac.size() != MACSIZE)
+		throw std::runtime_error{ "sodium::cryptor::encrypt(detached) wrong mac size" };
+
+	// make space for encrypted message
+	// detached form, stream cipher => same size as plaintext.
+	BT ciphertext(plaintext.size());
+
+	// let's encrypt now!
+	crypto_secretbox_detached(reinterpret_cast<unsigned char *>(ciphertext.data()),
+		reinterpret_cast<unsigned char *>(mac.data()),
+		reinterpret_cast<const unsigned char *>(plaintext.data()),
+		plaintext.size(),
+		nonce.data(),
+		key_.data());
+
+	// return the encrypted bytes (mac is returned by reference)
+	return ciphertext; // by move semantics
+}
+
+template <class BT>
+BT
+cryptor<BT>::decrypt(const BT &ciphertext,
+	const nonce_type &nonce)
+{
+	// some sanity checks before we get started
+	if (ciphertext.size() < MACSIZE)
+		throw std::runtime_error{ "sodium::cryptor::decrypt(combined) ciphertext too small for mac" };
+
+	// make space for decrypted buffer
+	BT decryptedtext(ciphertext.size() - MACSIZE);
+
+	// and now decrypt!
+	if (crypto_secretbox_open_easy(reinterpret_cast<unsigned char *>(decryptedtext.data()),
+		reinterpret_cast<const unsigned char *>(ciphertext.data()),
+		ciphertext.size(),
+		nonce.data(),
+		key_.data()) != 0)
+		throw std::runtime_error{ "sodium::cryptor::decrypt(combined) can't decrypt" };
+
+	return decryptedtext;
+}
+
+template <class BT>
+BT
+cryptor<BT>::decrypt(const BT &ciphertext,
+	const BT      &mac,
+	const nonce_type &nonce)
+{
+	// some sanity checks before we get started
+	if (mac.size() != MACSIZE)
+		throw std::runtime_error{ "sodium::cryptor::decrypt(detached) wrong mac size" };
+
+	// make space for decrypted buffer;
+	// detached mode. stream cipher => decryptedtext size == ciphertext size
+	BT decryptedtext(ciphertext.size());
+
+	// and now decrypt!
+	if (crypto_secretbox_open_detached(reinterpret_cast<unsigned char *>(decryptedtext.data()),
+		reinterpret_cast<const unsigned char *>(ciphertext.data()),
+		reinterpret_cast<const unsigned char *>(mac.data()),
+		ciphertext.size(),
+		nonce.data(),
+		key_.data()) != 0)
+		throw std::runtime_error{ "sodium::cryptor::decrypt(detached) can't decrypt" };
+
+	return decryptedtext; // by move semantics
+}
 
 } // namespace sodium
