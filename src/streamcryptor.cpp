@@ -20,17 +20,16 @@
 
 using bytes = sodium::bytes;
 using sodium::StreamCryptor;
-using sodium::CryptorAEAD;
+using sodium::cryptor_aead;
 
 void
 StreamCryptor::encrypt(std::istream &istr, std::ostream &ostr)
 {
   bytes plaintext(blocksize_, '\0');
-  CryptorAEAD::nonce_type running_nonce {nonce_};
+  cryptor_aead<>::nonce_type running_nonce {nonce_};
   
   while (istr.read(reinterpret_cast<char *>(plaintext.data()), blocksize_)) {
-    bytes ciphertext = sc_aead_.encrypt(header_, plaintext,
-					 key_, running_nonce);
+    bytes ciphertext = sc_aead_.encrypt(header_, plaintext, running_nonce);
     running_nonce.increment();
 
     ostr.write(reinterpret_cast<char *>(ciphertext.data()), ciphertext.size());
@@ -44,8 +43,7 @@ StreamCryptor::encrypt(std::istream &istr, std::ostream &ostr)
     if (s != plaintext.size())
       plaintext.resize(s);
 
-    bytes ciphertext = sc_aead_.encrypt(header_, plaintext,
-					 key_, running_nonce);
+    bytes ciphertext = sc_aead_.encrypt(header_, plaintext, running_nonce);
     // running_nonce.increment() not needed anymore...
     ostr.write(reinterpret_cast<char *>(ciphertext.data()), ciphertext.size());
     if (!ostr)
@@ -57,13 +55,12 @@ void
 StreamCryptor::decrypt(std::istream &istr, std::ostream &ostr)
 {
   bytes ciphertext(MACSIZE + blocksize_, '\0');
-  CryptorAEAD::nonce_type running_nonce {nonce_};   // restart with saved nonce_
+  cryptor_aead<>::nonce_type running_nonce {nonce_};   // restart with saved nonce_
 
   while (istr.read(reinterpret_cast<char *>(ciphertext.data()),
 		   MACSIZE + blocksize_)) {
     // we've got a whole MACSIZE + blocksize_ chunk
-    bytes plaintext = sc_aead_.decrypt(header_, ciphertext,
-					key_, running_nonce);
+    bytes plaintext = sc_aead_.decrypt(header_, ciphertext, running_nonce);
     running_nonce.increment();
 
     ostr.write(reinterpret_cast<char *>(plaintext.data()), plaintext.size());
@@ -78,8 +75,7 @@ StreamCryptor::decrypt(std::istream &istr, std::ostream &ostr)
     if (s != ciphertext.size())
       ciphertext.resize(s);
 
-    bytes plaintext = sc_aead_.decrypt(header_, ciphertext,
-					key_, running_nonce);
+    bytes plaintext = sc_aead_.decrypt(header_, ciphertext, running_nonce);
     // no need to running_nonce.increment() anymore...
 
     ostr.write(reinterpret_cast<char *>(plaintext.data()), plaintext.size());

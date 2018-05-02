@@ -21,7 +21,7 @@
 #include "common.h"
 #include "key.h"
 #include "nonce.h"
-#include "cryptoraead.h"
+#include "cryptor_aead.h"
 
 #include <stdexcept>
 #include <istream>
@@ -45,7 +45,7 @@ class StreamCryptor {
    * that the total blocksize of the (MAC || ciphertext)s will be
    * MACSIZE + plaintext.size() for each block.
    **/
-  constexpr static std::size_t MACSIZE = CryptorAEAD::MACSIZE;
+  constexpr static std::size_t MACSIZE = cryptor_aead<>::MACSIZE;
 
   /**
    * A StreamCryptor will encrypt/decrypt streams blockwise using a
@@ -67,14 +67,15 @@ class StreamCryptor {
    * the constructor throws a std::runtime_error.
    **/
   
- StreamCryptor(const CryptorAEAD::key_type   &key,
-	       const CryptorAEAD::nonce_type &nonce,
+ StreamCryptor(const cryptor_aead<>::key_type   &key,
+	       const cryptor_aead<>::nonce_type &nonce,
 	       const std::size_t blocksize) :
-  key_ {key}, nonce_ {nonce}, header_ {}, blocksize_ {blocksize} {
+  sc_aead_{cryptor_aead<>(key)},
+  nonce_ {nonce}, header_ {},
+  blocksize_ {blocksize} {
     // some sanity checks, before we start
     if (blocksize < 1)
       throw std::runtime_error {"sodium::StreamCryptor::StreamCryptor(): wrong blocksize"};
-    key_.readonly();
   }
 
   /**
@@ -85,7 +86,7 @@ class StreamCryptor {
    * where blocksize has been passed in the constructor. The final block
    * by have less than blocksize bytes.
    * 
-   * The encyption is performed by the CryptorAEAD crypto engine, using
+   * The encyption is performed by the cryptor_aead crypto engine, using
    * the saved key, and a running nonce that starts with the initial
    * nonce passed at construction time, and whose copy is incremented
    * for each chunk.
@@ -124,7 +125,7 @@ class StreamCryptor {
    * less than MACSIZE + blocksize bytes, but should have at least
    * MACSIZE bytes left.
    *
-   * The decryption is attempted by the CryptorAEAD crypto engine, using
+   * The decryption is attempted by the cryptor_aead crypto engine, using
    * the saved key, and a running nonce that starts with the initial
    * nonce passed at construction time, and whose copy is incremented
    * with each chunk.
@@ -148,12 +149,10 @@ class StreamCryptor {
   void decrypt(std::istream &istr, std::ostream &ostr);
   
  private:
-  CryptorAEAD::key_type   key_;
-  CryptorAEAD::nonce_type nonce_;
-  bytes                   header_;
-  std::size_t             blocksize_;
-  
-  CryptorAEAD             sc_aead_;
+  cryptor_aead<>             sc_aead_;
+  cryptor_aead<>::nonce_type nonce_;
+  bytes                      header_;
+  std::size_t                blocksize_;
 };
 
 } // namespace sodium

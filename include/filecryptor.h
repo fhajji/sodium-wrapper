@@ -21,7 +21,7 @@
 #include "key.h"
 #include "keyvar.h"
 #include "nonce.h"
-#include "cryptoraead.h"
+#include "cryptor_aead.h"
 
 #include <sodium.h>
 
@@ -42,7 +42,7 @@ class FileCryptor {
    * that the total blocksize of the (MAC || ciphertext) will be
    * MACSIZE + plaintext.size() for each block.
    **/
-  constexpr static std::size_t MACSIZE = CryptorAEAD::MACSIZE;
+  constexpr static std::size_t MACSIZE = cryptor_aead<>::MACSIZE;
 
   /**
    * We can compute the hash of the (MAC || ciphertext) of the whole
@@ -89,12 +89,13 @@ class FileCryptor {
    * the hash MUST be the same as the one given here.
    **/
 
-  FileCryptor(const CryptorAEAD::key_type   &key,
-	      const CryptorAEAD::nonce_type &nonce,
+  FileCryptor(const cryptor_aead<>::key_type &key,
+	      const cryptor_aead<>::nonce_type &nonce,
 	      const std::size_t             blocksize,
 	      const KeyVar                  &hashkey,
 	      const std::size_t             hashsize) :
-  key_ {key}, hashkey_ {hashkey}, nonce_ {nonce}, header_ {},
+  sc_aead_{ cryptor_aead<>(key) }, hashkey_{ hashkey },
+  nonce_{ nonce }, header_{},
   blocksize_ {blocksize}, hashsize_ {hashsize} {
     // some sanity checks, before we start
     if (blocksize < 1)
@@ -107,7 +108,7 @@ class FileCryptor {
 
   /**
    * Encrypt the input stream ISTR in a blockwise fashion, using the
-   * algorithm described in sodium::CryptorAEAD, and write the result
+   * algorithm described in sodium::cryptor_aead, and write the result
    * in output stream OSTR.
    * 
    * At the same time, compute a generic hash over the resulting
@@ -120,7 +121,7 @@ class FileCryptor {
 
   /**
    * Decrypt the input _file_ stream IFS in a blockwise fashion, using
-   * the algorithm described in sodium::CryptorAEAD, and write the result
+   * the algorithm described in sodium::cryptor_aead, and write the result
    * in output _stream_ OSTR.
    *
    * At the same time, compute a generic authenticated hash of
@@ -148,13 +149,13 @@ class FileCryptor {
   void decrypt(std::ifstream &ifs, std::ostream &ostr);
 
  private:
-  CryptorAEAD::key_type   key_;
-  KeyVar                  hashkey_;
-  CryptorAEAD::nonce_type nonce_;
-  bytes                   header_;
-  std::size_t             blocksize_, hashsize_;
+  cryptor_aead<>             sc_aead_;
+  KeyVar                     hashkey_;
+  cryptor_aead<>::nonce_type nonce_;
+  bytes                      header_;
+  std::size_t                blocksize_, hashsize_;
   
-  CryptorAEAD             sc_aead_;
+
 };
 
 } // namespace sodium

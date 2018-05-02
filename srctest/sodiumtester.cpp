@@ -24,7 +24,7 @@
 #include "keyvar.h"
 #include "cryptor.h"
 #include "authenticator.h"
-#include "cryptoraead.h"
+#include "cryptor_aead.h"
 #include "streamcryptor.h"
 #include "filecryptor.h"
 
@@ -38,7 +38,7 @@ using sodium::Key;
 using sodium::KeyVar;
 using sodium::Nonce;
 using sodium::cryptor;
-using sodium::CryptorAEAD;
+using sodium::cryptor_aead;
 using sodium::authenticator;
 using sodium::StreamCryptor;
 using sodium::FileCryptor;
@@ -310,7 +310,7 @@ SodiumTester::test3()
 }
 
 /**
- * This function tests sodium::CryptorAEAD.
+ * This function tests sodium::cryptor_aead.
  *
  * - We encrypt a plain header and plaintext with a random key and nonce,
  *   resulting in a (MAC || ciphertext), which we display in hex format.
@@ -333,9 +333,9 @@ std::string
 SodiumTester::test4(const std::string &plaintext,
 		    const std::string &header)
 {
-  CryptorAEAD             sc_aead {};
-  CryptorAEAD::key_type   key;
-  CryptorAEAD::nonce_type nonce {};
+  cryptor_aead<>::key_type   key;   // random key
+  cryptor_aead<>::nonce_type nonce; // random nonce
+  cryptor_aead<> sc_aead{ std::move(key) };
 
   std::ostringstream os; // to collect output
   os << "starting AEAD test... ---------" << std::endl;
@@ -351,17 +351,15 @@ SodiumTester::test4(const std::string &plaintext,
   // now encrypt
   bytes ciphertext_with_mac = sc_aead.encrypt(headerblob,
 					       plainblob,
-					       key,
 					       nonce);
 
   os << "encrypted: "
      << sodium::tohex(ciphertext_with_mac)
      << std::endl;
 
-  // and then decrypt (would throw if there was an error
+  // and then decrypt (would throw if there was an error)
   bytes decryptedblob = sc_aead.decrypt(headerblob,
 					 ciphertext_with_mac,
-					 key,
 					 nonce);
 
   os << "decrypted okay." << std::endl;
@@ -373,7 +371,6 @@ SodiumTester::test4(const std::string &plaintext,
     try {
       bytes out = sc_aead.decrypt(header_corrupted,
 				   ciphertext_with_mac,
-				   key,
 				   nonce);
       os << "ERROR: didn't catch intentional header corruption!" << std::endl;
     }
@@ -386,12 +383,11 @@ SodiumTester::test4(const std::string &plaintext,
        << std::endl;
   
   // now, intentionally corrupt the ciphertext and decrypt again:
-  if (ciphertext_with_mac.size() > sodium::CryptorAEAD::MACSIZE)
-    ++ciphertext_with_mac[sodium::CryptorAEAD::MACSIZE];
+  if (ciphertext_with_mac.size() > sodium::cryptor_aead<>::MACSIZE)
+    ++ciphertext_with_mac[sodium::cryptor_aead<>::MACSIZE];
   try {
     bytes out = sc_aead.decrypt(header_corrupted,
 				 ciphertext_with_mac,
-				 key,
 				 nonce);
     os << "ERROR: didn't catch intentional ciphertext corruption!"
        << std::endl;
@@ -406,7 +402,6 @@ SodiumTester::test4(const std::string &plaintext,
   //   and then encrypt with incrementing nonce (OKAY)
   ciphertext_with_mac = sc_aead.encrypt(headerblob,
 					plainblob,
-					key,
 					nonce);
   os << "encrypted (same nonce): "
      << sodium::tohex(ciphertext_with_mac)
@@ -416,7 +411,6 @@ SodiumTester::test4(const std::string &plaintext,
 
   ciphertext_with_mac = sc_aead.encrypt(headerblob,
 					plainblob,
-					key,
 					nonce);
   os << "encrypted (different nonce): "
      << sodium::tohex(ciphertext_with_mac)
@@ -425,7 +419,6 @@ SodiumTester::test4(const std::string &plaintext,
   try {
     bytes decryptedblob = sc_aead.decrypt(headerblob,
 					   ciphertext_with_mac,
-					   key,
 					   nonce);
     os << "decrypted okay." << std::endl;
     if (decryptedblob == plainblob)
@@ -446,7 +439,6 @@ SodiumTester::test4(const std::string &plaintext,
   bytes empty_headerblob  {empty_header.cbegin(), empty_header.cend()};
   bytes empty_ciphertext_with_mac = sc_aead.encrypt(empty_headerblob,
 						     empty_plainblob,
-						     key,
 						     nonce);
   os << "empty encrypted: "
      << sodium::tohex(empty_ciphertext_with_mac)
@@ -454,7 +446,6 @@ SodiumTester::test4(const std::string &plaintext,
   try {
     bytes empty_decrypted = sc_aead.decrypt(empty_headerblob,
 					     empty_ciphertext_with_mac,
-					     key,
 					     nonce);
     if (empty_decrypted == empty_plainblob)
       os << "empty (decrypted) == empty (plainblob)" << std::endl;
@@ -523,9 +514,9 @@ SodiumTester::test5(const std::string &filename)
 {
   std::size_t                   MYBLKSIZE = 1024;
   
-  CryptorAEAD::key_type   key;
-  CryptorAEAD::nonce_type nonce      {};
-  StreamCryptor           strm_crypt (key, nonce, MYBLKSIZE);
+  cryptor_aead<>::key_type   key;
+  cryptor_aead<>::nonce_type nonce;
+  StreamCryptor              strm_crypt (key, nonce, MYBLKSIZE);
 
   key.noaccess();
   
@@ -568,10 +559,10 @@ SodiumTester::test6(const std::string &filename)
 {
   std::size_t             MYBLKSIZE  = 1024;
   
-  CryptorAEAD::key_type   key;
-  KeyVar                  hashkey    (FileCryptor::HASHKEYSIZE);
-  CryptorAEAD::nonce_type nonce      {};
-  FileCryptor             file_crypt (key, nonce, MYBLKSIZE,
+  cryptor_aead<>::key_type   key;
+  KeyVar                     hashkey    (FileCryptor::HASHKEYSIZE);
+  cryptor_aead<>::nonce_type nonce;
+  FileCryptor                file_crypt (key, nonce, MYBLKSIZE,
 				      hashkey, FileCryptor::HASHSIZE);
 
   key.noaccess();

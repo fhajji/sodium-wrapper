@@ -1,4 +1,4 @@
-// test_CryptorAEAD.cpp -- Test sodium::CryptorAEAD
+// test_cryptor_aead.cpp -- Test sodium:cryptor_aead
 //
 // ISC License
 // 
@@ -17,14 +17,14 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE sodium::CryptorAEAD Test
+#define BOOST_TEST_MODULE sodium::cryptor_aead Test
 #include <boost/test/included/unit_test.hpp>
 
-#include "cryptoraead.h"
+#include "cryptor_aead.h"
 #include <string>
 #include <sodium.h>
 
-using sodium::CryptorAEAD;
+using sodium::cryptor_aead;
 using bytes = sodium::bytes;
 
 bool
@@ -34,14 +34,13 @@ test_of_correctness(const std::string &header,
 		    bool falsify_header = false,
 		    bool falsify_ciphertext = false)
 {
-  CryptorAEAD             sc {};
-  CryptorAEAD::key_type   key;
-  CryptorAEAD::nonce_type nonce {};
+  cryptor_aead<> sc;                // with random key
+  cryptor_aead<>::nonce_type nonce; // random nonce
 
   bytes plainblob    {plaintext.cbegin(), plaintext.cend()};
   bytes headerblob   {header.cbegin(), header.cend()};
 
-  bytes ciphertext = sc.encrypt(headerblob, plainblob, key, nonce);
+  bytes ciphertext = sc.encrypt(headerblob, plainblob, nonce);
 
   if (falsify_ciphertext && ciphertext.size() != 0)
     ++ciphertext[0];
@@ -55,13 +54,11 @@ test_of_correctness(const std::string &header,
     ++headerblob[0];
   
   try {
-    decrypted  = sc.decrypt(headerblob, ciphertext, key, nonce);
+    decrypted = sc.decrypt(headerblob, ciphertext, nonce);
   }
   catch (std::exception & /* e */) {
     return false; // decryption failed;
   }
-
-  key.noaccess();
 
   return plainblob == decrypted;
 }
@@ -93,99 +90,99 @@ struct SodiumFixture {
 
 BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture )
 
-BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_full_plaintext_full_header )
+BOOST_AUTO_TEST_CASE( sodium_cryptor_aead_test_full_plaintext_full_header )
 {
   std::string header    {"the head"};
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   std::size_t csize;
 
   BOOST_CHECK(test_of_correctness(header, plaintext, csize, false, false));
-  BOOST_CHECK_EQUAL(csize, plaintext.size() + CryptorAEAD::MACSIZE);
+  BOOST_CHECK_EQUAL(csize, plaintext.size() + cryptor_aead<>::MACSIZE);
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_full_plaintext_empty_header )
+BOOST_AUTO_TEST_CASE( sodium_cryptor_aead_test_full_plaintext_empty_header )
 {
   std::string header    {};
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   std::size_t csize;
 
   BOOST_CHECK(test_of_correctness(header, plaintext, csize, false, false));
-  BOOST_CHECK_EQUAL(csize, plaintext.size() + CryptorAEAD::MACSIZE);
+  BOOST_CHECK_EQUAL(csize, plaintext.size() + cryptor_aead<>::MACSIZE);
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_empty_plaintext_full_header )
+BOOST_AUTO_TEST_CASE( sodium_cryptor_aead_test_empty_plaintext_full_header )
 {
   std::string header    {"the head"};
   std::string plaintext {};
   std::size_t csize;
 
   BOOST_CHECK(test_of_correctness(header, plaintext, csize, false, false));
-  BOOST_CHECK_EQUAL(csize, plaintext.size() + CryptorAEAD::MACSIZE);
+  BOOST_CHECK_EQUAL(csize, plaintext.size() + cryptor_aead<>::MACSIZE);
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_empty_plaintext_empty_header )
+BOOST_AUTO_TEST_CASE( sodium_cryptor_aead_test_empty_plaintext_empty_header )
 {
   std::string header    {};
   std::string plaintext {};
   std::size_t csize;
 
   BOOST_CHECK(test_of_correctness(header, plaintext, csize, false, false));
-  BOOST_CHECK_EQUAL(csize, plaintext.size() + CryptorAEAD::MACSIZE);
+  BOOST_CHECK_EQUAL(csize, plaintext.size() + cryptor_aead<>::MACSIZE);
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_empty_plaintext_falsify_header )
+BOOST_AUTO_TEST_CASE( sodium_cryptor_aead_test_empty_plaintext_falsify_header )
 {
   std::string header    {"the head"};
   std::string plaintext {};
   std::size_t csize;
 
   BOOST_CHECK(! test_of_correctness(header, plaintext, csize, true, false));
-  BOOST_CHECK_EQUAL(csize, plaintext.size() + CryptorAEAD::MACSIZE);
+  BOOST_CHECK_EQUAL(csize, plaintext.size() + cryptor_aead<>::MACSIZE);
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_full_plaintext_falsify_header )
+BOOST_AUTO_TEST_CASE( sodium_cryptor_aead_test_full_plaintext_falsify_header )
 {
   std::string header    {"the head"};
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   std::size_t csize;
 
   BOOST_CHECK(! test_of_correctness(header, plaintext, csize, true, false));
-  BOOST_CHECK_EQUAL(csize, plaintext.size() + CryptorAEAD::MACSIZE);
+  BOOST_CHECK_EQUAL(csize, plaintext.size() + cryptor_aead<>::MACSIZE);
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_falsify_plaintext_empty_header )
+BOOST_AUTO_TEST_CASE( sodium_cryptor_aead_test_falsify_plaintext_empty_header )
 {
   std::string header    {};
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   std::size_t csize;
 
   BOOST_CHECK(! test_of_correctness(header, plaintext, csize, false, true));
-  BOOST_CHECK_EQUAL(csize, plaintext.size() + CryptorAEAD::MACSIZE);
+  BOOST_CHECK_EQUAL(csize, plaintext.size() + cryptor_aead<>::MACSIZE);
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_falsify_plaintext_full_header )
+BOOST_AUTO_TEST_CASE( sodium_cryptor_aead_test_falsify_plaintext_full_header )
 {
   std::string header    {"the head"};
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   std::size_t csize;
 
   BOOST_CHECK(! test_of_correctness(header, plaintext, csize, false, true));
-  BOOST_CHECK_EQUAL(csize, plaintext.size() + CryptorAEAD::MACSIZE);
+  BOOST_CHECK_EQUAL(csize, plaintext.size() + cryptor_aead<>::MACSIZE);
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_falsify_plaintext_falsify_header )
+BOOST_AUTO_TEST_CASE( sodium_cryptor_aead_test_falsify_plaintext_falsify_header )
 {
   std::string header    {"the head"};
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   std::size_t csize;
 
   BOOST_CHECK(! test_of_correctness(header, plaintext, csize, true, true));
-  BOOST_CHECK_EQUAL(csize, plaintext.size() + CryptorAEAD::MACSIZE);
+  BOOST_CHECK_EQUAL(csize, plaintext.size() + cryptor_aead<>::MACSIZE);
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_big_header )
+BOOST_AUTO_TEST_CASE( sodium_cryptor_aead_test_big_header )
 {
-  std::string header(CryptorAEAD::MACSIZE * 200, 'A');
+  std::string header(cryptor_aead<>::MACSIZE * 200, 'A');
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   std::size_t csize;
 
@@ -195,9 +192,9 @@ BOOST_AUTO_TEST_CASE( sodium_cryptorAEAD_test_big_header )
   // It is the responsability of the user to transmit the header
   // separately from the ciphertext, i.e. to tag it along.
   
-  BOOST_CHECK_EQUAL(header.size(), CryptorAEAD::MACSIZE * 200);
+  BOOST_CHECK_EQUAL(header.size(), cryptor_aead<>::MACSIZE * 200);
   BOOST_CHECK(test_of_correctness(header, plaintext, csize, false, false));
-  BOOST_CHECK_EQUAL(csize, plaintext.size() + CryptorAEAD::MACSIZE);
+  BOOST_CHECK_EQUAL(csize, plaintext.size() + cryptor_aead<>::MACSIZE);
 
   // However, a modification of the header WILL be detected.
   // We modify only the 0-th byte right now, but a modification

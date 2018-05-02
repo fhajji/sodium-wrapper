@@ -25,7 +25,7 @@
 
 using bytes = sodium::bytes;
 using sodium::FileCryptor;
-using sodium::CryptorAEAD;
+using sodium::cryptor_aead;
 
 void
 FileCryptor::encrypt(std::istream &istr, std::ostream &ostr)
@@ -39,13 +39,12 @@ FileCryptor::encrypt(std::istream &istr, std::ostream &ostr)
 
   // the encryption API
   bytes plaintext(blocksize_, '\0');
-  CryptorAEAD::nonce_type running_nonce {nonce_};
+  cryptor_aead<>::nonce_type running_nonce {nonce_};
 
   // for each full block...
   while (istr.read(reinterpret_cast<char *>(plaintext.data()), blocksize_)) {
     // encrypt the block (with MAC)
-    bytes ciphertext = sc_aead_.encrypt(header_, plaintext,
-					 key_, running_nonce);
+    bytes ciphertext = sc_aead_.encrypt(header_, plaintext, running_nonce);
     running_nonce.increment();
 
     ostr.write(reinterpret_cast<char *>(ciphertext.data()), ciphertext.size());
@@ -63,8 +62,7 @@ FileCryptor::encrypt(std::istream &istr, std::ostream &ostr)
       plaintext.resize(s);
 
     // encrypt the final partial block
-    bytes ciphertext = sc_aead_.encrypt(header_, plaintext,
-					 key_, running_nonce);
+    bytes ciphertext = sc_aead_.encrypt(header_, plaintext, running_nonce);
     // running_nonce.increment() not needed anymore...
     ostr.write(reinterpret_cast<char *>(ciphertext.data()), ciphertext.size());
     if (!ostr)
@@ -93,7 +91,7 @@ FileCryptor::decrypt(std::ifstream &ifs, std::ostream &ostr)
 
   // the decryption API
   bytes ciphertext(MACSIZE + blocksize_, '\0');
-  CryptorAEAD::nonce_type running_nonce {nonce_}; // restart with saved nonce_
+  cryptor_aead<>::nonce_type running_nonce {nonce_}; // restart with saved nonce_
 
   // before we start decrypting, fetch the hash block at the end of the file.
   // It should be exactly hashsize_ bytes long.
@@ -131,8 +129,7 @@ FileCryptor::decrypt(std::ifstream &ifs, std::ostream &ostr)
       in_hash = true;
     }
     // we've got a whole MACSIZE + blocksize_ chunk
-    bytes plaintext = sc_aead_.decrypt(header_, ciphertext,
-					key_, running_nonce);
+    bytes plaintext = sc_aead_.decrypt(header_, ciphertext, running_nonce);
     running_nonce.increment();
 
     ostr.write(reinterpret_cast<char *>(plaintext.data()), plaintext.size());
@@ -169,8 +166,7 @@ FileCryptor::decrypt(std::ifstream &ifs, std::ostream &ostr)
 
       // now, attempt to decrypt, if there's still something to decrypt
       if (! ciphertext.empty()) {
-	bytes plaintext = sc_aead_.decrypt(header_, ciphertext,
-					    key_, running_nonce);
+	bytes plaintext = sc_aead_.decrypt(header_, ciphertext, running_nonce);
 	// no need to running_nonce.increment() anymore...
 
 	ostr.write(reinterpret_cast<char *>(plaintext.data()),
