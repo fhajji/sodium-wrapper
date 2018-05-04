@@ -107,29 +107,6 @@ test_different_keys(const std::string &plaintext)
   return false;
 }
 
-bool
-test_keyless_hashing(const std::string &plaintext)
-{
-  hashor hashor {};
-
-  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
-
-  try {
-    bytes outHash1 = hashor.hash(plainblob /* , hashor::HASHSIZE */); // keyless
-    bytes outHash2(hashor::HASHSIZE);
-    hashor.hash(plainblob, outHash2); // keyless
-
-    return outHash1 == outHash2;
-  }
-  catch (std::exception & /* e */) {
-    // test failed for some reason
-    return false;
-  }
-
-  // NOTREACHED
-  return false;
-}
-
 struct SodiumFixture {
   SodiumFixture()  {
     BOOST_REQUIRE(sodium_init() != -1);
@@ -277,20 +254,6 @@ BOOST_AUTO_TEST_CASE( sodium_hashor_test_same_empty_plaintext_different_keys )
   std::string plaintext {};
 
   BOOST_CHECK(test_different_keys(plaintext));
-}
-
-BOOST_AUTO_TEST_CASE( sodium_hashor_test_keyless_full_plaintext )
-{
-  std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-
-  BOOST_CHECK(test_keyless_hashing(plaintext));
-}
-
-BOOST_AUTO_TEST_CASE( sodium_hashor_test_keyless_empty_plaintext )
-{
-  std::string plaintext {};
-
-  BOOST_CHECK(test_keyless_hashing(plaintext));
 }
 
 BOOST_AUTO_TEST_SUITE_END ()

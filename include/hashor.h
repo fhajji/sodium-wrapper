@@ -1,4 +1,4 @@
-// hashor.h -- Generic hashing with / without key
+// hashor.h -- Generic hashing with key
 //
 // ISC License
 // 
@@ -60,19 +60,6 @@ class hashor {
   BT hash(const BT         &plaintext,
 	      const key_type    &key,
 	      const std::size_t hashsize=HASHSIZE);
-
-  /**
-   * Hash a plaintext into a hash of the desired size of hashsize
-   * bytes.  Return the generated hash.
-   *
-   * This is a keyless hashing version of the hash() function.
-   *
-   * Otherwise, see hash() above.
-   **/
-
-  BT hash(const BT &plaintext,
-	      const std::size_t hashsize=HASHSIZE);
-  
   
   /**
    * Hash a plaintext, using the provided key, into a hash of the
@@ -97,18 +84,6 @@ class hashor {
 	      const key_type &key,
 	      BT          &outHash);
 
-  /**
-   * Hash a plaintext into a hash of the size outHash.size().
-   * Save the computed hash into outHash.
-   * 
-   * This is a keyless hashing version of the hash() function.
-   * 
-   * Otherwise, see hash() above.
-   **/
-  
-  void   hash(const BT &plaintext,
-	     BT       &outHash);
-  
 };
 
 template <class BT>
@@ -142,29 +117,6 @@ hashor<BT>::hash(const BT &plaintext,
 }
 
 template <class BT>
-BT
-hashor<BT>::hash(const BT &plaintext,
-	const std::size_t hashsize)
-{
-	// some sanity checks before we start
-	if (hashsize < hashor<BT>::HASHSIZE_MIN)
-		throw std::runtime_error{ "sodium::hashor::hash() hash size too small" };
-	if (hashsize > hashor<BT>::HASHSIZE_MAX)
-		throw std::runtime_error{ "sodium::hashor::hash() hash size too big" };
-
-	// make space for hash
-	BT outHash(hashsize);
-
-	// now compute the hash!
-	crypto_generichash(reinterpret_cast<unsigned char *>(outHash.data()), outHash.size(),
-		reinterpret_cast<const unsigned char *>(plaintext.data()), plaintext.size(),
-		NULL, 0); // keyless hashing
-
-				  // return hash
-	return outHash; // using move semantics
-}
-
-template <class BT>
 void
 hashor<BT>::hash(const BT &plaintext,
 	const key_type &key,
@@ -186,25 +138,6 @@ hashor<BT>::hash(const BT &plaintext,
 	crypto_generichash(reinterpret_cast<unsigned char *>(outHash.data()), outHash.size(),
 		reinterpret_cast<const unsigned char *>(plaintext.data()), plaintext.size(),
 		key.data(), key.size());
-
-	// hash is returned implicitely in outHash by reference.
-}
-
-template <class BT>
-void
-hashor<BT>::hash(const BT &plaintext,
-	BT       &outHash)
-{
-	// some sanity checks before we start
-	if (outHash.size() < hashor<BT>::HASHSIZE_MIN)
-		throw std::runtime_error{ "sodium::hashor::hash() hash size too small" };
-	if (outHash.size() > hashor<BT>::HASHSIZE_MAX)
-		throw std::runtime_error{ "sodium::hashor::hash() hash size too big" };
-
-	// now compute the hash!
-	crypto_generichash(reinterpret_cast<unsigned char *>(outHash.data()), outHash.size(),
-		reinterpret_cast<const unsigned char *>(plaintext.data()), plaintext.size(),
-		NULL, 0); // keyless hashing
 
 	// hash is returned implicitely in outHash by reference.
 }
