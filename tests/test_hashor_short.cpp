@@ -31,13 +31,12 @@ using sodium::hashor_short;
 bool
 test_hash_default_size(const std::string &plaintext)
 {
-  hashor_short<>::key_type key;
-  hashor_short<>           hashor {};
+  hashor_short<> hashor; // with a random key
   
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   try {
-    bytes outHash = hashor.hash(plainblob, key);
+    bytes outHash = hashor.hash(plainblob);
     
     return outHash.size() == hashor_short<>::HASHSIZE;
   }
@@ -55,15 +54,14 @@ test_hash_default_size(const std::string &plaintext)
 bool
 test_same_hashes(const std::string &plaintext)
 {
-  hashor_short<>::key_type key;
-  hashor_short<>           hashor {};
+  hashor_short<> hashor1{ hashor_short<>::key_type() }; // key moving version
+  hashor_short<> hashor2{ hashor1 };                    // copying version
 
   hashor_short<>::bytes_type plainblob {plaintext.cbegin(), plaintext.cend()};
-
   hashor_short<>::bytes_type outHash(hashor_short<>::HASHSIZE);
 
-  hashor.hash(plainblob, key, outHash);
-  auto outHash_returned = hashor.hash(plainblob, key);
+  hashor1.hash(plainblob, outHash);
+  auto outHash_returned = hashor2.hash(plainblob);
 
   return outHash == outHash_returned; // same content of the hashes
 }
@@ -73,14 +71,13 @@ test_hash_size(const std::string &plaintext,
 	       const std::size_t hashsize)
 {
   hashor_short<>::key_type key;
-  hashor_short<>           hashor {};
+  hashor_short<>           hashor {std::move(key)}; // key-moving version
 
   bytes plainblob { plaintext.cbegin(), plaintext.cend() };
-
   bytes outHash(hashsize); // make it too big
 
   try {
-    hashor.hash(plainblob, key, outHash);
+    hashor.hash(plainblob, outHash);
     return true; // hashing was successful
   }
   catch (std::exception & /* e */) {
@@ -99,14 +96,18 @@ test_different_keys(const std::string &plaintext)
 {
   hashor_short<>::key_type key1;
   hashor_short<>::key_type key2;
-  hashor_short<>           hashor {};
-  
+  hashor_short<>           hashor1{ key1 }; // key-copying version
+  hashor_short<>           hashor2{ key2 }; // key-coping version
+
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   try {
-    bytes outHash1 = hashor.hash(plainblob, key1);
-    bytes outHash2 = hashor.hash(plainblob, key2);
+    auto outHash1 = hashor1.hash(plainblob);
+    auto outHash2 = hashor2.hash(plainblob);
     
+	// since we COPIED the keys while constructing
+	// hashor2 and hashor2, they are still available
+	// for comparison.
     return (key1 != key2) && (outHash1 != outHash2);
   }
   catch (std::exception & /* e */) {
@@ -162,16 +163,15 @@ BOOST_AUTO_TEST_CASE( sodium_hashshort_test_same_hashes_empty )
 
 BOOST_AUTO_TEST_CASE( sodium_hashshort_test_falsify_plaintext )
 {
-  hashor_short<>::key_type key;
-  hashor_short<>           hashor {};
+  hashor_short<> hashor {};
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   bytes       plainblob { plaintext.cbegin(), plaintext.cend() };
   bytes       falsified { plainblob };
   ++falsified[0];
   
-  bytes hash1 = hashor.hash(plainblob, key);
-  bytes hash2 = hashor.hash(falsified, key);
+  bytes hash1 = hashor.hash(plainblob);
+  bytes hash2 = hashor.hash(falsified); // reuse key
 
   // unless there is a collision (somewhat, but not entirely unlikely),
   // both hashes must be different for test to succeed
@@ -211,6 +211,26 @@ BOOST_AUTO_TEST_CASE( sodium_hashshort_test_outHash_size_just_right )
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
 
   BOOST_CHECK(test_hash_size(plaintext, hashor_short<>::HASHSIZE));
+}
+
+BOOST_AUTO_TEST_CASE(sodium_hashshort_test_move_hashors)
+{
+	hashor_short<> hashor1{};
+
+	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
+	bytes       plainblob{ plaintext.cbegin(), plaintext.cend() };
+
+	bytes hash1 = hashor1.hash(plainblob);
+
+	// move-construct hashor2 out of hashor1.
+	// hashor1's key will std::move() to hashor2's key
+	hashor_short<> hashor2{ std::move(hashor1) };
+
+	bytes hash2 = hashor2.hash(plainblob);
+
+	// since hash1 and hash2 were computed from the same key
+	// and same plainblob, they MUST be equal.
+	BOOST_CHECK(hash1 == hash2);
 }
 
 BOOST_AUTO_TEST_SUITE_END ()
