@@ -118,7 +118,7 @@ namespace sodium {
 		{}
 
 		cryptor_aead_encrypt_filter(cryptor_aead<vector_type> &&cryptor_aead, const nonce_type &nonce, const vector_type &header) :
-			cryptor_aead_{ std::move(cryptor_aead) }, nonce_{ nonce }
+			cryptor_aead_{ std::move(cryptor_aead) }, nonce_{ nonce }, header_{ header }
 		{}
 
 		virtual ~cryptor_aead_encrypt_filter()
