@@ -1,4 +1,4 @@
-// hashor_keyless.h -- Generic hashing without key
+// hashor_generic_keyless.h -- Generic hashing without key
 //
 // ISC License
 // 
@@ -25,7 +25,7 @@
 namespace sodium {
 
 template <class BT = bytes>
-class hashor_keyless {
+class hashor_generic_keyless {
 
 public:
 	static constexpr std::size_t HASHSIZE = crypto_generichash_BYTES;
@@ -40,7 +40,7 @@ public:
 	*
 	* This is keyless generic hashing.
 	*
-	* Otherwise, see sodium::hashor template for keyed generic hashing.
+	* Otherwise, see sodium::hashor_generic template for keyed generic hashing.
 	**/
 
 	BT hash(const BT &plaintext,
@@ -52,7 +52,7 @@ public:
 	*
 	* This is keyless generic hashing.
 	*
-	* Otherwise, see sodium::hashor template for keyed generic hashing.
+	* Otherwise, see sodium::hashor_generic template for keyed generic hashing.
 	**/
 
 	void hash(const BT &plaintext,
@@ -62,14 +62,14 @@ public:
 
 template <class BT>
 BT
-hashor_keyless<BT>::hash(const BT &plaintext,
+hashor_generic_keyless<BT>::hash(const BT &plaintext,
 						 const std::size_t hashsize)
 {
 	// some sanity checks before we start
-	if (hashsize < hashor_keyless<BT>::HASHSIZE_MIN)
-		throw std::runtime_error{ "sodium::hashor_keyless::hash() hash size too small" };
-	if (hashsize > hashor_keyless<BT>::HASHSIZE_MAX)
-		throw std::runtime_error{ "sodium::hashor_keyless::hash() hash size too big" };
+	if (hashsize < hashor_generic_keyless<BT>::HASHSIZE_MIN)
+		throw std::runtime_error{ "sodium::hashor_generic_keyless::hash() hash size too small" };
+	if (hashsize > hashor_generic_keyless<BT>::HASHSIZE_MAX)
+		throw std::runtime_error{ "sodium::hashor_generic_keyless::hash() hash size too big" };
 
 	// make space for hash
 	BT outHash(hashsize);
@@ -85,14 +85,14 @@ hashor_keyless<BT>::hash(const BT &plaintext,
 
 template <class BT>
 void
-hashor_keyless<BT>::hash(const BT &plaintext,
+hashor_generic_keyless<BT>::hash(const BT &plaintext,
 		BT       &outHash)
 {
 	// some sanity checks before we start
-	if (outHash.size() < hashor_keyless<BT>::HASHSIZE_MIN)
-		throw std::runtime_error{ "sodium::hashor_keyless::hash() hash size too small" };
-	if (outHash.size() > hashor_keyless<BT>::HASHSIZE_MAX)
-		throw std::runtime_error{ "sodium::hashor_keyless::hash() hash size too big" };
+	if (outHash.size() < hashor_generic_keyless<BT>::HASHSIZE_MIN)
+		throw std::runtime_error{ "sodium::hashor_generic_keyless::hash() hash size too small" };
+	if (outHash.size() > hashor_generic_keyless<BT>::HASHSIZE_MAX)
+		throw std::runtime_error{ "sodium::hashor_generic_keyless::hash() hash size too big" };
 
 	// now compute the hash!
 	crypto_generichash(reinterpret_cast<unsigned char *>(outHash.data()), outHash.size(),

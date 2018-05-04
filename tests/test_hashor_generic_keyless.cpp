@@ -1,4 +1,4 @@
-// test_hashor_keyless.cpp -- Test sodium::hashor_keyless<>
+// test_hashor_generic_keyless.cpp -- Test sodium::hashor_generic_keyless<>
 //
 // ISC License
 // 
@@ -17,22 +17,22 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE sodium::hashor_keyless Test
+#define BOOST_TEST_MODULE sodium::hashor_generic_keyless Test
 #include <boost/test/included/unit_test.hpp>
 
-#include "hashor_keyless.h"
+#include "hashor_generic_keyless.h"
 #include <string>
 #include <stdexcept>
 #include <sodium.h>
 
 using bytes          = sodium::bytes;
-using hashor_keyless = sodium::hashor_keyless<bytes>;
+using hashor_generic_keyless = sodium::hashor_generic_keyless<bytes>;
 
 bool
 test_hash_size(const std::string &plaintext,
 	const std::size_t hashsize)
 {
-	hashor_keyless hashor;
+	hashor_generic_keyless hashor;
 
 	bytes plainblob{ plaintext.cbegin(), plaintext.cend() };
 
@@ -53,13 +53,13 @@ test_hash_size(const std::string &plaintext,
 bool
 test_keyless_hashing(const std::string &plaintext)
 {
-	hashor_keyless hashor;
+	hashor_generic_keyless hashor;
 
 	bytes plainblob{ plaintext.cbegin(), plaintext.cend() };
 
 	try {
-		bytes outHash1 = hashor.hash(plainblob /* , hashor_keyless::HASHSIZE */); // keyless
-		bytes outHash2(hashor_keyless::HASHSIZE);
+		bytes outHash1 = hashor.hash(plainblob /* , hashor_generic_keyless::HASHSIZE */); // keyless
+		bytes outHash2(hashor_generic_keyless::HASHSIZE);
 		hashor.hash(plainblob, outHash2); // keyless
 
 		return outHash1 == outHash2;
@@ -85,66 +85,66 @@ struct SodiumFixture {
 
 BOOST_FIXTURE_TEST_SUITE(sodium_test_suite, SodiumFixture)
 
-BOOST_AUTO_TEST_CASE(sodium_hashor_keyless_test_default_hash_size)
+BOOST_AUTO_TEST_CASE(sodium_hashor_generic_keyless_test_default_hash_size)
 {
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
 
-	BOOST_CHECK(test_hash_size(plaintext, hashor_keyless::HASHSIZE));
+	BOOST_CHECK(test_hash_size(plaintext, hashor_generic_keyless::HASHSIZE));
 }
 
-BOOST_AUTO_TEST_CASE(sodium_hashor_keyless_test_min_hash_size)
+BOOST_AUTO_TEST_CASE(sodium_hashor_generic_keyless_test_min_hash_size)
 {
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
 
-	BOOST_CHECK(test_hash_size(plaintext, hashor_keyless::HASHSIZE_MIN));
+	BOOST_CHECK(test_hash_size(plaintext, hashor_generic_keyless::HASHSIZE_MIN));
 }
 
-BOOST_AUTO_TEST_CASE(sodium_hashor_keyless_test_max_hash_size)
+BOOST_AUTO_TEST_CASE(sodium_hashor_generic_keyless_test_max_hash_size)
 {
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
 
-	BOOST_CHECK(test_hash_size(plaintext, hashor_keyless::HASHSIZE_MAX));
+	BOOST_CHECK(test_hash_size(plaintext, hashor_generic_keyless::HASHSIZE_MAX));
 }
 
-BOOST_AUTO_TEST_CASE(sodium_hashor_keyless_test_hash_size_too_small)
+BOOST_AUTO_TEST_CASE(sodium_hashor_generic_keyless_test_hash_size_too_small)
 {
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
 
-	BOOST_CHECK(!test_hash_size(plaintext, hashor_keyless::HASHSIZE_MIN - 1));
+	BOOST_CHECK(!test_hash_size(plaintext, hashor_generic_keyless::HASHSIZE_MIN - 1));
 }
 
-BOOST_AUTO_TEST_CASE(sodium_hashor_keyless_test_hash_size_too_big)
+BOOST_AUTO_TEST_CASE(sodium_hashor_generic_keyless_test_hash_size_too_big)
 {
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
 
-	BOOST_CHECK(!test_hash_size(plaintext, hashor_keyless::HASHSIZE_MAX + 1));
+	BOOST_CHECK(!test_hash_size(plaintext, hashor_generic_keyless::HASHSIZE_MAX + 1));
 }
 
-BOOST_AUTO_TEST_CASE(sodium_hashor_keyless_test_falsify_plaintext)
+BOOST_AUTO_TEST_CASE(sodium_hashor_generic_keyless_test_falsify_plaintext)
 {
-	hashor_keyless hashor;
+	hashor_generic_keyless hashor;
 
 	std::string                plaintext{ "the quick brown fox jumps over the lazy dog" };
-	hashor_keyless::bytes_type plainblob{ plaintext.cbegin(), plaintext.cend() };
-	hashor_keyless::bytes_type falsified{ plainblob };
+	hashor_generic_keyless::bytes_type plainblob{ plaintext.cbegin(), plaintext.cend() };
+	hashor_generic_keyless::bytes_type falsified{ plainblob };
 	++falsified[0];
 
-	bytes hash1 = hashor.hash(plainblob /* , hashor_keyless::HASHSIZE */);
-	bytes hash2 = hashor.hash(falsified /* , hashor_keyless::HASHSIZE */);
+	bytes hash1 = hashor.hash(plainblob /* , hashor_generic_keyless::HASHSIZE */);
+	bytes hash2 = hashor.hash(falsified /* , hashor_generic_keyless::HASHSIZE */);
 
 	// unless there is a collision (very unlikely),
 	// both hashes must be different for test to succeed
 	BOOST_CHECK(hash1 != hash2);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_hashor_keyless_test_keyless_full_plaintext)
+BOOST_AUTO_TEST_CASE(sodium_hashor_generic_keyless_test_keyless_full_plaintext)
 {
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
 
 	BOOST_CHECK(test_keyless_hashing(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE(sodium_hashor_keyless_test_keyless_empty_plaintext)
+BOOST_AUTO_TEST_CASE(sodium_hashor_generic_keyless_test_keyless_empty_plaintext)
 {
 	std::string plaintext{};
 

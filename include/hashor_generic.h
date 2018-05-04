@@ -1,4 +1,4 @@
-// hashor.h -- Generic hashing with key
+// hashor_generic.h -- Generic hashing with key
 //
 // ISC License
 // 
@@ -27,7 +27,7 @@
 namespace sodium {
 
 template <class BT=bytes>
-class hashor {
+class hashor_generic {
 
  public:
   static constexpr std::size_t KEYSIZE      = sodium::KEYSIZE_HASHKEY;
@@ -40,8 +40,8 @@ class hashor {
   using bytes_type = BT;
   using key_type = KeyVar;
 
-  // A hashor with a new random key of default length
-  hashor() : key_(key_type(KEYSIZE)) {}
+  // A hashor_generic with a new random key of default length
+  hashor_generic() : key_(key_type(KEYSIZE)) {}
 
   /**
   * Create a generic hashor with the specified key.
@@ -52,42 +52,42 @@ class hashor {
   *
   * The constructor will throw a std::runtime_error if not.
   *
-  * Generic hashing is deterministic: with the same key (hashor),
+  * Generic hashing is deterministic: with the same key (hashor_generic),
   * and the same desired hash size, hashing a plaintext will
   * always result in the same hash.
   **/
 
-  // A hashor with a user-supplied key (copying version)
-  hashor(const key_type &key) : key_(key)
+  // A hashor_generic with a user-supplied key (copying version)
+  hashor_generic(const key_type &key) : key_(key)
   {
 	  // some sanity checks before we start
 
-	  if (key_.size() < hashor<BT>::KEYSIZE_MIN)
-		  throw std::runtime_error{ "sodium::hashor key size too small" };
-	  if (key_.size() > hashor<BT>::KEYSIZE_MAX)
-		  throw std::runtime_error{ "sodium::hashor key size too big" };
+	  if (key_.size() < hashor_generic<BT>::KEYSIZE_MIN)
+		  throw std::runtime_error{ "sodium::hashor_generic key size too small" };
+	  if (key_.size() > hashor_generic<BT>::KEYSIZE_MAX)
+		  throw std::runtime_error{ "sodium::hashor_generic key size too big" };
   }
 
-  // A hashor with a user-supplied key (moving version)
-  hashor(key_type &&key) : key_(std::move(key))
+  // A hashor_generic with a user-supplied key (moving version)
+  hashor_generic(key_type &&key) : key_(std::move(key))
   {
 	  // some sanity checks before we start
 
-	  if (key_.size() < hashor<BT>::KEYSIZE_MIN)
-		  throw std::runtime_error{ "sodium::hashor key size too small" };
-	  if (key_.size() > hashor<BT>::KEYSIZE_MAX)
-		  throw std::runtime_error{ "sodium::hashor key size too big" };
+	  if (key_.size() < hashor_generic<BT>::KEYSIZE_MIN)
+		  throw std::runtime_error{ "sodium::hashor_generic key size too small" };
+	  if (key_.size() > hashor_generic<BT>::KEYSIZE_MAX)
+		  throw std::runtime_error{ "sodium::hashor_generic key size too big" };
   }
 
   // A copying constructor
-  hashor(const hashor &other) :
+  hashor_generic(const hashor_generic &other) :
 	  key_(other.key_)
   {
 	  // other key has already been sanity-checked for length
   }
 
   // A moving constructor
-  hashor(hashor &&other) :
+  hashor_generic(hashor_generic &&other) :
 	  key_(std::move(other.key_))
   {
 	  // other key has already been sanity-checked for length
@@ -141,14 +141,14 @@ private:
 
 template <class BT>
 BT
-hashor<BT>::hash(const BT &plaintext,
+hashor_generic<BT>::hash(const BT &plaintext,
 	const std::size_t hashsize)
 {
 	// some sanity checks before we start
-	if (hashsize < hashor<BT>::HASHSIZE_MIN)
-		throw std::runtime_error{ "sodium::hashor::hash() hash size too small" };
-	if (hashsize > hashor<BT>::HASHSIZE_MAX)
-		throw std::runtime_error{ "sodium::hashor::hash() hash size too big" };
+	if (hashsize < hashor_generic<BT>::HASHSIZE_MIN)
+		throw std::runtime_error{ "sodium::hashor_generic::hash() hash size too small" };
+	if (hashsize > hashor_generic<BT>::HASHSIZE_MAX)
+		throw std::runtime_error{ "sodium::hashor_generic::hash() hash size too big" };
 
 	// make space for hash
 	BT outHash(hashsize);
@@ -164,14 +164,14 @@ hashor<BT>::hash(const BT &plaintext,
 
 template <class BT>
 void
-hashor<BT>::hash(const BT &plaintext,
+hashor_generic<BT>::hash(const BT &plaintext,
 	BT          &outHash)
 {
 	// some sanity checks before we start
-	if (outHash.size() < hashor<BT>::HASHSIZE_MIN)
-		throw std::runtime_error{ "sodium::hashor::hash() hash size too small" };
-	if (outHash.size() > hashor<BT>::HASHSIZE_MAX)
-		throw std::runtime_error{ "sodium::hashor::hash() hash size too big" };
+	if (outHash.size() < hashor_generic<BT>::HASHSIZE_MIN)
+		throw std::runtime_error{ "sodium::hashor_generic::hash() hash size too small" };
+	if (outHash.size() > hashor_generic<BT>::HASHSIZE_MAX)
+		throw std::runtime_error{ "sodium::hashor_generic::hash() hash size too big" };
 
 	// now compute the hash!
 	crypto_generichash(reinterpret_cast<unsigned char *>(outHash.data()), outHash.size(),
