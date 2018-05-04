@@ -34,13 +34,12 @@ bool
 test_hash_size(const std::string &plaintext,
 	       const std::size_t hashsize)
 {
-  hashor::key_type key(hashsize);
-  hashor           hashor {};
+  hashor hashor; // with a random key of default length
   
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   try {
-    bytes outHash = hashor.hash(plainblob, key, hashsize);
+    bytes outHash = hashor.hash(plainblob, hashsize);
     
     return outHash.size() == hashsize;
   }
@@ -58,18 +57,18 @@ test_key_size(const std::string &plaintext,
 	      const std::size_t keysize,
 	      bool  return_hash_as_value=true)
 {
-  hashor::key_type key    (keysize);
-  hashor           hashor {};
-
-  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
-
   try {
+    hashor::key_type key    (keysize);
+    hashor           hashor {std::move(key)}; // explicit moving version
+
+    bytes plainblob {plaintext.cbegin(), plaintext.cend()};
+
     if (return_hash_as_value) {
-      bytes outHash = hashor.hash(plainblob, key /* , hashor::HASHSIZE */ );
+      bytes outHash = hashor.hash(plainblob /* , hashor::HASHSIZE */ );
     }
     else {
       bytes outHash(hashor::HASHSIZE);
-      hashor.hash(plainblob, key, outHash);
+      hashor.hash(plainblob, outHash);
     }
 
     return true; // hashing succeeded. test ok.
@@ -86,17 +85,17 @@ test_key_size(const std::string &plaintext,
 bool
 test_different_keys(const std::string &plaintext)
 {
-  hashor::key_type key1(hashor::KEYSIZE);
-  hashor::key_type key2(hashor::KEYSIZE);
-  hashor           hashor {};
+  hashor hashor1{ hashor::key_type(hashor::KEYSIZE) }; // moving version
+  hashor hashor2{ hashor::key_type(hashor::KEYSIZE) }; // moving version
   
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   try {
-    bytes outHash1 = hashor.hash(plainblob, key1 /* , hashor::HASHSIZE */);
-    bytes outHash2 = hashor.hash(plainblob, key2 /* , hashor::HASHSIZE */);
+    bytes outHash1 = hashor1.hash(plainblob /* , hashor::HASHSIZE */);
+    bytes outHash2 = hashor2.hash(plainblob /* , hashor::HASHSIZE */);
     
-    return (key1 != key2) && (outHash1 != outHash2);
+	// very unlikely that hashor1 and hashor2 have the same key
+    return outHash1 != outHash2;
   }
   catch (std::exception & /* e */) {
     // test failed for some reason
@@ -227,15 +226,15 @@ BOOST_AUTO_TEST_CASE( sodium_hashor_test_key_size_too_big_outHash )
 BOOST_AUTO_TEST_CASE( sodium_hashor_test_falsify_plaintext )
 {
   hashor::key_type key(hashor::KEYSIZE);
-  hashor           hashor {};
+  hashor           hashor {key}; // copying version
 
   std::string        plaintext {"the quick brown fox jumps over the lazy dog"};
   hashor::bytes_type plainblob { plaintext.cbegin(), plaintext.cend() };
   hashor::bytes_type falsified { plainblob };
   ++falsified[0];
   
-  bytes hash1 = hashor.hash(plainblob, key /* , hashor::HASHSIZE */);
-  bytes hash2 = hashor.hash(falsified, key /* , hashor::HASHSIZE */);
+  bytes hash1 = hashor.hash(plainblob /* , hashor::HASHSIZE */);
+  bytes hash2 = hashor.hash(falsified /* , hashor::HASHSIZE */);
 
   // unless there is a collision (very unlikely),
   // both hashes must be different for test to succeed
