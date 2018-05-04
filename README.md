@@ -145,9 +145,10 @@ On Unix, just execute the binaries. Assuming you're still in the
 
 ```
 ./sodiumtester
+make test
 cd tests
 ./test_Key
-./test_Nonce
+./test_nonce
 ```
 
 ### Running on Windows
@@ -186,7 +187,7 @@ cd \Users\fhajji\CMakeBuilds\{some-hash}\build\x64-Debug\Debug
 copy wrapsodium.dll ..\tests\Debug
 cd ..\tests\Debug
 .\test_Key
-.\test_Nonce
+.\test_nonce
 ```
 
 Replace `Debug` by `Release` to test the release build.

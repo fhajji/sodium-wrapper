@@ -56,7 +56,7 @@ class xchacha20_symmetric_filter
   typedef char char_type; // !!! char, not unsigned char
   
   using key_type   = Key<KEYSIZE>;
-  using nonce_type = Nonce<NONCESIZE>;
+  using nonce_type = nonce<NONCESIZE>;
 
   /**
    * Construct a SymmetricFilter model for the XChaCha20 stream cipher.

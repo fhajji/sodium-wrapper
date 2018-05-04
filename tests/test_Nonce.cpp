@@ -1,4 +1,4 @@
-// test_Nonce.cpp -- Test sodium::Nonce<>
+// test_nonce.cpp -- Test sodium::nonce<>
 //
 // ISC License
 // 
@@ -17,7 +17,7 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE sodium::Nonce Test
+#define BOOST_TEST_MODULE sodium::nonce Test
 #include <boost/test/included/unit_test.hpp>
 
 #include "nonce.h"
@@ -36,15 +36,15 @@ BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture )
 
 BOOST_AUTO_TEST_CASE( sodium_test_nonce_defaultsize )
 {
-  sodium::Nonce<> a {};
+  sodium::nonce<> a {};
 
   BOOST_CHECK_EQUAL(a.size(), sodium::NONCESIZE_SECRETBOX);
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_nonce_size )
 {
-  sodium::Nonce<64>  a {};
-  sodium::Nonce<128> b {};
+  sodium::nonce<64>  a {};
+  sodium::nonce<128> b {};
 
   BOOST_CHECK_EQUAL(a.size(), 64);
   BOOST_CHECK_EQUAL(b.size(), 128);
@@ -57,16 +57,16 @@ BOOST_AUTO_TEST_CASE( sodium_test_nonce_size )
 
 BOOST_AUTO_TEST_CASE( sodium_test_nonce_copy )
 {
-  sodium::Nonce<> a {};
-  sodium::Nonce<> a_copy {a};
+  sodium::nonce<> a {};
+  sodium::nonce<> a_copy {a};
 
   BOOST_CHECK(a == a_copy); // check operator== in constant time
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_nonce_assignment )
 {
-  sodium::Nonce<64> a {};
-  sodium::Nonce<64> b {};
+  sodium::nonce<64> a {};
+  sodium::nonce<64> b {};
 
   BOOST_CHECK(a != b); // may fail in very rare cases (1 out of 2^{8*64} cases)
   a = b;
@@ -75,8 +75,8 @@ BOOST_AUTO_TEST_CASE( sodium_test_nonce_assignment )
 
 BOOST_AUTO_TEST_CASE( sodium_test_nonce_increment_compare )
 {
-  sodium::Nonce<> a {};
-  sodium::Nonce<> a_copy {a};
+  sodium::nonce<> a {};
+  sodium::nonce<> a_copy {a};
 
   BOOST_CHECK(a == a_copy);      // check operator==
   BOOST_CHECK(! (a != a_copy));  // check operator!=
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_nonce_increment_compare )
 
 BOOST_AUTO_TEST_CASE( sodium_test_nonce_init_nonzero )
 {
-  sodium::Nonce<> a {};
+  sodium::nonce<> a {};
 
   // In rare cases, this check could fail, because all-zeroes is a
   // valid initial nonce value. It can happen once in every
@@ -124,16 +124,16 @@ BOOST_AUTO_TEST_CASE( sodium_test_nonce_init_nonzero )
 
 BOOST_AUTO_TEST_CASE( sodium_test_nonce_init_zero )
 {
-  sodium::Nonce<> a(false); // non-initialized nonce...
+  sodium::nonce<> a(false); // non-initialized nonce...
 
   BOOST_CHECK(a.is_zero()); // ... must be all-zeroes.
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_nonce_operator_plus_equal )
 {
-  sodium::Nonce<128> a {};
-  sodium::Nonce<128> b {a};
-  sodium::Nonce<128> five(false); // all-zeroes
+  sodium::nonce<128> a {};
+  sodium::nonce<128> b {a};
+  sodium::nonce<128> five(false); // all-zeroes
   
   BOOST_CHECK(a == b);
 

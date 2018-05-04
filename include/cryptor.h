@@ -35,7 +35,7 @@ class cryptor {
   static constexpr std::size_t MACSIZE   = crypto_secretbox_MACBYTES;
 
   using bytes_type = BT;
-  using nonce_type = Nonce<NONCESIZE>;
+  using nonce_type = nonce<NONCESIZE>;
   using key_type   = Key<KEYSIZE>;
 
   // A cryptor with a new random key

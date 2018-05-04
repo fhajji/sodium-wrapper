@@ -40,7 +40,7 @@ class CryptorMultiPK {
   static constexpr std::size_t  MACSIZE           = crypto_box_MACBYTES;
 
   using privkey_type = Key<KEYSIZE_PRIVKEY>;
-  using nonce_type   = Nonce<NSZPK>;
+  using nonce_type   = nonce<NSZPK>;
   
   /**
    * Create and store an internal shared key built out of a

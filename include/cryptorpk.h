@@ -35,7 +35,7 @@ class CryptorPK {
   static constexpr std::size_t  MACSIZE             = crypto_box_MACBYTES;
 
   using privkey_type = Key<KEYSIZE_PRIVKEY>;
-  using nonce_type   = Nonce<NSZPK>;
+  using nonce_type   = nonce<NSZPK>;
   
   /**
    * Encrypt plaintext using recipient's public key, sign it using

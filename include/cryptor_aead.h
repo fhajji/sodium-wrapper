@@ -36,7 +36,7 @@ class cryptor_aead
 
   using bytes_type = BT;
   using key_type   = Key<KEYSIZE>;
-  using nonce_type = Nonce<NSZA>;
+  using nonce_type = nonce<NSZA>;
 
   // A cryptor_aead with a new random key
   cryptor_aead() : key_(std::move(key_type())) {}

@@ -36,7 +36,7 @@
 
 using sodium::Key;
 using sodium::KeyVar;
-using sodium::Nonce;
+using sodium::nonce;
 using sodium::cryptor;
 using sodium::cryptor_aead;
 using sodium::authenticator;
@@ -68,7 +68,7 @@ SodiumTester::SodiumTester()
  * and return the result as a string in hexadecimal representation.
  *
  * - We use sodium::Key<> wrapper to create and store a random key
- * - We use sodium::Nonce<> wrapper to create a store a random nonce
+ * - We use sodium::nonce<> wrapper to create a store a random nonce
  * - We store the plaintext/ciphertext in a bytes, in unprotected memory
  * - We use our wrapper sodium::cryptor<> to do the encryption
  * - We use our wrapper sodium::cryptor<> to test-decrypt the result
@@ -181,7 +181,7 @@ SodiumTester::test1(const std::string &plaintext)
  *   - if decryption succeeded (didn't throw), check again manually
  *     that both plaintext and decrypted text are identical.
  *
- * In all cases the same random Nonce is (re-)used for encryption
+ * In all cases the same random nonce is (re-)used for encryption
  * and decryption, of course.
  **/
 
@@ -223,9 +223,9 @@ SodiumTester::test2(const std::string &plaintext,
 }
 
 /**
- * This function tests sodium::Nonce<>(s).
+ * This function tests sodium::nonce<>(s).
  *
- *   - We create a Nonce<> 'a' with a random value.
+ *   - We create a nonce<> 'a' with a random value.
  *   - We check that 'a' is indeed 24 bytes (sodium::NONCESIZE_SECRETBOX) long
  *   - We display a hex representation of 'a'
  *   - We copy 'a' into 'a_copy' using the compiler-generated copy constructor
@@ -234,13 +234,13 @@ SodiumTester::test2(const std::string &plaintext,
  *   - We increment 'a' 5 times, i.e. in pseudo-code: a = a+5.
  *     That is: we call a.increment() 5 times in a row, and we display
  *     each time the hex value of 'a'.  Notice how the FIRST byte changes,
- *     showing indeed that the Nonce bytes are interpreted indeed as an
+ *     showing indeed that the nonce bytes are interpreted indeed as an
  *     integer in Little Endian format.
  *   - We test with operator > if 'a_copy' is greater than 'a' and throw
- *     if yes. Indeed, a_copy is the original Nonce value, and 'a' has been
+ *     if yes. Indeed, a_copy is the original nonce value, and 'a' has been
  *     incremented 5 times already. So 'a_copy' shouldn't be greater than 'a'
  *     The test is in constant time... but we don't measure that here.
- *   - We create a new Nonce 'b', but uninitialized. When a nonce is
+ *   - We create a new nonce 'b', but uninitialized. When a nonce is
  *     uninitialized, its backend is default-initialized, i.e. all those
  *     byte(s) of its std::vector are zeroes.
  *   - We check this by:
@@ -264,11 +264,11 @@ std::string
 SodiumTester::test3()
 {
   std::ostringstream os; // to collect output
-  os << "starting Nonce test... -------" << std::endl;
+  os << "starting nonce test... -------" << std::endl;
 
-  Nonce<> a {}; // a random nonce
+  nonce<> a {}; // a random nonce
   
-  // Check at compile time that we got the default size of the Nonce:
+  // Check at compile time that we got the default size of the nonce:
   static_assert(a.size() == sodium::NONCESIZE_SECRETBOX,
 		"SodiumTester::test3() wrong nonce size");
   // when static_assert() isn't possible in some conditions, dynamic assert:
@@ -277,7 +277,7 @@ SodiumTester::test3()
 
   os << "a+0: " << sodium::tohex(a.as_bytes()) << std::endl;
   
-  Nonce<> a_copy {a};
+  nonce<> a_copy {a};
   if (a != a_copy)
     throw std::runtime_error {"SodiumTester::test3() a != a_copy"};
   
@@ -289,7 +289,7 @@ SodiumTester::test3()
   if (a_copy > a)
     throw std::runtime_error {"SodiumTester::test3() a+5 > a"};
   
-  Nonce<> b(false); // uninitialized, zeroed?
+  nonce<> b(false); // uninitialized, zeroed?
   os << "b+0: " << sodium::tohex(b.as_bytes()) << std::endl;
   if (! b.is_zero())
     throw std::runtime_error {"SodiumTester::test3() not initialized to zero"};
@@ -305,7 +305,7 @@ SodiumTester::test3()
   if (a_copy != a)
     throw std::runtime_error {"SodiumTester::test3() a_copy + 5 != a+5"};
 
-  os << "---------------- ending Nonce test..." << std::endl;
+  os << "---------------- ending nonce test..." << std::endl;
   return os.str();
 }
 
@@ -340,7 +340,7 @@ SodiumTester::test4(const std::string &plaintext,
   std::ostringstream os; // to collect output
   os << "starting AEAD test... ---------" << std::endl;
 
-  // check at compile time that we got the right size of the Nonce
+  // check at compile time that we got the right size of the nonce
   static_assert(nonce.size() == sodium::NONCESIZE_AEAD,
 		"SodiumTester::test4() wrong nonce size");
   

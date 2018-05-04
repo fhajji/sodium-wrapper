@@ -56,7 +56,7 @@ class salsa20_symmetric_filter
   typedef char char_type; // !!! char, not unsigned char
   
   using key_type   = Key<KEYSIZE>;
-  using nonce_type = Nonce<NONCESIZE>;
+  using nonce_type = nonce<NONCESIZE>;
 
   /**
    * Construct a SymmetricFilter model for the Salsa20 stream cipher.
