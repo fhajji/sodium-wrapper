@@ -113,6 +113,17 @@ class nonce
     sodium_increment(noncedata_.data(), noncedata_.size());
   }
 
+  nonce<N>& operator++ () {
+	  increment();
+	  return *this;
+  }
+
+  nonce<N> operator++ (int) {
+	  nonce<N> result{ *this };
+	  increment();
+	  return result;
+  }
+
   /**
    * Testing if a nonce contains only zero bits in constant time
    * (for a given length).

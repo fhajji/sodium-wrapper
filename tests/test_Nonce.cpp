@@ -111,6 +111,40 @@ BOOST_AUTO_TEST_CASE( sodium_test_nonce_increment_compare )
   BOOST_CHECK_EQUAL(sodium::compare(a_copy, a), -1);
 }
 
+BOOST_AUTO_TEST_CASE(sodium_test_nonce_pre_post_increment_compare)
+{
+	sodium::nonce<> a{};
+	sodium::nonce<> a_copy1{ a };
+	sodium::nonce<> a_copy2{ a };
+	sodium::nonce<> a_copy3{ a };
+
+	sodium::nonce<> one{ false }; // start with 0
+	one.increment(); // and make it 1 with increment()
+	sodium::nonce<> a_plus_one{ a_copy3 += one };
+
+	// now test ++a and a++:
+	sodium::nonce<> a_plus_plus{ a_copy1++ };
+	sodium::nonce<> plus_plus_a{ ++a_copy2 };
+
+	// pre-increment is always different from post-increment
+	BOOST_CHECK(a_plus_plus != plus_plus_a);
+
+	// pre-increment is indeed original value+1
+	BOOST_CHECK(plus_plus_a == a_plus_one);
+
+	// pre-increment has indeed incremented original value (by 1)
+	BOOST_CHECK(a_copy1 == a_plus_one);
+
+	// post-increment returns original value
+	BOOST_CHECK(a_plus_plus == a);
+
+	// post-increment has indeed incremented original value (by 1)
+	BOOST_CHECK(a_copy2 == a_plus_one);
+
+	// This fails in case of wrap-around (very rare, we don't care):
+	BOOST_CHECK(a_plus_plus < plus_plus_a);
+}
+
 BOOST_AUTO_TEST_CASE( sodium_test_nonce_init_nonzero )
 {
   sodium::nonce<> a {};
