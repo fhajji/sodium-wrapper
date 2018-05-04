@@ -1,4 +1,4 @@
-// hashshort.h -- Short-input hashing with / without key
+// hashor_short.h -- Short-input hashing with key
 //
 // ISC License
 // 
@@ -25,13 +25,15 @@
 
 namespace sodium {
 
-class HashShort {
+template <class BT=bytes>
+class hashor_short {
 
  public:
-  static constexpr std::size_t KEYSIZE      = sodium::KEYSIZE_HASHSHORTKEY;
-  static constexpr std::size_t HASHSIZE     = crypto_shorthash_BYTES;
+  static constexpr std::size_t KEYSIZE  = sodium::KEYSIZE_HASHSHORTKEY;
+  static constexpr std::size_t HASHSIZE = crypto_shorthash_BYTES;
 
-  using key_type = Key<KEYSIZE>;
+  using bytes_type = BT;
+  using key_type   = Key<KEYSIZE>;
   
   /**
    * Hash a (typically short) plaintext, using the provided key, into
@@ -47,15 +49,7 @@ class HashShort {
    * The computed and returned hash will be HASHSIZE bytes long.
    **/
   
-  bytes hash(const bytes &plaintext,
-	      const key_type &key) {
-    bytes outHash(HASHSIZE);
-    crypto_shorthash(outHash.data(),
-		     plaintext.data(), plaintext.size(),
-		     key.data());
-    return outHash; // using move semantics.
-  }
-
+  BT hash(const BT &plaintext, const key_type &key);
     
   /**
    * Hash a (typically short) plaintext, using the provided key, into
@@ -77,17 +71,37 @@ class HashShort {
    * the same hash.
    **/
 
-  void   hash(const bytes &plaintext,
-	      const key_type &key,
-	      bytes         &outHash) {
-    if (outHash.size() != HASHSIZE)
-      throw std::runtime_error {"sodium::HashShort::hash() outHash wrong size"};
-    crypto_shorthash(outHash.data(),
-		     plaintext.data(), plaintext.size(),
-		     key.data());
-    // return outHash implicitely by reference
-  }
+  void   hash(const BT &plaintext,
+	  const key_type &key,
+	  BT             &outHash);
 
 };
+
+template <class BT>
+BT
+hashor_short<BT>::hash(const BT &plaintext,
+	const key_type &key)
+{
+	BT outHash(hashor_short<BT>::HASHSIZE);
+	crypto_shorthash(reinterpret_cast<unsigned char *>(outHash.data()),
+		reinterpret_cast<const unsigned char *>(plaintext.data()), plaintext.size(),
+		key.data());
+	return outHash; // using move semantics.
+}
+
+template <class BT>
+void
+hashor_short<BT>::hash(const BT &plaintext,
+	const key_type &key,
+	BT         &outHash)
+{
+	if (outHash.size() != hashor_short<BT>::HASHSIZE)
+		throw std::runtime_error{ "sodium::hashor_short::hash() outHash wrong size" };
+
+	crypto_shorthash(reinterpret_cast<unsigned char *>(outHash.data()),
+		reinterpret_cast<const unsigned char *>(plaintext.data()), plaintext.size(),
+		key.data());
+	// return outHash implicitely by reference
+}
 
 } // namespace sodium

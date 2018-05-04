@@ -1,4 +1,4 @@
-// test_HashShort.cpp -- Test sodium::HashShort
+// test_hashor_short.cpp -- Test sodium::hashor_short
 //
 // ISC License
 // 
@@ -17,29 +17,29 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE sodium::HashShort Test
+#define BOOST_TEST_MODULE sodium::hashor_short Test
 #include <boost/test/included/unit_test.hpp>
 
-#include "hashshort.h"
+#include "hashor_short.h"
 #include <string>
 #include <stdexcept>
 #include <sodium.h>
 
-using sodium::HashShort;
 using bytes = sodium::bytes;
+using sodium::hashor_short;
 
 bool
 test_hash_default_size(const std::string &plaintext)
 {
-  HashShort::key_type key;
-  HashShort           hasher {};
+  hashor_short<>::key_type key;
+  hashor_short<>           hashor {};
   
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   try {
-    bytes outHash = hasher.hash(plainblob, key);
+    bytes outHash = hashor.hash(plainblob, key);
     
-    return outHash.size() == HashShort::HASHSIZE;
+    return outHash.size() == hashor_short<>::HASHSIZE;
   }
   catch (std::exception & /* e */) {
     // test failed for some reason
@@ -47,7 +47,7 @@ test_hash_default_size(const std::string &plaintext)
   }
 
   // NOTREACHED
-  BOOST_TEST_MESSAGE("test_hash_default_size() fell off the cliff");
+  BOOST_TEST_MESSAGE("test_hashor_short_default_size() fell off the cliff");
   BOOST_CHECK(false);
   return false;
 }
@@ -55,15 +55,15 @@ test_hash_default_size(const std::string &plaintext)
 bool
 test_same_hashes(const std::string &plaintext)
 {
-  HashShort::key_type key;
-  HashShort           hasher {};
+  hashor_short<>::key_type key;
+  hashor_short<>           hashor {};
 
-  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
+  hashor_short<>::bytes_type plainblob {plaintext.cbegin(), plaintext.cend()};
 
-  bytes outHash(HashShort::HASHSIZE);
+  hashor_short<>::bytes_type outHash(hashor_short<>::HASHSIZE);
 
-  hasher.hash(plainblob, key, outHash);
-  bytes outHash_returned = hasher.hash(plainblob, key);
+  hashor.hash(plainblob, key, outHash);
+  auto outHash_returned = hashor.hash(plainblob, key);
 
   return outHash == outHash_returned; // same content of the hashes
 }
@@ -72,15 +72,15 @@ bool
 test_hash_size(const std::string &plaintext,
 	       const std::size_t hashsize)
 {
-  HashShort::key_type key;
-  HashShort           hasher {};
+  hashor_short<>::key_type key;
+  hashor_short<>           hashor {};
 
   bytes plainblob { plaintext.cbegin(), plaintext.cend() };
 
   bytes outHash(hashsize); // make it too big
 
   try {
-    hasher.hash(plainblob, key, outHash);
+    hashor.hash(plainblob, key, outHash);
     return true; // hashing was successful
   }
   catch (std::exception & /* e */) {
@@ -97,15 +97,15 @@ test_hash_size(const std::string &plaintext,
 bool
 test_different_keys(const std::string &plaintext)
 {
-  HashShort::key_type key1;
-  HashShort::key_type key2;
-  HashShort           hasher {};
+  hashor_short<>::key_type key1;
+  hashor_short<>::key_type key2;
+  hashor_short<>           hashor {};
   
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   try {
-    bytes outHash1 = hasher.hash(plainblob, key1);
-    bytes outHash2 = hasher.hash(plainblob, key2);
+    bytes outHash1 = hashor.hash(plainblob, key1);
+    bytes outHash2 = hashor.hash(plainblob, key2);
     
     return (key1 != key2) && (outHash1 != outHash2);
   }
@@ -162,16 +162,16 @@ BOOST_AUTO_TEST_CASE( sodium_hashshort_test_same_hashes_empty )
 
 BOOST_AUTO_TEST_CASE( sodium_hashshort_test_falsify_plaintext )
 {
-  HashShort::key_type key;
-  HashShort           hasher {};
+  hashor_short<>::key_type key;
+  hashor_short<>           hashor {};
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   bytes       plainblob { plaintext.cbegin(), plaintext.cend() };
   bytes       falsified { plainblob };
   ++falsified[0];
   
-  bytes hash1 = hasher.hash(plainblob, key);
-  bytes hash2 = hasher.hash(falsified, key);
+  bytes hash1 = hashor.hash(plainblob, key);
+  bytes hash2 = hashor.hash(falsified, key);
 
   // unless there is a collision (somewhat, but not entirely unlikely),
   // both hashes must be different for test to succeed
@@ -196,21 +196,21 @@ BOOST_AUTO_TEST_CASE( sodium_hashshort_test_outHash_size_too_big )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
 
-  BOOST_CHECK(! test_hash_size(plaintext, HashShort::HASHSIZE+1));
+  BOOST_CHECK(! test_hash_size(plaintext, hashor_short<>::HASHSIZE+1));
 }
 
 BOOST_AUTO_TEST_CASE( sodium_hashshort_test_outHash_size_too_small )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
 
-  BOOST_CHECK(! test_hash_size(plaintext, HashShort::HASHSIZE-1));
+  BOOST_CHECK(! test_hash_size(plaintext, hashor_short<>::HASHSIZE-1));
 }
 
 BOOST_AUTO_TEST_CASE( sodium_hashshort_test_outHash_size_just_right )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
 
-  BOOST_CHECK(test_hash_size(plaintext, HashShort::HASHSIZE));
+  BOOST_CHECK(test_hash_size(plaintext, hashor_short<>::HASHSIZE));
 }
 
 BOOST_AUTO_TEST_SUITE_END ()
