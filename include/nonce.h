@@ -73,6 +73,11 @@ class nonce
   nonce<N>(const nonce<N> &)            = default;
   nonce<N>& operator=(const nonce<N> &) = default;
 
+  // to increase efficiency, enable moving constructor:
+  nonce<N>(nonce<N> &&other) :
+	  noncedata_{ std::move(other.noncedata_) }
+  {}
+
  /**
   * Various libsodium functions used either directly on in
   * the wrappers need access to the bytes stored in the nonce.

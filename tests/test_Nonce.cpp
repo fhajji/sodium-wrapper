@@ -63,6 +63,20 @@ BOOST_AUTO_TEST_CASE( sodium_test_nonce_copy )
   BOOST_CHECK(a == a_copy); // check operator== in constant time
 }
 
+BOOST_AUTO_TEST_CASE( sodium_test_nonce_move )
+{
+	sodium::nonce<> a{};
+	sodium::nonce<> a_copy{ a };
+	sodium::nonce<> a_move1{ std::move(a_copy) };
+
+	// create a copy of a in a temporary object,
+	// then implicitely move (not copy) it into a_move2.
+	sodium::nonce<> a_move2{ sodium::nonce<>(a) };
+
+	BOOST_CHECK(a == a_move1); // check operator== in constant time
+	BOOST_CHECK(a == a_move2);
+}
+
 BOOST_AUTO_TEST_CASE( sodium_test_nonce_assignment )
 {
   sodium::nonce<64> a {};
