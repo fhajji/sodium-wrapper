@@ -1,4 +1,4 @@
-// hash.h -- Generic hashing with / without key
+// hashor.h -- Generic hashing with / without key
 //
 // ISC License
 // 
@@ -26,7 +26,8 @@
 
 namespace sodium {
 
-class Hash {
+template <class BT=bytes>
+class hashor {
 
  public:
   static constexpr std::size_t KEYSIZE      = sodium::KEYSIZE_HASHKEY;
@@ -36,6 +37,7 @@ class Hash {
   static constexpr std::size_t HASHSIZE_MIN = crypto_generichash_BYTES_MIN;
   static constexpr std::size_t HASHSIZE_MAX = crypto_generichash_BYTES_MAX;
 
+  using bytes_type = BT;
   using key_type = KeyVar;
   
   /**
@@ -55,7 +57,7 @@ class Hash {
    * The computed and returned hash will be hashsize bytes long.
    **/
   
-  bytes hash(const bytes    &plaintext,
+  BT hash(const BT         &plaintext,
 	      const key_type    &key,
 	      const std::size_t hashsize=HASHSIZE);
 
@@ -68,7 +70,7 @@ class Hash {
    * Otherwise, see hash() above.
    **/
 
-  bytes hash(const bytes &plaintext,
+  BT hash(const BT &plaintext,
 	      const std::size_t hashsize=HASHSIZE);
   
   
@@ -91,9 +93,9 @@ class Hash {
    * the key will very likely result in a different hash.
    **/
 
-  void   hash(const bytes &plaintext,
+  void   hash(const BT &plaintext,
 	      const key_type &key,
-	      bytes          &outHash);
+	      BT          &outHash);
 
   /**
    * Hash a plaintext into a hash of the size outHash.size().
@@ -104,9 +106,107 @@ class Hash {
    * Otherwise, see hash() above.
    **/
   
-  void   hash(const bytes &plaintext,
-	      bytes       &outHash);
+  void   hash(const BT &plaintext,
+	     BT       &outHash);
   
 };
+
+template <class BT>
+BT
+hashor<BT>::hash(const BT &plaintext,
+	const key_type  &key,
+	const std::size_t hashsize)
+{
+	// some sanity checks before we start
+
+	if (key.size() < hashor<BT>::KEYSIZE_MIN)
+		throw std::runtime_error{ "sodium::hashor::hash() key size too small" };
+	if (key.size() > hashor<BT>::KEYSIZE_MAX)
+		throw std::runtime_error{ "sodium::hashor::hash() key size too big" };
+
+	if (hashsize < hashor<BT>::HASHSIZE_MIN)
+		throw std::runtime_error{ "sodium::hashor::hash() hash size too small" };
+	if (hashsize > hashor<BT>::HASHSIZE_MAX)
+		throw std::runtime_error{ "sodium::hashor::hash() hash size too big" };
+
+	// make space for hash
+	BT outHash(hashsize);
+
+	// now compute the hash!
+	crypto_generichash(reinterpret_cast<unsigned char *>(outHash.data()), outHash.size(),
+		reinterpret_cast<const unsigned char *>(plaintext.data()), plaintext.size(),
+		key.data(), key.size());
+
+	// return hash
+	return outHash; // using move semantics
+}
+
+template <class BT>
+BT
+hashor<BT>::hash(const BT &plaintext,
+	const std::size_t hashsize)
+{
+	// some sanity checks before we start
+	if (hashsize < hashor<BT>::HASHSIZE_MIN)
+		throw std::runtime_error{ "sodium::hashor::hash() hash size too small" };
+	if (hashsize > hashor<BT>::HASHSIZE_MAX)
+		throw std::runtime_error{ "sodium::hashor::hash() hash size too big" };
+
+	// make space for hash
+	BT outHash(hashsize);
+
+	// now compute the hash!
+	crypto_generichash(reinterpret_cast<unsigned char *>(outHash.data()), outHash.size(),
+		reinterpret_cast<const unsigned char *>(plaintext.data()), plaintext.size(),
+		NULL, 0); // keyless hashing
+
+				  // return hash
+	return outHash; // using move semantics
+}
+
+template <class BT>
+void
+hashor<BT>::hash(const BT &plaintext,
+	const key_type &key,
+	BT          &outHash)
+{
+	// some sanity checks before we start
+
+	if (key.size() < hashor<BT>::KEYSIZE_MIN)
+		throw std::runtime_error{ "sodium::hashor::hash() key size too small" };
+	if (key.size() > hashor<BT>::KEYSIZE_MAX)
+		throw std::runtime_error{ "sodium::hashor::hash() key size too big" };
+
+	if (outHash.size() < hashor<BT>::HASHSIZE_MIN)
+		throw std::runtime_error{ "sodium::hashor::hash() hash size too small" };
+	if (outHash.size() > hashor<BT>::HASHSIZE_MAX)
+		throw std::runtime_error{ "sodium::hashor::hash() hash size too big" };
+
+	// now compute the hash!
+	crypto_generichash(reinterpret_cast<unsigned char *>(outHash.data()), outHash.size(),
+		reinterpret_cast<const unsigned char *>(plaintext.data()), plaintext.size(),
+		key.data(), key.size());
+
+	// hash is returned implicitely in outHash by reference.
+}
+
+template <class BT>
+void
+hashor<BT>::hash(const BT &plaintext,
+	BT       &outHash)
+{
+	// some sanity checks before we start
+	if (outHash.size() < hashor<BT>::HASHSIZE_MIN)
+		throw std::runtime_error{ "sodium::hashor::hash() hash size too small" };
+	if (outHash.size() > hashor<BT>::HASHSIZE_MAX)
+		throw std::runtime_error{ "sodium::hashor::hash() hash size too big" };
+
+	// now compute the hash!
+	crypto_generichash(reinterpret_cast<unsigned char *>(outHash.data()), outHash.size(),
+		reinterpret_cast<const unsigned char *>(plaintext.data()), plaintext.size(),
+		NULL, 0); // keyless hashing
+
+	// hash is returned implicitely in outHash by reference.
+}
 
 } // namespace sodium

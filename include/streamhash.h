@@ -21,7 +21,6 @@
 #include "common.h"
 #include "key.h"     // key sizes
 #include "keyvar.h"
-#include "hash.h"
 
 #include <stdexcept>
 #include <istream>
