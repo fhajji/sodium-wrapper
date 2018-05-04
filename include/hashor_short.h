@@ -39,7 +39,7 @@ class hashor_short {
   hashor_short() : key_(key_type()) {}
 
   /**
-  * Create a generic hashor with the specified key.
+  * Create a short hashor with the specified key.
   *
   * Short hashing is deterministic: with the same key (hashor_short),
   * hashing a plaintext will always result in the same hash.
