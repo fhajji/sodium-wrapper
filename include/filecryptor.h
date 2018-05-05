@@ -92,7 +92,7 @@ class FileCryptor {
   FileCryptor(const cryptor_aead<>::key_type &key,
 	      const cryptor_aead<>::nonce_type &nonce,
 	      const std::size_t             blocksize,
-	      const KeyVar                  &hashkey,
+	      const keyvar<>                &hashkey,
 	      const std::size_t             hashsize) :
   sc_aead_{ cryptor_aead<>(key) }, hashkey_{ hashkey },
   nonce_{ nonce }, header_{},
@@ -150,12 +150,10 @@ class FileCryptor {
 
  private:
   cryptor_aead<>             sc_aead_;
-  KeyVar                     hashkey_;
+  keyvar<>                   hashkey_;
   cryptor_aead<>::nonce_type nonce_;
   bytes                      header_;
   std::size_t                blocksize_, hashsize_;
-  
-
 };
 
 } // namespace sodium

@@ -35,7 +35,7 @@
 #include <utility>
 
 using sodium::Key;
-using sodium::KeyVar;
+using sodium::keyvar;
 using sodium::nonce;
 using sodium::cryptor;
 using sodium::cryptor_aead;
@@ -560,7 +560,7 @@ SodiumTester::test6(const std::string &filename)
   std::size_t             MYBLKSIZE  = 1024;
   
   cryptor_aead<>::key_type   key;
-  KeyVar                     hashkey    (FileCryptor::HASHKEYSIZE);
+  keyvar<>                   hashkey    (FileCryptor::HASHKEYSIZE);
   cryptor_aead<>::nonce_type nonce;
   FileCryptor                file_crypt (key, nonce, MYBLKSIZE,
 				      hashkey, FileCryptor::HASHSIZE);

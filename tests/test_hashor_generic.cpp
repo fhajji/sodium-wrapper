@@ -25,8 +25,6 @@
 #include <stdexcept>
 #include <sodium.h>
 
-using sodium::KeyVar;
-
 using bytes  = sodium::bytes;
 using hashor_generic = sodium::hashor_generic<bytes>;
 

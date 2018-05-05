@@ -145,7 +145,7 @@ class blake2b_tee_filter : public detail::filter_adapter<Device>
   static constexpr std::size_t HASHSIZE_MIN = crypto_generichash_BYTES_MIN;
   static constexpr std::size_t HASHSIZE_MAX = crypto_generichash_BYTES_MAX;
 
-  using key_type  = KeyVar;
+  using key_type  = keyvar<>;
   using hash_type = sodium::chars; // of hashsize_ elements
   
   /**
@@ -538,7 +538,7 @@ public:
   static constexpr std::size_t HASHSIZE_MIN = crypto_generichash_BYTES_MIN;
   static constexpr std::size_t HASHSIZE_MAX = crypto_generichash_BYTES_MAX;
 
-  using key_type  = KeyVar;
+  using key_type  = keyvar<>;
   using hash_type = sodium::chars; // of hashsize_ elements
 
   /**

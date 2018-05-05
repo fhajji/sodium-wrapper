@@ -38,7 +38,7 @@ class hashor_generic {
   static constexpr std::size_t HASHSIZE_MAX = crypto_generichash_BYTES_MAX;
 
   using bytes_type = BT;
-  using key_type = KeyVar;
+  using key_type = keyvar<>;
 
   // A hashor_generic with a new random key of default length
   hashor_generic() : key_(key_type(KEYSIZE)) {}

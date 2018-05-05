@@ -47,7 +47,7 @@ class StreamHash {
   static constexpr std::size_t HASHSIZE_MIN = crypto_generichash_BYTES_MIN;
   static constexpr std::size_t HASHSIZE_MAX = crypto_generichash_BYTES_MAX;
 
-  using key_type = KeyVar;
+  using key_type = keyvar<>;
   
   /**
    * A StreamHash will compute a keyed hash on streams of potentially

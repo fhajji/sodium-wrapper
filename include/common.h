@@ -32,7 +32,10 @@ namespace sodium {
 
 	// a contiguous collection of bytes, interpreted as char
 	using chars = std::vector<char>;
-  
+
+	// a contiguous collection of bytes, in protected memory
+	using bytes_protected = std::vector<byte, SodiumAlloc<byte>>;  // key_t
+
 	std::string tohex (const bytes &in); // in: utils.cpp
 	std::string tohex (const chars &in); // in: utils.cpp
 } // namespace sodium

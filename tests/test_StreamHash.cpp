@@ -27,7 +27,6 @@
 #include <sstream>
 #include <sodium.h>
 
-using sodium::KeyVar;
 using sodium::StreamHash;
 using bytes = sodium::bytes;
 
