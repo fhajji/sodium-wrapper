@@ -49,7 +49,7 @@ class SignorPK {
    *
    * There are also two different ways to provide the keys for
    * signing and verification: individually, or combined as a
-   * pair of public/private _signing_ Keys. Because signing keys
+   * pair of public/private _signing_ keys. Because signing keys
    * have a different number of bytes than encryption keys, a
    * Sodium::KeyPairSign instead of a Sodium::KeyPair is required
    * in that case.
@@ -66,7 +66,7 @@ class SignorPK {
   static constexpr std::size_t  KEYSIZE_PRIVKEY = sodium::KEYSIZE_PRIVKEY_SIGN;
   static constexpr std::size_t  SIGNATURE_SIZE  = crypto_sign_BYTES;
 
-  using privkey_type = Key<KEYSIZE_PRIVKEY>;
+  using privkey_type = key<KEYSIZE_PRIVKEY>;
   
   /**
    * Sign the plaintext with the private key privkey.  Return

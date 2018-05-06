@@ -39,7 +39,7 @@ class CryptorMultiPK {
   static constexpr std::size_t  KEYSIZE_SHAREDKEY = sodium::KEYSIZE_SHAREDKEY;
   static constexpr std::size_t  MACSIZE           = crypto_box_MACBYTES;
 
-  using privkey_type = Key<KEYSIZE_PRIVKEY>;
+  using privkey_type = key<KEYSIZE_PRIVKEY>;
   using nonce_type   = nonce<NSZPK>;
   
   /**
@@ -180,7 +180,7 @@ class CryptorMultiPK {
 		 const nonce_type &nonce);
 
  private:
-  Key<KEYSIZE_SHAREDKEY> shared_key_;
+  key<KEYSIZE_SHAREDKEY> shared_key_;
   bool                   shared_key_ready_;
 };
 

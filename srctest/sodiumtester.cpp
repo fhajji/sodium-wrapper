@@ -34,7 +34,7 @@
 #include <fstream>
 #include <utility>
 
-using sodium::Key;
+using sodium::key;
 using sodium::keyvar;
 using sodium::nonce;
 using sodium::cryptor;
@@ -67,7 +67,6 @@ SodiumTester::SodiumTester()
  * Encrypt a plaintext string with a randomly generated key and nonce
  * and return the result as a string in hexadecimal representation.
  *
- * - We use sodium::Key<> wrapper to create and store a random key
  * - We use sodium::nonce<> wrapper to create a store a random nonce
  * - We store the plaintext/ciphertext in a bytes, in unprotected memory
  * - We use our wrapper sodium::cryptor<> to do the encryption
@@ -207,13 +206,13 @@ SodiumTester::test2(const std::string &plaintext,
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // try the first key
-  key.setpass(pw1, salt, Key<sodium::KEYSIZE_SECRETBOX>::strength_t::medium);
+  key.setpass(pw1, salt, cryptor<>::key_type::strength_type::medium);
   
   // now encrypt with that key
   bytes ciphertext = cryptor<>(key).encrypt(plainblob, nonce);
 
   // try the second key
-  key.setpass(pw2, salt, Key<sodium::KEYSIZE_SECRETBOX>::strength_t::medium);
+  key.setpass(pw2, salt, cryptor<>::key_type::strength_type::medium);
   
   // now decrypt with that new key.
   // if the key/password was different, we will throw right here and now

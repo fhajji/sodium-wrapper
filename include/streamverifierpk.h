@@ -44,7 +44,7 @@ class StreamVerifierPK {
    * The stream will be read in a blockwise fashion with blocks
    * of size at most blocksize bytes.
    * 
-   * The constructor takes a public _signing_ Key of size
+   * The constructor takes a public _signing_ key of size
    * KEYSIZE_PUBKEY bytes. It will throw a std::runtime_error if the
    * key size isn't corect.
    **/

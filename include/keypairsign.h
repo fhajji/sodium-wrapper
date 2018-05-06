@@ -25,13 +25,13 @@ namespace sodium {
 class KeyPairSign
 {
   /**
-   * The class Sodium::KeyPairSign represents a pair of Public Key /
-   * Private Key used for public key signatures in various public key
+   * The class Sodium::KeyPairSign represents a pair of public key /
+   * private key used for public key signatures in various public key
    * cryptography functions of the libsodium library.
    *
    * The public key is stored in unprotected (bytes) memory, while
-   * the private key, being sensitive, is stored in protected (key_t) 
-   * memory, i.e. in an internal Key object.
+   * the private key, being sensitive, is stored in protected (key_type) 
+   * memory, i.e. in an internal key object.
    *
    * A KeyPairSign provides non-mutable data()/size() access to the
    * bytes of the public/private keys in a uniform fashion via the
@@ -50,7 +50,7 @@ class KeyPairSign
   static constexpr std::size_t KEYSIZE_PRIVKEY   = sodium::KEYSIZE_PRIVKEY_SIGN;
   static constexpr std::size_t KEYSIZE_SEEDBYTES = sodium::KEYSIZE_SEEDBYTES_SIGN;
 
-  using privkey_type = Key<KEYSIZE_PRIVKEY>;
+  using privkey_type = key<KEYSIZE_PRIVKEY>;
   
   /**
    * Generate a new (random) key pair of public/private signing keys.
@@ -61,8 +61,8 @@ class KeyPairSign
    *
    * Underlying libsodium function: crypto_sign_keypair().
    *
-   * the private key is stored in an internal Key object in protected
-   * key_t memory (readonly). It will be wiped clean when the KeyPairSign
+   * the private key is stored in an internal key object in protected
+   * key_type memory (readonly). It will be wiped clean when the KeyPairSign
    * goes out of scope or is destroyed.
    *
    * The public key is stored in an internal bytes object in
@@ -103,7 +103,7 @@ class KeyPairSign
   }
 
   /**
-   * Given a previously calculated private Key whose privkey_size
+   * Given a previously calculated private key whose privkey_size
    * bytes are stored starting at privkey_data, derive the
    * corresponding public key pubkey, and construct with privkey_data
    * and pubkey a new KeyPairSign. privkey_data MUST point to
@@ -154,7 +154,7 @@ class KeyPairSign
   }
   
   /**
-   * Give const access to the stored private key as a Key object.
+   * Give const access to the stored private key as a key object.
    *
    * This can be used to access the bytes of the private key via a
    * non-mutable data()/size() interface like this:
@@ -164,7 +164,7 @@ class KeyPairSign
   const privkey_type privkey() const { return privkey_; }
 
   /**
-   * Give const access to the stored public key as a data_t object.
+   * Give const access to the stored public key as a bytes object.
    *
    * This can be used to access the bytes of the public key via a
    * non-mutable data()/size() interface like this:

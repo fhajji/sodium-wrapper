@@ -33,7 +33,7 @@ class hashor_short {
   static constexpr std::size_t HASHSIZE = crypto_shorthash_BYTES;
 
   using bytes_type = BT;
-  using key_type   = Key<KEYSIZE>;
+  using key_type   = key<KEYSIZE>;
   
   // A hashor_short with a new random key
   hashor_short() : key_(key_type()) {}

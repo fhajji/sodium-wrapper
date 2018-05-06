@@ -36,7 +36,7 @@ class cryptor {
 
   using bytes_type = BT;
   using nonce_type = nonce<NONCESIZE>;
-  using key_type   = Key<KEYSIZE>;
+  using key_type   = key<KEYSIZE>;
 
   // A cryptor with a new random key
   cryptor() : key_(std::move(key_type())) {}
@@ -72,14 +72,14 @@ class cryptor {
    *   - NO value of nonce is EVER reused again with the same key
    * 
    * Nonces don't need to be kept secret from Eve/Oscar, and therefore
-   * don't need to be stored in key_t memory. However, care MUST be
+   * don't need to be stored in key_type memory. However, care MUST be
    * taken not to reuse a previously used nonce. When using a big
    * noncespace (24 bytes here), generating them randomly e.g. with
    * libsodium's randombytes_buf() may be good enough... but be careful
    * nonetheless.
    *
    * The ciphertext is meant to be sent over the insecure channel,
-   * and it too won't be stored in protected key_t memory.
+   * and it too won't be stored in protected key_type memory.
    **/
 
   BT encrypt(const BT &plaintext,
@@ -101,14 +101,14 @@ class cryptor {
    *   - NO value of nonce is EVER reused again with the same key
    * 
    * Nonces don't need to be kept secret from Eve/Oscar, and therefore
-   * don't need to be stored in key_t memory. However, care MUST be
+   * don't need to be stored in key_type memory. However, care MUST be
    * taken not to reuse a previously used nonce. When using a big
    * noncespace (24 bytes here), generating them randomly e.g. with
    * libsodium's randombytes_buf() may be good enough... but be careful
    * nonetheless.
    *
    * The ciphertext and mac are meant to be sent over the insecure
-   * channel, and they too won't be stored in protected key_t memory.
+   * channel, and they too won't be stored in protected key_type memory.
    **/
   
   BT encrypt(const BT &plaintext,

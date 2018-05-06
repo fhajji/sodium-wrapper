@@ -30,8 +30,8 @@ class KeyPair
    * the libsodium library.
    *
    * The public key is stored in unprotected (bytes) memory, while
-   * the private key, being sensitive, is stored in protected (key_t) 
-   * memory, i.e. in an internal Key object.
+   * the private key, being sensitive, is stored in protected (key_type) 
+   * memory, i.e. in an internal key object.
    *
    * A KeyPair provides non-mutable data()/size() access to the bytes
    * of the public/private keys in a uniform fashion via the
@@ -50,7 +50,7 @@ class KeyPair
   static constexpr std::size_t KEYSIZE_PRIVKEY     = sodium::KEYSIZE_PRIVKEY;
   static constexpr std::size_t KEYSIZE_SEEDBYTES   = sodium::KEYSIZE_SEEDBYTES;
 
-  using privkey_type = Key<KEYSIZE_PRIVKEY>;
+  using privkey_type = key<KEYSIZE_PRIVKEY>;
   
   /**
    * Generate a new (random) key pair of public/private keys.
@@ -61,8 +61,8 @@ class KeyPair
    *
    * Underlying libsodium function: crypto_box_keypair().
    *
-   * the private key is stored in an internal Key object in protected
-   * key_t memory (readonly). It will be wiped clean when the KeyPair
+   * the private key is stored in an internal key object in protected
+   * key_type memory (readonly). It will be wiped clean when the KeyPair
    * goes out of scope or is destroyed.
    *
    * The public key is stored in an internal bytes object in
@@ -97,7 +97,7 @@ class KeyPair
   }
 
   /**
-   * Given a previously calculated private Key whose privkey_size
+   * Given a previously calculated private key whose privkey_size
    * bytes are stored starting at privkey_data, derive the
    * corresponding public key pubkey, and construct with privkey_data
    * and pubkey a new KeyPair. privkey_data MUST point to
@@ -131,7 +131,7 @@ class KeyPair
   }
 
   /**
-   * Give const access to the stored private key as a Key object.
+   * Give const access to the stored private key as a key object.
    *
    * This can be used to access the bytes of the private key via a
    * non-mutable data()/size() interface like this:
@@ -141,7 +141,7 @@ class KeyPair
   const privkey_type& privkey() const { return privkey_; }
 
   /**
-   * Give const access to the stored public key as a data_t object.
+   * Give const access to the stored public key as a bytes object.
    *
    * This can be used to access the bytes of the public key via a
    * non-mutable data()/size() interface like this:

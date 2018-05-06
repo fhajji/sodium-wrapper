@@ -138,7 +138,7 @@ class poly1305_tee_filter : public detail::filter_adapter<Device>
   static constexpr std::size_t KEYSIZE = sodium::KEYSIZE_POLY1305;
   static constexpr std::size_t MACSIZE = crypto_onetimeauth_BYTES;
   
-  using key_type = Key<KEYSIZE>;
+  using key_type = key<KEYSIZE>;
   using mac_type = chars; // of MACSIZE elements...
   
   /**
@@ -454,7 +454,7 @@ public:
   static constexpr std::size_t KEYSIZE = sodium::KEYSIZE_POLY1305;
   static constexpr std::size_t MACSIZE = crypto_onetimeauth_BYTES;
   
-  using key_type = Key<KEYSIZE>;
+  using key_type = key<KEYSIZE>;
   using mac_type = chars; // of size MACSIZE
   
   poly1305_tee_device(device_param device, sink_param sink,

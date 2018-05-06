@@ -34,7 +34,7 @@ class CryptorPK {
   static constexpr std::size_t  KEYSIZE_PRIVKEY     = sodium::KEYSIZE_PRIVKEY;
   static constexpr std::size_t  MACSIZE             = crypto_box_MACBYTES;
 
-  using privkey_type = Key<KEYSIZE_PRIVKEY>;
+  using privkey_type = key<KEYSIZE_PRIVKEY>;
   using nonce_type   = nonce<NSZPK>;
   
   /**

@@ -36,7 +36,7 @@ class authenticator
 
   // Member type aliases
   using bytes_type = BT;
-  using key_type = Key<KEYSIZE_AUTH>;
+  using key_type = key<KEYSIZE_AUTH>;
   
   // An authenticator with a new random key
   authenticator() : auth_key_(std::move(key_type())) {}

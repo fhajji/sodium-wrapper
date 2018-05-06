@@ -35,7 +35,7 @@ class cryptor_aead
   static constexpr std::size_t  MACSIZE = crypto_aead_chacha20poly1305_ABYTES;
 
   using bytes_type = BT;
-  using key_type   = Key<KEYSIZE>;
+  using key_type   = key<KEYSIZE>;
   using nonce_type = nonce<NSZA>;
 
   // A cryptor_aead with a new random key

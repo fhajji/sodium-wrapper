@@ -36,7 +36,7 @@ class StreamSignorPK {
   static constexpr std::size_t KEYSIZE_PRIVKEY  = sodium::KEYSIZE_PRIVKEY_SIGN;
   static constexpr std::size_t SIGNATURE_SIZE   = crypto_sign_BYTES;
 
-  using privkey_type = Key<KEYSIZE_PRIVKEY>;
+  using privkey_type = key<KEYSIZE_PRIVKEY>;
   
   /**
    * A StreamSignorPK will sign streams of potentially unlimited length

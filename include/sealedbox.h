@@ -34,7 +34,7 @@ class SealedBox {
   static constexpr std::size_t KEYSIZE_PRIVKEY = sodium::KEYSIZE_PRIVKEY;
   static constexpr std::size_t SEALSIZE        = crypto_box_SEALBYTES;
 
-  using privkey_type = Key<KEYSIZE_PRIVKEY>;
+  using privkey_type = key<KEYSIZE_PRIVKEY>;
   
   /**
    * Encrypt plaintext using recipient's public key pubkey. Return
