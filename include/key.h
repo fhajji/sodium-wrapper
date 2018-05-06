@@ -24,6 +24,7 @@
 #include <vector>
 #include <string>
 #include <utility>
+#include <type_traits>
 
 #include <sodium.h>
 
@@ -55,7 +56,7 @@ namespace sodium {
   static constexpr std::size_t KEYSIZE_SALSA20        = crypto_stream_salsa20_KEYBYTES;
   static constexpr std::size_t KEYSIZE_XSALSA20       = crypto_stream_KEYBYTES;
   
-template <std::size_t KEYSZ=0>
+template <std::size_t KEYSZ=0, typename BT=bytes_protected>
 class key
 {
   /**
@@ -87,7 +88,11 @@ class key
    *     guard pages, and access to those pages is granted with mprotect().
    **/
   
-  using bytes_type = bytes_protected;
+  using bytes_type = BT;
+  
+  // refuse to compile when not instantiating with bytes_protected
+  static_assert(std::is_same<bytes_type, bytes_protected>(),
+	  "key<> not in protected memory");
   
   // The strengh of the key derivation efforts for setpass()
   using strength_type = enum class strength_enum { low, medium, high };

@@ -399,6 +399,22 @@ BOOST_AUTO_TEST_CASE( sodium_test_key_select_copy_or_move )
   // resources from its key parameter, key here wouldn't be empty.
 }
 
+BOOST_AUTO_TEST_CASE(sodium_test_key_bytes_protected)
+{
+	sodium::key<ks2, sodium::bytes_protected> key;
+
+	BOOST_CHECK(!isAllZero(key.data(), key.size()));
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_key_bytes_unprotected)
+{
+#if 0
+	sodium::key<ks2, sodium::bytes> key; // should refuse to compile
+
+	BOOST_CHECK(!isAllZero(key.data(), key.size()));
+#endif
+}
+
 // NYI: add test cases for readwrite(), readonly() and noaccess()...
 
 BOOST_AUTO_TEST_SUITE_END ()
