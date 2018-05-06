@@ -19,13 +19,17 @@
 #pragma once
 
 #include "common.h"
-#include "alloc.h"
+#include "allocator.h"
 
 #include <vector>
 #include <string>
 #include <utility>
 
 #include <sodium.h>
+
+#ifndef NDEBUG
+#include <iostream>
+#endif // ! NDEBUG
 
 namespace sodium {
 
@@ -83,7 +87,7 @@ class Key
    *     guard pages, and access to those pages is granted with mprotect().
    **/
   
-  using key_t      = std::vector<byte, SodiumAlloc<byte>>;
+  using key_t = bytes_protected;
   
   // The strengh of the key derivation efforts for setpass()
   using strength_t = enum class Strength { low, medium, high };
@@ -348,6 +352,10 @@ template <std::size_t KEYSIZE1, std::size_t KEYSIZE2>
   // std::equal(k1.data(), k1.data() + k1.size(),
   //            k2.data());
   
+#ifndef NDEBUG
+  std::cerr << "DEBUG: sodium::Key<...>::operator==() called" << std::endl;
+#endif // ! NDEBUG
+
   // compare two keys in constant time instead:
   return (k1.size() == k2.size())
     &&
@@ -358,5 +366,9 @@ template <std::size_t KEYSIZE1, std::size_t KEYSIZE2>
   bool operator!= (const sodium::Key<KEYSIZE1> &k1,
 		   const sodium::Key<KEYSIZE2> &k2)
 {
+#ifndef NDEBUG
+  std::cerr << "DEBUG: sodium::Key<...>::operator!=() called" << std::endl;
+#endif // ! NDEBUG
+
   return (! (k1 == k2));
 }

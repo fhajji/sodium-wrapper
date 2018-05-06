@@ -21,7 +21,7 @@
 #include <vector>
 #include <string>
 
-#include "alloc.h"
+#include "allocator.h"
 
 namespace sodium {
 	// libsodium treats all bytes as unsigned char
@@ -34,7 +34,7 @@ namespace sodium {
 	using chars = std::vector<char>;
 
 	// a contiguous collection of bytes, in protected memory
-	using bytes_protected = std::vector<byte, SodiumAlloc<byte>>;  // key_t
+	using bytes_protected = std::vector<byte, allocator<byte>>;  // key_t
 
 	std::string tohex (const bytes &in); // in: utils.cpp
 	std::string tohex (const chars &in); // in: utils.cpp

@@ -19,7 +19,7 @@
 #pragma once
 
 #include "common.h"
-#include "alloc.h"
+#include "allocator.h"
 #include "key.h"     // for KEYSIZE constants
 #include <vector>
 #include <string>
@@ -59,7 +59,7 @@ class keyvar
    *     guard pages, and access to those pages is granted with mprotect().
    **/
   
-  using key_t = BT;                             // e.g. protected_bytes (std:vector<byte, sodiumalloc>)
+  using key_t = BT;                             // e.g. protected_bytes (std:vector<byte, sodium::allocator<byte>>)
   using byte_type = typename key_t::value_type; // e.g. byte (unsigned char)
   
   // The strengh of the key derivation efforts for setpass()
