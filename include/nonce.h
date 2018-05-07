@@ -21,6 +21,10 @@
 #include "common.h"
 #include <sodium.h>
 
+#ifndef NDEBUG
+#include <iostream>
+#endif // ! NDEBUG
+
 namespace sodium {
 
 // Typical values for number of bytes of Nonces (from <sodium.h>):
@@ -64,17 +68,17 @@ class nonce
    * default value of bytes, i.e. to zero bytes.
    **/
  
-  nonce<N>(bool init=true) : noncedata_(N) {
+  nonce(bool init=true) : noncedata_(N) {
     if (init)
       randombytes_buf(noncedata_.data(), noncedata_.size());
   }
 
   // there's nothing special about copy operations: allow them.
-  nonce<N>(const nonce<N> &)            = default;
-  nonce<N>& operator=(const nonce<N> &) = default;
+  nonce(const nonce &)            = default;
+  nonce& operator=(const nonce &) = default;
 
   // to increase efficiency, enable moving constructor:
-  nonce<N>(nonce<N> &&other) :
+  nonce(nonce &&other) :
 	  noncedata_{ std::move(other.noncedata_) }
   {}
 
@@ -118,13 +122,13 @@ class nonce
     sodium_increment(noncedata_.data(), noncedata_.size());
   }
 
-  nonce<N>& operator++ () {
+  nonce& operator++ () {
 	  increment();
 	  return *this;
   }
 
-  nonce<N> operator++ (int) {
-	  nonce<N> result{ *this };
+  nonce operator++ (int) {
+	  nonce result{ *this };
 	  increment();
 	  return result;
   }
@@ -145,7 +149,7 @@ class nonce
    * The byte patterns stored in the nonce(s) is considered to be
    * in little endian format.
    **/
-  nonce<N>& operator+= (const nonce<N> &b) {
+  nonce& operator+= (const nonce &b) {
     sodium_add(noncedata_.data(), b.noncedata_.data(), noncedata_.size());
     return *this;
   }
@@ -160,6 +164,10 @@ class nonce
 template <std::size_t N>
   int compare(const nonce<N> &a, const nonce<N> &b)
 {
+#ifndef NDEBUG
+  std::cerr << "DEBUG: nonce::compare called." << std::endl;
+#endif // ! NDEBUG
+
   return sodium_compare(a.data(), b.data(), a.size());
 }
 
