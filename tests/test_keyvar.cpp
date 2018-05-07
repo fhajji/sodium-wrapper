@@ -207,11 +207,11 @@ BOOST_AUTO_TEST_CASE( sodium_test_keyvar_setpass )
   std::string pw2 { "12345" };
 
   keyvar<> key1(ks3, false);
-  key1.setpass(pw1, salt1, keyvar<>::strength_t::medium);
+  key1.setpass(pw1, salt1, keyvar<>::strength_type::medium);
   BOOST_CHECK(! isAllZero(key1.data(), key1.size()));
   
   keyvar<> key2(ks3, false);
-  key2.setpass(pw1, salt1, keyvar<>::strength_t::medium);
+  key2.setpass(pw1, salt1, keyvar<>::strength_type::medium);
   BOOST_CHECK(! isAllZero(key2.data(), key2.size()));
 
   // invoking setpass() with the same parameters must yield the
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_keyvar_setpass )
   
   // invoking setpass() with different password must yield
   // different bytes
-  key2.setpass(pw2, salt1, keyvar<>::strength_t::medium);
+  key2.setpass(pw2, salt1, keyvar<>::strength_type::medium);
   BOOST_CHECK(! isAllZero(key2.data(), key2.size()));
   
   BOOST_CHECK(! isSameBytes(key1.data(), key1.size(),
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_keyvar_setpass )
   // must yield different bytes
   bytes salt2(ks_salt);
   randombytes_buf(salt2.data(), salt2.size());
-  key2.setpass(pw1, salt2, keyvar<>::strength_t::medium);
+  key2.setpass(pw1, salt2, keyvar<>::strength_type::medium);
   BOOST_CHECK(! isAllZero(key2.data(), key2.size()));
   
   BOOST_CHECK(! isSameBytes(key1.data(), key1.size(),
@@ -239,14 +239,14 @@ BOOST_AUTO_TEST_CASE( sodium_test_keyvar_setpass )
 
   // invoking setpass() with same password, same salt, but
   // different strength, must yield different bytes
-  key2.setpass(pw1, salt1, keyvar<>::strength_t::low);
+  key2.setpass(pw1, salt1, keyvar<>::strength_type::low);
   BOOST_CHECK(! isAllZero(key2.data(), key2.size()));
   
   BOOST_CHECK(! isSameBytes(key1.data(), key1.size(),
 			    key2.data(), key2.size()));
 
   // try memory / cpu intensive key generation (patience...)
-  key2.setpass(pw1, salt1, keyvar<>::strength_t::high);
+  key2.setpass(pw1, salt1, keyvar<>::strength_type::high);
   BOOST_CHECK(! isAllZero(key2.data(), key2.size()));
 }
 
@@ -387,6 +387,22 @@ BOOST_AUTO_TEST_CASE( sodium_test_keyvar_select_copy_or_move )
 
   // note that had selectkeyvar(keyvar &&) not explicitely pilfered the
   // resources from its key parameter, key here wouldn't be empty.
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_keyvar_bytes_protected)
+{
+	sodium::keyvar<sodium::bytes_protected> key(ks2);
+
+	BOOST_CHECK(!isAllZero(key.data(), key.size()));
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_keyvar_bytes_unprotected)
+{
+#if 0
+	sodium::keyvar<sodium::bytes> key(ks2); // should refuse to compile
+
+	BOOST_CHECK(!isAllZero(key.data(), key.size()));
+#endif
 }
 
 // NYI: add test cases for readwrite(), readonly() and noaccess()...

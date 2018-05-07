@@ -89,12 +89,13 @@ class key
    **/
   
   using bytes_type = BT;
+  using byte_type  = typename bytes_type::value_type; // e.g. byte (unsigned char)
   
   // refuse to compile when not instantiating with bytes_protected
   static_assert(std::is_same<bytes_type, bytes_protected>(),
 	  "key<> not in protected memory");
   
-  // The strengh of the key derivation efforts for setpass()
+  // The strength of the key derivation efforts for setpass()
   using strength_type = enum class strength_enum { low, medium, high };
 
   /**
@@ -195,7 +196,7 @@ class key
    * _after_ the constructor has finished constructing *this! (XXX).
    **/
 
-  const      byte          *data() const { return keydata_.data(); }
+  const      byte_type     *data() const { return keydata_.data(); }
   constexpr  std::size_t    size() const { return keydata_.size(); }
 
   /**
@@ -214,7 +215,7 @@ class key
    *   - CryptorMultiPK
    **/
 
-  byte *setdata() { return keydata_.data(); }
+  byte_type *setdata() { return keydata_.data(); }
     
   /**
    * Derive key material from the string password, and the salt

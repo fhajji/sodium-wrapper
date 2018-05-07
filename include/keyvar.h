@@ -24,7 +24,12 @@
 #include <vector>
 #include <string>
 #include <utility>
+#include <type_traits>
 #include <sodium.h>
+
+#ifndef NDEBUG
+#include <iostream>
+#endif // ! NDEBUG
 
 namespace sodium {
 
@@ -52,18 +57,22 @@ class keyvar
  public:
   
   /**
-   * key_t is protected memory for bytes of key material (see: alloc.h)
-   *   * key_t memory will self-destruct/zero when out-of-scope / throws
-   *   * key_t memory can be made readonly or temporarily non-accessible
-   *   * key_t memory is stored in virtual pages protected by canary,
+   * bytes_type is protected memory for bytes of key material (see: allocator.h)
+   *   * bytes_type memory will self-destruct/zero when out-of-scope / throws
+   *   * bytes_type memory can be made readonly or temporarily non-accessible
+   *   * bytes_type memory is stored in virtual pages protected by canary,
    *     guard pages, and access to those pages is granted with mprotect().
    **/
   
-  using key_t = BT;                             // e.g. protected_bytes (std:vector<byte, sodium::allocator<byte>>)
-  using byte_type = typename key_t::value_type; // e.g. byte (unsigned char)
+  using bytes_type = BT;                              // e.g. protected_bytes (std:vector<byte, sodium::allocator<byte>>)
+  using byte_type  = typename bytes_type::value_type; // e.g. byte (unsigned char)
   
-  // The strengh of the key derivation efforts for setpass()
-  using strength_t = enum class Strength { low, medium, high };
+  // refuse to compile when not instantiating with bytes_protected
+  static_assert(std::is_same<bytes_type, bytes_protected>(),
+	  "keyvar<> not in protected memory");
+
+  // The strength of the key derivation efforts for setpass()
+  using strength_type = enum class strength_enum { low, medium, high };
 
   /**
    * Construct a keyvar of size key_size.
@@ -76,7 +85,7 @@ class keyvar
    * the key in the readwrite() default for further setpass()...
    **/
   
-  keyvar(std::size_t key_size, bool init=true) : keydata(key_size) {
+  keyvar(std::size_t key_size, bool init=true) : keydata_(key_size) {
     if (init) {
       initialize();
       readonly();
@@ -123,17 +132,17 @@ class keyvar
    * keyvars.
    **/
   
-  keyvar() : keydata(0) {
+  keyvar() : keydata_(0) {
     // leave readwrite()
   }
 
   keyvar(keyvar &&other) noexcept :
     keyvar {} {
-      std::swap(this->keydata, other.keydata);
+      std::swap(this->keydata_, other.keydata_);
   }
 
   keyvar& operator=(keyvar &&other) {
-    this->keydata = std::move(other.keydata);
+    this->keydata_ = std::move(other.keydata_);
     return *this;
   }
     
@@ -151,8 +160,8 @@ class keyvar
    *   initialize(), destroy(), setpass().
    **/
 
-  const byte_type     *data() const { return keydata.data(); }
-        std::size_t    size() const { return keydata.size(); }
+  const byte_type     *data() const { return keydata_.data(); }
+        std::size_t    size() const { return keydata_.size(); }
 
   /**
    * Provide mutable access to the bytes of the keyvar, so that users
@@ -173,7 +182,7 @@ class keyvar
    *         it is needed.
    **/
 
-  BT *setdata() { return keydata.data(); }
+  byte_type *setdata() { return keydata_.data(); }
     
   /**
    * Derive key material from the string password, and the salt
@@ -182,7 +191,7 @@ class keyvar
    * 
    * The strength parameter determines how much effort is to be
    * put into the derivation of the key. It can be one of
-   *    keyvar::strength_t::{low,medium,high}.
+   *    keyvar::strength_type::{low,medium,high}.
    *
    * This function throws a std::runtime_error if the strength parameter
    * or the salt size don't make sense, or if the underlying libsodium
@@ -191,20 +200,20 @@ class keyvar
 
   void setpass (const std::string &password,
 		const bytes &salt,
-		const strength_t strength = strength_t::high) {
+		const strength_type strength = strength_type::high) {
     // check strength and set appropriate parameters
     std::size_t strength_mem;
     unsigned long long strength_cpu;
     switch (strength) {
-    case strength_t::low:
+    case strength_type::low:
       strength_mem = crypto_pwhash_MEMLIMIT_INTERACTIVE;
       strength_cpu = crypto_pwhash_OPSLIMIT_INTERACTIVE;
       break;
-    case strength_t::medium:
+    case strength_type::medium:
       strength_mem = crypto_pwhash_MEMLIMIT_MODERATE;
       strength_cpu = crypto_pwhash_OPSLIMIT_MODERATE;
       break;
-    case strength_t::high:
+    case strength_type::high:
       strength_mem = crypto_pwhash_MEMLIMIT_SENSITIVE;
       strength_cpu = crypto_pwhash_OPSLIMIT_SENSITIVE;
       break;
@@ -218,7 +227,7 @@ class keyvar
 
     // derive a key from the hash of the password, and store it!
     readwrite(); // temporarily unlock the key (if not already)
-    if (crypto_pwhash (keydata.data(), keydata.size(),
+    if (crypto_pwhash (keydata_.data(), keydata_.size(),
 		       password.data(), password.size(),
 		       salt.data(),
 		       strength_cpu,
@@ -243,7 +252,7 @@ class keyvar
    **/
   
   void initialize() {
-    randombytes_buf(keydata.data(), keydata.size());
+    randombytes_buf(keydata_.data(), keydata_.size());
   }
 
   /**
@@ -265,7 +274,7 @@ class keyvar
   
   void destroy() {
     readwrite();
-    sodium_memzero(keydata.data(), keydata.size());
+    sodium_memzero(keydata_.data(), keydata_.size());
   }
 
   /**
@@ -280,7 +289,7 @@ class keyvar
    * has been called. Restore access by calling readonly() or readwrite().
    **/
   
-  void noaccess()  { keydata.get_allocator().noaccess(keydata.data()); }
+  void noaccess()  { keydata_.get_allocator().noaccess(keydata_.data()); }
 
   /**
    * Mark this keyvar as read-only. All attemps to write to this key will
@@ -293,17 +302,17 @@ class keyvar
    * Note that the key bytes can be made writable by calling readwrite().
    **/
   
-  void readonly()  { keydata.get_allocator().readonly(keydata.data()); }
+  void readonly()  { keydata_.get_allocator().readonly(keydata_.data()); }
 
   /**
    * Mark this keyvar as read/writable. Useful after it has been
    * previously marked readonly() or noaccess().
    **/
 
-  void readwrite() { keydata.get_allocator().readwrite(keydata.data()); }
+  void readwrite() { keydata_.get_allocator().readwrite(keydata_.data()); }
 
  private:
-  key_t keydata; // the bytes of the key are stored in protected memory
+  bytes_type keydata_; // the bytes of the key are stored in protected memory
 };
 
 } // namespace sodium
@@ -318,6 +327,10 @@ operator== (const sodium::keyvar<BT> &k1, const sodium::keyvar<BT> &k2)
 	//   std::equal(k1.data(), k1.data() + k1.size(),
 	// 	     k2.data());
 
+#ifndef NDEBUG
+	std::cerr << "DEBUG: sodium::keyvar::operator==() called" << std::endl;
+#endif // ! NDEBUG
+
 	// Compare in constant time instead:
 	return (k1.size() == k2.size())
 		&&
@@ -328,5 +341,9 @@ template<class BT>
 bool
 operator!= (const sodium::keyvar<BT> &k1, const sodium::keyvar<BT> &k2)
 {
+#ifndef NDEBUG
+	std::cerr << "DEBUG: sodium::keyvar::operator!=() called" << std::endl;
+#endif // ! NDEBUG
+
 	return (!(k1 == k2));
 }
