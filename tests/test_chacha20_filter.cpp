@@ -20,8 +20,9 @@
 #define BOOST_TEST_MODULE sodium::chacha20_filter Test
 #include <boost/test/included/unit_test.hpp>
 
-#include "chacha20_filter.h"
 #include "common.h"
+#include "helpers.h"
+#include "chacha20_filter.h"
 
 #include <string>
 #include <stdexcept>    // std::runtime_error

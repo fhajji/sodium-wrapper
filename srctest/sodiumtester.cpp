@@ -19,6 +19,7 @@
 #include "sodiumtester.h"
 
 #include "common.h"
+#include "helpers.h"
 #include "nonce.h"
 #include "key.h"
 #include "keyvar.h"

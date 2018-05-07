@@ -1,4 +1,4 @@
-// common.h -- Common data types, and function declarations.
+// common.h -- Common data types.
 //
 // ISC License
 // 
@@ -18,11 +18,8 @@
 
 #pragma once
 
-#include <vector>
-#include <string>
-
 #include "allocator.h"
-#include "helpers.h"
+#include <vector>
 
 namespace sodium {
 	// libsodium treats all bytes as unsigned char
@@ -35,6 +32,6 @@ namespace sodium {
 	using chars = std::vector<char>;
 
 	// a contiguous collection of bytes, in protected memory
-	using bytes_protected = std::vector<byte, allocator<byte>>;  // key_t
+	using bytes_protected = std::vector<byte, allocator<byte>>;
 
 } // namespace sodium

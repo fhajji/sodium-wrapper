@@ -145,8 +145,6 @@ std::string bin2hex(const BT &in, bool clearmem)
 	return outhex;
 }
 
-
-
 /**
 * Clear len bytes above the current stack pointer
 * to overwrite sensitive values that may have been

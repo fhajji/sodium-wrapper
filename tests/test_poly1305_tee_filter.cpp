@@ -20,8 +20,9 @@
 #define BOOST_TEST_MODULE sodium::poly1305_tee_filter Test
 #include <boost/test/included/unit_test.hpp>
 
-#include "poly1305_tee_filter.h"
 #include "common.h"
+#include "helpers.h"
+#include "poly1305_tee_filter.h"
 
 #include <string>
 #include <cstdio> // std::remove()

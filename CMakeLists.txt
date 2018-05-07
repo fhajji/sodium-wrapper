@@ -2,7 +2,7 @@
 #
 # ISC License
 #
-# Copyright (c) 2017 Farid Hajji <farid@hajji.name>
+# Copyright (c) 2018 Farid Hajji <farid@hajji.name>
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -41,7 +41,7 @@ set ( CMAKE_CXX_EXTENSIONS OFF )
 
 # --------------- Find dependencies --------------------------------------
 set (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR})
-find_package(sodium 1.0.12 REQUIRED)
+find_package(sodium 1.0.16 REQUIRED)
 find_package(Boost REQUIRED COMPONENTS unit_test_framework)
 
 if (sodium_FOUND)

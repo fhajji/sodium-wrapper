@@ -19,16 +19,18 @@ Criticism and pull requests welcome, of course.
 
 ## Roadmap (tentative)
 
-* Fix: one unit test still fails (only on) Windows.
+* Fix: one unit test still fails (only on Debug builds) on Windows.
 * Update to newest libsodium (in progress).
-* Add wrappers to missing libsodium calls.
-* Try to turn it into a header-only wrapper.
-* Change API to lower case to make it more C++11, STL- and Boost-ish.
-* Use new streaming API that appeared in 1.0.14.
+* Add wrappers to missing libsodium calls (in progress).
+* Try to turn it into a header-only wrapper (in progress).
+* Change API to lower case to make it more C++11, STL- and Boost-ish (in progress).
+* Change API to reflect more faithfully libsodium's C-API naming scheme.
+* Replace ad-hoc streaming classes by new 1.0.14+ streaming API.
+* Adapt Boost.Iostreams filters to use the new 1.0.14+ streaming API.
 * Use updated API in some (toy) projects to test for suitability.
-* User feedback. Update API if needed.
-* Cryptographic audit, e.g. to check for unintended side-channel attacks.
-* API freeze, lots more of testing and auditing, user feedback.
+* Tag 0.1 to indicate semi-stable API. Seek user feedback. Update API if needed. Repeat.
+* API freeze, lots more of testing and auditing, more user feedback.
+* Cryptographic audit, e.g. to check for unintended side-channel attacks in wrappers.
 * Initial release of API 1.0.
 * Setting up release branch.
 * More developments, tracking libsodium's updates, etc.
@@ -146,9 +148,9 @@ On Unix, just execute the binaries. Assuming you're still in the
 
 ```
 ./sodiumtester
-make test
+make test         # run all tests
 cd tests
-./test_Key
+./test_key        # run individual tests
 ./test_nonce
 ```
 
@@ -184,11 +186,11 @@ On my system:
 
 ```
 cd \Users\fhajji\CMakeBuilds\{some-hash}\build\x64-Debug\Debug
-.\sodiumtester
+.\sodiumtester.exe
 copy wrapsodium.dll ..\tests\Debug
 cd ..\tests\Debug
-.\test_Key
-.\test_nonce
+.\test_key.exe
+.\test_nonce.exe
 ```
 
 Replace `Debug` by `Release` to test the release build.
