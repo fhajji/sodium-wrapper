@@ -20,10 +20,11 @@ Criticism and pull requests welcome, of course.
 ## Roadmap (tentative)
 
 * Fix: one unit test still fails (only on) Windows.
-* Update to newest libsodium.
+* Update to newest libsodium (in progress).
 * Add wrappers to missing libsodium calls.
 * Try to turn it into a header-only wrapper.
 * Change API to lower case to make it more C++11, STL- and Boost-ish.
+* Use new streaming API that appeared in 1.0.14.
 * Use updated API in some (toy) projects to test for suitability.
 * User feedback. Update API if needed.
 * Cryptographic audit, e.g. to check for unintended side-channel attacks.
@@ -35,7 +36,7 @@ Criticism and pull requests welcome, of course.
 ## Requirements
 
 * Libraries:
-  * [libsodium](https://github.com/jedisct1/libsodium) 1.0.12+
+  * [libsodium](https://github.com/jedisct1/libsodium) 1.0.16+
   * [Boost](https://www.boost.org/) 1.66.0+
     * Boost.Test for unit testing
 	* Boost.Iostreams for streaming APIs.

@@ -72,7 +72,7 @@ SodiumTester::SodiumTester()
  * - We use our wrapper sodium::cryptor<> to do the encryption
  * - We use our wrapper sodium::cryptor<> to test-decrypt the result
  *   and verify that the decrypted text is the same as the plaintext.
- * - We use our wrapper sodium::tohex() to convert the ciphertext into
+ * - We use our wrapper sodium::bin2hex() to convert the ciphertext into
  *   hexadecimal string, which we return.
  **/
 
@@ -108,7 +108,7 @@ SodiumTester::test0(const std::string &plaintext)
   // finally, convert the bytes of the ciphertext into a hexadecimal
   // string that can be printed, and return that string.
 
-  std::string encrypted_as_hex = sodium::tohex(ciphertext);
+  std::string encrypted_as_hex = sodium::bin2hex<>(ciphertext);
   return encrypted_as_hex;
 
   // the key will self-destruct here when it goes out of scope.
@@ -274,7 +274,7 @@ SodiumTester::test3()
   // if (a.size() != sodium::NONCESIZE_SECRETBOX)
   //   throw std::runtime_error {"SodiumTester::test3() wrong nonce size"};
 
-  os << "a+0: " << sodium::tohex(a.as_bytes()) << std::endl;
+  os << "a+0: " << sodium::bin2hex<>(a.as_bytes()) << std::endl;
   
   nonce<> a_copy {a};
   if (a != a_copy)
@@ -282,14 +282,14 @@ SodiumTester::test3()
   
   for (int i: {1,2,3,4,5}) {
     a.increment();
-    os << "a+" << i << ": " << sodium::tohex(a.as_bytes()) << std::endl;
+    os << "a+" << i << ": " << sodium::bin2hex<>(a.as_bytes()) << std::endl;
   }
 
   if (a_copy > a)
     throw std::runtime_error {"SodiumTester::test3() a+5 > a"};
   
   nonce<> b(false); // uninitialized, zeroed?
-  os << "b+0: " << sodium::tohex(b.as_bytes()) << std::endl;
+  os << "b+0: " << sodium::bin2hex<>(b.as_bytes()) << std::endl;
   if (! b.is_zero())
     throw std::runtime_error {"SodiumTester::test3() not initialized to zero"};
 
@@ -298,7 +298,7 @@ SodiumTester::test3()
     b.increment();
   }
   // b is now 5, display it!
-  os << "b+5: " << sodium::tohex(b.as_bytes()) << std::endl;
+  os << "b+5: " << sodium::bin2hex<>(b.as_bytes()) << std::endl;
 
   a_copy += b; // increment original a by 5 (should be new a)
   if (a_copy != a)
@@ -353,7 +353,7 @@ SodiumTester::test4(const std::string &plaintext,
 					       nonce);
 
   os << "encrypted: "
-     << sodium::tohex(ciphertext_with_mac)
+     << sodium::bin2hex<>(ciphertext_with_mac)
      << std::endl;
 
   // and then decrypt (would throw if there was an error)
@@ -403,7 +403,7 @@ SodiumTester::test4(const std::string &plaintext,
 					plainblob,
 					nonce);
   os << "encrypted (same nonce): "
-     << sodium::tohex(ciphertext_with_mac)
+     << sodium::bin2hex<>(ciphertext_with_mac)
      << std::endl;
 
   nonce.increment(); // don't forget that!
@@ -412,7 +412,7 @@ SodiumTester::test4(const std::string &plaintext,
 					plainblob,
 					nonce);
   os << "encrypted (different nonce): "
-     << sodium::tohex(ciphertext_with_mac)
+     << sodium::bin2hex<>(ciphertext_with_mac)
      << std::endl;
 
   try {
@@ -440,7 +440,7 @@ SodiumTester::test4(const std::string &plaintext,
 						     empty_plainblob,
 						     nonce);
   os << "empty encrypted: "
-     << sodium::tohex(empty_ciphertext_with_mac)
+     << sodium::bin2hex<>(empty_ciphertext_with_mac)
      << std::endl;
   try {
     bytes empty_decrypted = sc_aead.decrypt(empty_headerblob,

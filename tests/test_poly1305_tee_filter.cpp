@@ -35,7 +35,6 @@ namespace io = boost::iostreams;
 
 using sodium::poly1305_tee_filter;
 using sodium::poly1305_tee_device;
-using sodium::tohex;
 using chars = sodium::chars;
 
 using mac_array_type = typename poly1305_tee_filter<io::null_sink>::mac_type;
@@ -131,8 +130,8 @@ verify_mac(const std::string &plaintext,
 					      key.data()), 0);
 
   // 5. Compare C-API and C++-API MACs:
-  BOOST_TEST_MESSAGE(tohex(mac_c_api));
-  BOOST_TEST_MESSAGE(tohex(mac_cpp_api));
+  BOOST_TEST_MESSAGE(sodium::bin2hex<mac_array_type>(mac_c_api));
+  BOOST_TEST_MESSAGE(sodium::bin2hex<mac_array_type>(mac_cpp_api));
   
   return mac_c_api == mac_cpp_api;
 }
@@ -200,8 +199,8 @@ verify_mac(const std::string &plaintext,
 					      key.data()), 0);
 
   // 5. Compare C-API and C++-API MACs:
-  BOOST_TEST_MESSAGE(tohex(mac_c_api));
-  BOOST_TEST_MESSAGE(tohex(mac_cpp_api));
+  BOOST_TEST_MESSAGE(sodium::bin2hex<mac_array_type>(mac_c_api));
+  BOOST_TEST_MESSAGE(sodium::bin2hex<mac_array_type>(mac_cpp_api));
   
   return mac_c_api == mac_cpp_api;
 }
@@ -255,8 +254,8 @@ verify_mac(const std::string &plaintext,
 					      key.data()), 0);
 
   // 5. Compare C-API and C++-API MACs:
-  BOOST_TEST_MESSAGE(tohex(mac_c_api));
-  BOOST_TEST_MESSAGE(tohex(mac));
+  BOOST_TEST_MESSAGE(sodium::bin2hex<mac_array_type>(mac_c_api));
+  BOOST_TEST_MESSAGE(sodium::bin2hex<mac_array_type>(mac));
   
   return mac_c_api == mac;
 }

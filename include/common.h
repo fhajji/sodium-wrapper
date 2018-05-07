@@ -22,6 +22,7 @@
 #include <string>
 
 #include "allocator.h"
+#include "helpers.h"
 
 namespace sodium {
 	// libsodium treats all bytes as unsigned char
@@ -36,6 +37,4 @@ namespace sodium {
 	// a contiguous collection of bytes, in protected memory
 	using bytes_protected = std::vector<byte, allocator<byte>>;  // key_t
 
-	std::string tohex (const bytes &in); // in: utils.cpp
-	std::string tohex (const chars &in); // in: utils.cpp
 } // namespace sodium

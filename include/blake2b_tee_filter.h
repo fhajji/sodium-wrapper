@@ -325,7 +325,7 @@ class blake2b_tee_filter : public detail::filter_adapter<Device>
 
 #ifndef NDEBUG
     hash_type   out_as_hash_type_var {out, out+hashsize_};
-    std::string out_as_hex_string    {tohex(out_as_hash_type_var)};
+    std::string out_as_hex_string    {sodium::bin2hex<hash_type>(out_as_hash_type_var)};
     std::cerr << "sodium::blake2b_tee_filter::close() called "
 	      << "[result="   << result << "], "
 	      << "[hashsize=" << hashsize_ << "]" << '\n'
@@ -731,7 +731,7 @@ public:
 
 #ifndef NDEBUG
     hash_type   out_as_hash_type_var {out, out+hashsize_};
-    std::string out_as_string        {tohex(out_as_hash_type_var)};
+    std::string out_as_string        {sodium::bin2hex<hash_type>(out_as_hash_type_var)};
     std::cerr << "sodium::blake2b_tee_device::close() called "
 	      << "[result="   << result << "] "
 	      << "[hashsize=" << hashsize_ << "]" << '\n'

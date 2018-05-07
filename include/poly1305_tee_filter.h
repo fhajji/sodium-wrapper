@@ -256,7 +256,7 @@ class poly1305_tee_filter : public detail::filter_adapter<Device>
 
 #ifndef NDEBUG
     mac_type    out_as_mac_type_var {out, out+MACSIZE};
-    std::string out_as_string       {tohex(out_as_mac_type_var)};
+    std::string out_as_string       {sodium::bin2hex<mac_type>(out_as_mac_type_var)};
     std::cerr << "sodium::poly1305_tee_filter::close() called "
 	      << "[result=" << result << "], "
 	      << "[MACSIZE=" << MACSIZE << "]" << '\n'
@@ -578,7 +578,7 @@ public:
 
 #ifndef NDEBUG
     mac_type    out_as_mac_type_var {out, out+MACSIZE};
-    std::string out_as_string       {tohex(out_as_mac_type_var)};
+    std::string out_as_string       {sodium::bin2hex<mac_type>(out_as_mac_type_var)};
     std::cerr << "sodium::poly1305_tee_device::close() called "
 	      << "[result=" << result << "] "
 	      << "[MACSIZE=" << MACSIZE << "]" << '\n'

@@ -35,7 +35,6 @@ namespace io = boost::iostreams;
 
 using sodium::blake2b_tee_filter;
 using sodium::blake2b_tee_device;
-using sodium::tohex;
 using chars = sodium::chars;
 
 using hash_array_type = typename blake2b_tee_filter<io::null_sink>::hash_type;
@@ -142,8 +141,8 @@ verify_hash(const std::string &plaintext,
   ishash.close();
   
   // 4. Compare C-API and C++-API hashes:
-  BOOST_TEST_MESSAGE(tohex(hash_c_api));
-  BOOST_TEST_MESSAGE(tohex(hash_cpp_api));
+  BOOST_TEST_MESSAGE(sodium::bin2hex<hash_array_type>(hash_c_api));
+  BOOST_TEST_MESSAGE(sodium::bin2hex<hash_array_type>(hash_cpp_api));
   
   return hash_c_api == hash_cpp_api;
 }
@@ -223,8 +222,8 @@ verify_hash(const std::string &plaintext,
   hash_array_type hash_cpp_api {hash};
     
   // 4. Compare C-API and C++-API hashes:
-  BOOST_TEST_MESSAGE(tohex(hash_c_api));
-  BOOST_TEST_MESSAGE(tohex(hash_cpp_api));
+  BOOST_TEST_MESSAGE(sodium::bin2hex<hash_array_type>(hash_c_api));
+  BOOST_TEST_MESSAGE(sodium::bin2hex<hash_array_type>(hash_cpp_api));
   
   return hash_c_api == hash_cpp_api;
 }
@@ -290,8 +289,8 @@ verify_hash(const std::string &plaintext,
   // 3. Fetch the computed hash from parameter (nothing to do)
       
   // 4. Compare C-API and C++-API hashes:
-  BOOST_TEST_MESSAGE(tohex(hash_c_api));
-  BOOST_TEST_MESSAGE(tohex(hash));
+  BOOST_TEST_MESSAGE(sodium::bin2hex<hash_array_type>(hash_c_api));
+  BOOST_TEST_MESSAGE(sodium::bin2hex<hash_array_type>(hash));
   
   return hash_c_api == hash;
 }
