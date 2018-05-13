@@ -16,6 +16,17 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+// Uncommend the following #define line, or pass it via command line
+// if you want (additional) calls to sodium_init() in sodium::allocator's
+// ctor.
+// 
+// This is normally unnecessary if you call sodium_init() in your
+// program before using libsodium or its wrapper(s). It is also
+// not necessary in the unit tests, since sodium_init() is normally
+// invoked in the test harness there, before the tests start.
+// 
+// #define SODIUM_INIT_IN_ALLOCATOR
+
 #pragma once
 
 #include <sodium.h>
@@ -30,14 +41,15 @@
 /**
  * This custom allocator doles out "secure memory" using libsodium's
  * malloc*() utility functions.  The idea is to store sensitive key
- * material in a std::vector<unsigned char, SodiumAlloc<unsigned char>>
+ * material in a std::vector<unsigned char, sodium::allocator<unsigned char>>
  * and let C++11's STL allocator magic work behind the scenes to grab
  * and safely release memory in mprotect()ed vitual pages of memory.
  *
  * We implement a custom allocator template and override:
  *
  *   - the constructor, to initialize sodium_init()... once more,
- *     just to be safe.
+ *     just to be safe
+ *     (only if SODIUM_INIT_IN_ALLOCATOR is #define(d))
  *   - allocate(), to grab mprotected memory for num T elements
  *     using sodium_allocarray()
  *   - deallocate(), to release and zero memory automatically
@@ -72,10 +84,12 @@ namespace sodium {
 		 **/
 
 		allocator() {
+#ifdef SODIUM_INIT_IN_ALLOCATOR
 			// safe to call sodium_init() more than once, but must be called
 			// at least once before using other libsodium functions.
 			if (sodium_init() == -1)
 				throw std::runtime_error{ "sodium::allocator::allocator() can't sodium_init()" };
+#endif // SODIUM_INIT_IN_ALLOCATOR
 		}
 
 		template <typename U>

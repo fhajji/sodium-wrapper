@@ -154,6 +154,14 @@ cd tests
 ./test_nonce
 ```
 
+Some tests output useful information messages such as timing
+information etc. To display those, add `--log_level=message`
+on the command line of the individual test:
+
+```
+./test_helpers --log_level=message
+```
+
 ### Running on Windows
 
 #### Running via Visual Studio
