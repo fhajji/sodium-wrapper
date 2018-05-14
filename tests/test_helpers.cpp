@@ -271,4 +271,65 @@ BOOST_AUTO_TEST_CASE(sodium_test_helpers_sodium_is_zero_timing_not_all_zeroes)
 	BOOST_TEST_MESSAGE(oss.str());
 }
 
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2hex_full)
+{
+	std::string in1{ "0123456789" };
+	sodium::bytes b1{ in1.cbegin(), in1.cend() };
+
+	// selects sodium::bin2hex<bytes>()
+	std::string hexb1{ sodium::bin2hex(b1) };
+
+	BOOST_CHECK(hexb1 == "30313233343536373839");
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2hex_empty)
+{
+	sodium::bytes b1; // empty
+
+	std::string hexb1{ sodium::bin2hex(b1) };
+
+	BOOST_CHECK(hexb1 == "");
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2hex_chars)
+{
+	std::string in1{ "0123456789" };
+	sodium::chars b1{ in1.cbegin(), in1.cend() };
+
+	// selects sodium::bin2hex<chars>()
+	std::string hexb1{ sodium::bin2hex(b1) };
+
+	BOOST_CHECK(hexb1 == "30313233343536373839");
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2hex_string)
+{
+	std::string in1{ "0123456789" };
+
+	// selects sodium::bin2hex<std::string>()
+	std::string hexin1{ sodium::bin2hex(in1) };
+
+	BOOST_CHECK(hexin1 == "30313233343536373839");
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2hex_string_clearmem_true)
+{
+	std::string in1{ "0123456789" };
+
+	// selects sodium::bin2hex<std::string>()
+	std::string hexin1{ sodium::bin2hex(in1, true) };
+
+	BOOST_CHECK(hexin1 == "30313233343536373839");
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2hex_string_clearmem_false)
+{
+	std::string in1{ "0123456789" };
+
+	// selects sodium::bin2hex<std::string>()
+	std::string hexin1{ sodium::bin2hex(in1, false) };
+
+	BOOST_CHECK(hexin1 == "30313233343536373839");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
