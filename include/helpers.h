@@ -64,15 +64,21 @@ bool is_zero(const BT &n) {
 * Convert the bytes stored in "in" to a hexadecimal string.
 * The underlying libsodium function runs in constant time.
 *
+* Specify as return type either
+*   std::string
+* or
+*   sodium::string_protected.
+* All other return types result in compile failures.
+*
 * Wrapped libsodium function:
 *   sodium_bin2hex()
 **/
 
-template <typename BT=bytes, typename OUTTYPE=std::string>
+template <typename BT=bytes, typename RETURN_TYPE=std::string>
 typename std::enable_if<
-	std::is_same<OUTTYPE, std::string>::value ||
-	std::is_same<OUTTYPE, sodium::string_protected>::value
-	, OUTTYPE>::type
+	std::is_same<RETURN_TYPE, std::string>::value ||
+	std::is_same<RETURN_TYPE, sodium::string_protected>::value
+	, RETURN_TYPE>::type
 bin2hex(const BT &in)
 {
 	// each byte turns into 2-char hex + \0 terminator.
@@ -105,7 +111,7 @@ bin2hex(const BT &in)
 		reinterpret_cast<const unsigned char *>(in.data()), in.size()));
 
 	// build a std::string<...>, stripping terminating \0 as well.
-	OUTTYPE outhex(hexbuf.get());
+	RETURN_TYPE outhex(hexbuf.get());
 
 	// return the string
 	return outhex;
@@ -117,16 +123,22 @@ bin2hex(const BT &in)
 *
 * If clearmem is true, zero temp buffer on the heap in
 * constant time.
+* 
+* Specify as return type either
+*   std::string
+* or
+*   sodium::string_protected.
+* All other return types result in compile failures.
 *
 * Wrapped libsodium function:
 *   sodium_bin2hex()
 **/
 
-template <typename BT=bytes, typename OUTTYPE=std::string>
+template <typename BT=bytes, typename RETURN_TYPE=std::string>
 typename std::enable_if<
-	std::is_same<OUTTYPE, std::string>::value ||
-	std::is_same<OUTTYPE, sodium::string_protected>::value
-	, OUTTYPE>::type
+	std::is_same<RETURN_TYPE, std::string>::value ||
+	std::is_same<RETURN_TYPE, sodium::string_protected>::value
+	, RETURN_TYPE>::type
 bin2hex(const BT &in, bool clearmem)
 {
 	// each byte turns into 2-char hex + \0 terminator.
@@ -164,7 +176,7 @@ bin2hex(const BT &in, bool clearmem)
 		reinterpret_cast<const unsigned char *>(in.data()), in.size()));
 
 	// build a std::string<...>, stripping terminating \0 as well.
-	OUTTYPE outhex(hexbuf.get());
+	RETURN_TYPE outhex(hexbuf.get());
 
 	// return the string
 	return outhex;
@@ -219,9 +231,15 @@ hex2bin(const std::string &hex,
 /**
 * Convert the contents in "in", interpreted as bytes, in base64.
 * 
-* Select the desired base64 algorithm via the VARIANT template
+* Specify the desired base64 algorithm via the VARIANT template
 * parameter. It MUST be one of the sodium_base64_VARIANT_*
 * values.
+*
+* Specify as return type either
+*   std::string
+* or
+*   sodium::string_protected.
+* All other return types result in compile failures.
 *
 * Return the base64 as a string.
 *
@@ -229,16 +247,16 @@ hex2bin(const std::string &hex,
 *   sodium_bin2base64()
 **/
 
-template <int VARIANT=sodium_base64_VARIANT_ORIGINAL, typename BT=bytes, typename OUTTYPE=std::string>
+template <int VARIANT=sodium_base64_VARIANT_ORIGINAL, typename BT=bytes, typename RETURN_TYPE=std::string>
 typename std::enable_if<
 	(VARIANT == sodium_base64_VARIANT_ORIGINAL ||
 	 VARIANT == sodium_base64_VARIANT_ORIGINAL_NO_PADDING ||
 	 VARIANT == sodium_base64_VARIANT_URLSAFE ||
 	 VARIANT == sodium_base64_VARIANT_URLSAFE_NO_PADDING)
 	&&
-	(std::is_same<OUTTYPE, std::string>::value ||
-	 std::is_same<OUTTYPE, sodium::string_protected>::value)
-	, OUTTYPE>::type
+	(std::is_same<RETURN_TYPE, std::string>::value ||
+	 std::is_same<RETURN_TYPE, sodium::string_protected>::value)
+	, RETURN_TYPE>::type
 bin2base64(const BT &in)
 {
 	// compute size for base64 output buffer, including trailing \0 byte
@@ -272,7 +290,7 @@ bin2base64(const BT &in)
 		VARIANT));
 
 	// build a std::string<...>, stripping terminating \0 as well.
-	OUTTYPE outbase64(base64buf.get());
+	RETURN_TYPE outbase64(base64buf.get());
 
 	// return the string
 	return outbase64;
@@ -281,9 +299,15 @@ bin2base64(const BT &in)
 /**
 * Convert the contents in "in", interpreted as bytes, in base64.
 *
-* Select the desired base64 algorithm via the VARIANT template
+* Specify the desired base64 algorithm via the VARIANT template
 * parameter. It MUST be one of the sodium_base64_VARIANT_*
 * values.
+* 
+* Specify as return type either
+*   std::string
+* or
+*   sodium::string_protected.
+* All other return types result in compile failures.
 * 
 * If clearmem is true, zero temp buffer on the heap in
 * constant time.
@@ -294,16 +318,16 @@ bin2base64(const BT &in)
 *   sodium_bin2base64()
 **/
 
-template <int VARIANT=sodium_base64_VARIANT_ORIGINAL, typename BT=bytes, typename OUTTYPE=std::string>
+template <int VARIANT=sodium_base64_VARIANT_ORIGINAL, typename BT=bytes, typename RETURN_TYPE=std::string>
 typename std::enable_if<
 	(VARIANT == sodium_base64_VARIANT_ORIGINAL ||
 	 VARIANT == sodium_base64_VARIANT_ORIGINAL_NO_PADDING ||
 	 VARIANT == sodium_base64_VARIANT_URLSAFE ||
 	 VARIANT == sodium_base64_VARIANT_URLSAFE_NO_PADDING)
 	&&
-	(std::is_same<OUTTYPE, std::string>::value ||
-	 std::is_same<OUTTYPE, sodium::string_protected>::value)
-	, OUTTYPE>::type
+	(std::is_same<RETURN_TYPE, std::string>::value ||
+	 std::is_same<RETURN_TYPE, sodium::string_protected>::value)
+	, RETURN_TYPE>::type
 bin2base64(const BT &in, bool clearmem)
 {
 	// compute size for base64 output buffer, including trailing \0 byte
@@ -342,7 +366,7 @@ bin2base64(const BT &in, bool clearmem)
 		VARIANT));
 
 	// build a std::string<...>, stripping terminating \0 as well.
-	OUTTYPE outbase64(base64buf.get());
+	RETURN_TYPE outbase64(base64buf.get());
 
 	// return the string
 	return outbase64;

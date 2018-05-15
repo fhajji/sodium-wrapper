@@ -396,6 +396,22 @@ BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2hex_key)
 	BOOST_CHECK(hex_some_key.size() == sodium::KEYSIZE_SECRETBOX * 2);
 }
 
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2hex_key_return_string_protected_clearmem)
+{
+	sodium::key<sodium::KEYSIZE_SECRETBOX> some_key; // random values
+
+	auto hex_some_key{ sodium::bin2hex<sodium::key<sodium::KEYSIZE_SECRETBOX>, sodium::string_protected>(some_key, true) };
+
+	BOOST_TEST_MESSAGE(hex_some_key);
+
+	// expect something like
+	// class std::basic_string<char, struct std::char_traits<char>, class sodium::allocator<char>>
+	BOOST_TEST_MESSAGE(typeid(hex_some_key).name());
+
+	BOOST_CHECK(some_key.size() == sodium::KEYSIZE_SECRETBOX);
+	BOOST_CHECK(hex_some_key.size() == sodium::KEYSIZE_SECRETBOX * 2);
+}
+
 BOOST_AUTO_TEST_CASE(sodium_test_helpers_hex2bin_full)
 {
 	std::string in1{ "30313233343536373839" };
