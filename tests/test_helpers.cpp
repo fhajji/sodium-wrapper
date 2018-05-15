@@ -294,6 +294,54 @@ BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2hex_empty)
 	BOOST_CHECK(hexb1 == "");
 }
 
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2hex_return_string_protected)
+{
+	std::string in1{ "0123456789" };
+	sodium::bytes b1{ in1.cbegin(), in1.cend() };
+
+	// returns a sodium::string_protected
+	auto hexb1{ sodium::bin2hex<sodium::bytes, sodium::string_protected>(b1) };
+
+	// expect something like
+	// class std::basic_string<char, struct std::char_traits<char>, class sodium::allocator<char>>
+	BOOST_TEST_MESSAGE(typeid(hexb1).name());
+
+	// since this is a sodium::string_protected,
+	// let's make it read-only, just for kicks:
+	
+	// C++17?
+	// hexb1.get_allocator().readonly(hexb1.data());
+
+	// C++11: std::basic_string<...>.data() is <const T *>, we need <T *>:
+	hexb1.get_allocator().readonly(const_cast<char *>(hexb1.data()));
+
+	BOOST_CHECK(hexb1 == "30313233343536373839");
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2hex_return_string_protected_clearmem)
+{
+	std::string in1{ "0123456789" };
+	sodium::bytes b1{ in1.cbegin(), in1.cend() };
+
+	// returns a sodium::string_protected
+	auto hexb1{ sodium::bin2hex<sodium::bytes, sodium::string_protected>(b1, true) };
+
+	// expect something like
+	// class std::basic_string<char, struct std::char_traits<char>, class sodium::allocator<char>>
+	BOOST_TEST_MESSAGE(typeid(hexb1).name());
+
+	// since this is a sodium::string_protected,
+	// let's make it read-only, just for kicks:
+
+	// C++17?
+	// hexb1.get_allocator().readonly(hexb1.data());
+
+	// C++11: std::basic_string<...>.data() is <const T *>, we need <T *>:
+	hexb1.get_allocator().readonly(const_cast<char *>(hexb1.data()));
+
+	BOOST_CHECK(hexb1 == "30313233343536373839");
+}
+
 BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2hex_chars)
 {
 	std::string in1{ "0123456789" };
@@ -448,6 +496,53 @@ BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2base64_empty)
 	BOOST_CHECK(base64b1.size() == 0);
 }
 
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2base64_return_string_protected)
+{
+	std::string in1{ "subjects?_d" };
+	sodium::bytes b1{ in1.cbegin(), in1.cend() };
+
+	auto base64b1{ sodium::bin2base64<sodium_base64_VARIANT_ORIGINAL, sodium::bytes, sodium::string_protected>(b1) };
+
+	// expect something like
+	// class std::basic_string<char, struct std::char_traits<char>, class sodium::allocator<char>>
+	BOOST_TEST_MESSAGE(typeid(base64b1).name());
+
+	// since this is a sodium::string_protected,
+	// let's make it read-only, just for kicks:
+
+	// C++17?
+	// hexb1.get_allocator().readonly(base64b1.data());
+
+	// C++11: std::basic_string<...>.data() is <const T *>, we need <T *>:
+	base64b1.get_allocator().readonly(const_cast<char *>(base64b1.data()));
+
+	BOOST_CHECK(base64b1 == "c3ViamVjdHM/X2Q=");
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2base64_return_string_protected_clearmem)
+{
+	std::string in1{ "subjects?_d" };
+	sodium::bytes b1{ in1.cbegin(), in1.cend() };
+
+	auto base64b1{ sodium::bin2base64<sodium_base64_VARIANT_ORIGINAL, sodium::bytes, sodium::string_protected>(b1,true) };
+
+	// expect something like
+	// class std::basic_string<char, struct std::char_traits<char>, class sodium::allocator<char>>
+	BOOST_TEST_MESSAGE(typeid(base64b1).name());
+
+	// since this is a sodium::string_protected,
+	// let's make it read-only, just for kicks:
+
+	// C++17?
+	// hexb1.get_allocator().readonly(base64b1.data());
+
+	// C++11: std::basic_string<...>.data() is <const T *>, we need <T *>:
+	base64b1.get_allocator().readonly(const_cast<char *>(base64b1.data()));
+
+	BOOST_CHECK(base64b1 == "c3ViamVjdHM/X2Q=");
+}
+
+
 BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2base64_full_chars)
 {
 	std::string in1{ "subjects?_d" };
@@ -547,14 +642,44 @@ BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2base64_full_urlsafe_nopadding)
 	BOOST_CHECK(base64b1 == "c3ViamVjdHM_X2Q");
 }
 
+// The following test cases are commented out, because they
+// are not supposed to compile. Uncomment to test template
+// argument verification.
+
 #if 0
-BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2base64_full_wrong_variant)
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2hex_wrong_return_type)
+{
+	std::string in1{ "0123456789" };
+	sodium::bytes b1{ in1.cbegin(), in1.cend() };
+
+	// should not compile, because std::wstring is wrong return type
+	auto hexb1{ sodium::bin2hex<sodium::bytes, std::wstring>(b1) };
+
+	BOOST_CHECK(hexb1 == "30313233343536373839");
+}
+#endif
+
+#if 0
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2base64_wrong_variant)
 {
 	std::string in1{ "subjects?_d" };
 	sodium::bytes b1{ in1.cbegin(), in1.cend() };
 
 	// should not compile, because 666 is wrong variant
 	std::string base64b1{ sodium::bin2base64<666, sodium::bytes>(b1) };
+
+	BOOST_CHECK(base64b1 == "c3ViamVjdHM/X2Q=");
+}
+#endif
+
+#if 0
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2base64_wrong_return_type)
+{
+	std::string in1{ "subjects?_d" };
+	sodium::bytes b1{ in1.cbegin(), in1.cend() };
+
+	// should not compile, because std::wstring is wrong return type
+	std::string base64b1{ sodium::bin2base64<sodium_base64_VARIANT_ORIGINAL, sodium::bytes, std::wstring>(b1) };
 
 	BOOST_CHECK(base64b1 == "c3ViamVjdHM/X2Q=");
 }

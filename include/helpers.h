@@ -68,8 +68,12 @@ bool is_zero(const BT &n) {
 *   sodium_bin2hex()
 **/
 
-template <typename BT = bytes>
-std::string bin2hex(const BT &in)
+template <typename BT=bytes, typename OUTTYPE=std::string>
+typename std::enable_if<
+	std::is_same<OUTTYPE, std::string>::value ||
+	std::is_same<OUTTYPE, sodium::string_protected>::value
+	, OUTTYPE>::type
+bin2hex(const BT &in)
 {
 	// each byte turns into 2-char hex + \0 terminator.
 	const std::size_t hexbuf_size = in.size() * 2 + 1;
@@ -85,6 +89,14 @@ std::string bin2hex(const BT &in)
 	// if clearmem is true. But that would not be portable.
 	// So we don't and stick to the heap.
 
+	// CAREFUL: even when using sodium::string_protected, this temp
+	// buffer is NOT in protected memory. It is not even zeroed
+	// after use, so there is a substantial time window where it 
+	// could leak to or be modified by outsiders.
+	//
+	// XXX use a sodium::bytes_protected buffer instead in this case?
+	// In normal other cases, using the heap is much faster though.
+
 	std::unique_ptr<char> hexbuf(new char[hexbuf_size]);
 
 	// convert bytes in in into hex using sodium_bin2hex().
@@ -92,8 +104,8 @@ std::string bin2hex(const BT &in)
 	static_cast<void>(sodium_bin2hex(hexbuf.get(), hexbuf_size,
 		reinterpret_cast<const unsigned char *>(in.data()), in.size()));
 
-	// build a std::string, stripping terminating \0 as well.
-	std::string outhex(hexbuf.get());
+	// build a std::string<...>, stripping terminating \0 as well.
+	OUTTYPE outhex(hexbuf.get());
 
 	// return the string
 	return outhex;
@@ -110,8 +122,12 @@ std::string bin2hex(const BT &in)
 *   sodium_bin2hex()
 **/
 
-template <typename BT=bytes>
-std::string bin2hex(const BT &in, bool clearmem)
+template <typename BT=bytes, typename OUTTYPE=std::string>
+typename std::enable_if<
+	std::is_same<OUTTYPE, std::string>::value ||
+	std::is_same<OUTTYPE, sodium::string_protected>::value
+	, OUTTYPE>::type
+bin2hex(const BT &in, bool clearmem)
 {
 	// each byte turns into 2-char hex + \0 terminator.
 	const std::size_t hexbuf_size = in.size() * 2 + 1;
@@ -127,6 +143,14 @@ std::string bin2hex(const BT &in, bool clearmem)
 	// if clearmem is true. But that would not be portable.
 	// So we don't and stick to the heap.
 
+	// CAREFUL: even when using sodium::string_protected, this temp
+	// buffer is NOT in protected memory. Even if it is quickly zeroed
+	// after use, there is a small time window where it could leak to
+	// or be modified by outsiders.
+	//
+	// XXX use a sodium::bytes_protected buffer instead in this case?
+	// In normal other cases, using the heap is much faster though.
+
 	deleted_unique_ptr<char> hexbuf(new char[hexbuf_size],
 		[=](char *buf) {
 		if (clearmem)
@@ -139,8 +163,8 @@ std::string bin2hex(const BT &in, bool clearmem)
 	static_cast<void>(sodium_bin2hex(hexbuf.get(), hexbuf_size,
 		reinterpret_cast<const unsigned char *>(in.data()), in.size()));
 
-	// build a std::string, stripping terminating \0 as well.
-	std::string outhex(hexbuf.get());
+	// build a std::string<...>, stripping terminating \0 as well.
+	OUTTYPE outhex(hexbuf.get());
 
 	// return the string
 	return outhex;
@@ -205,13 +229,16 @@ hex2bin(const std::string &hex,
 *   sodium_bin2base64()
 **/
 
-template <int VARIANT=sodium_base64_VARIANT_ORIGINAL, typename BT=bytes>
+template <int VARIANT=sodium_base64_VARIANT_ORIGINAL, typename BT=bytes, typename OUTTYPE=std::string>
 typename std::enable_if<
-	VARIANT == sodium_base64_VARIANT_ORIGINAL ||
-	VARIANT == sodium_base64_VARIANT_ORIGINAL_NO_PADDING ||
-	VARIANT == sodium_base64_VARIANT_URLSAFE ||
-	VARIANT == sodium_base64_VARIANT_URLSAFE_NO_PADDING
-	, std::string>::type
+	(VARIANT == sodium_base64_VARIANT_ORIGINAL ||
+	 VARIANT == sodium_base64_VARIANT_ORIGINAL_NO_PADDING ||
+	 VARIANT == sodium_base64_VARIANT_URLSAFE ||
+	 VARIANT == sodium_base64_VARIANT_URLSAFE_NO_PADDING)
+	&&
+	(std::is_same<OUTTYPE, std::string>::value ||
+	 std::is_same<OUTTYPE, sodium::string_protected>::value)
+	, OUTTYPE>::type
 bin2base64(const BT &in)
 {
 	// compute size for base64 output buffer, including trailing \0 byte
@@ -228,6 +255,14 @@ bin2base64(const BT &in)
 	// if clearmem is true. But that would not be portable.
 	// So we don't and stick to the heap.
 
+	// CAREFUL: even when using sodium::string_protected, this temp
+	// buffer is NOT in protected memory. It is not even zeroed
+	// after use, so there is a substantial time window where it 
+	// could leak to or be modified by outsiders.
+	//
+	// XXX use a sodium::bytes_protected buffer instead in this case?
+	// In normal other cases, using the heap is much faster though.
+
 	std::unique_ptr<char> base64buf(new char[base64buf_size]);
 
 	// convert bytes in in into base64 using sodium_bin2base64().
@@ -236,8 +271,8 @@ bin2base64(const BT &in)
 		reinterpret_cast<const unsigned char *>(in.data()), in.size(),
 		VARIANT));
 
-	// build a std::string, stripping terminating \0 as well.
-	std::string outbase64(base64buf.get());
+	// build a std::string<...>, stripping terminating \0 as well.
+	OUTTYPE outbase64(base64buf.get());
 
 	// return the string
 	return outbase64;
@@ -259,14 +294,17 @@ bin2base64(const BT &in)
 *   sodium_bin2base64()
 **/
 
-template <int VARIANT = sodium_base64_VARIANT_ORIGINAL, typename BT = bytes>
+template <int VARIANT=sodium_base64_VARIANT_ORIGINAL, typename BT=bytes, typename OUTTYPE=std::string>
 typename std::enable_if<
-	VARIANT == sodium_base64_VARIANT_ORIGINAL ||
-	VARIANT == sodium_base64_VARIANT_ORIGINAL_NO_PADDING ||
-	VARIANT == sodium_base64_VARIANT_URLSAFE ||
-	VARIANT == sodium_base64_VARIANT_URLSAFE_NO_PADDING
-	, std::string>::type
-	bin2base64(const BT &in, bool clearmem)
+	(VARIANT == sodium_base64_VARIANT_ORIGINAL ||
+	 VARIANT == sodium_base64_VARIANT_ORIGINAL_NO_PADDING ||
+	 VARIANT == sodium_base64_VARIANT_URLSAFE ||
+	 VARIANT == sodium_base64_VARIANT_URLSAFE_NO_PADDING)
+	&&
+	(std::is_same<OUTTYPE, std::string>::value ||
+	 std::is_same<OUTTYPE, sodium::string_protected>::value)
+	, OUTTYPE>::type
+bin2base64(const BT &in, bool clearmem)
 {
 	// compute size for base64 output buffer, including trailing \0 byte
 	const std::size_t base64buf_size = sodium_base64_encoded_len(in.size(), VARIANT);
@@ -282,6 +320,14 @@ typename std::enable_if<
 	// if clearmem is true. But that would not be portable.
 	// So we don't and stick to the heap.
 
+	// CAREFUL: even when using sodium::string_protected, this temp
+	// buffer is NOT in protected memory. Even if it is quickly zeroed
+	// after use, there is a small time window where it could leak to
+	// or be modified by outsiders.
+	//
+	// XXX use a sodium::bytes_protected buffer instead in this case?
+	// In normal other cases, using the heap is much faster though.
+
 	deleted_unique_ptr<char> base64buf(new char[base64buf_size],
 		[=](char *buf) {
 		if (clearmem)
@@ -295,13 +341,12 @@ typename std::enable_if<
 		reinterpret_cast<const unsigned char *>(in.data()), in.size(),
 		VARIANT));
 
-	// build a std::string, stripping terminating \0 as well.
-	std::string outbase64(base64buf.get());
+	// build a std::string<...>, stripping terminating \0 as well.
+	OUTTYPE outbase64(base64buf.get());
 
 	// return the string
 	return outbase64;
 }
-
 
 /**
 * Clear len bytes above the current stack pointer

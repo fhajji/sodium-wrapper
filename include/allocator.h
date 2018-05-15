@@ -75,7 +75,7 @@ namespace sodium {
 	class allocator
 	{
 	public:
-		typedef T value_type;
+		using value_type = T;
 
 		/**
 		 * Initialize the libsodium library by calling sodium_init()

@@ -20,6 +20,7 @@
 
 #include "allocator.h"
 #include <vector>
+#include <string>
 
 namespace sodium {
 	// libsodium treats all bytes as unsigned char
@@ -32,6 +33,8 @@ namespace sodium {
 	using chars = std::vector<char>;
 
 	// a contiguous collection of bytes, in protected memory
-	using bytes_protected = std::vector<byte, allocator<byte>>;
+	using bytes_protected = std::vector<byte, sodium::allocator<byte>>;
 
+	// a std::string in protected memory
+	using string_protected = std::basic_string<char, std::char_traits<char>, sodium::allocator<char>>;
 } // namespace sodium
