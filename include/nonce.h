@@ -106,7 +106,7 @@ class nonce
   static constexpr std::size_t  size()       { return N; }
 
   /**
-   * Expose noncedata_ as const bytes for sodium::bin2hex<>().
+   * Expose noncedata_ as const bytes for sodium::bin2hex().
    **/
 
   const bytes as_bytes() const { return noncedata_; }
