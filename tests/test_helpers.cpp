@@ -427,5 +427,137 @@ BOOST_AUTO_TEST_CASE(sodium_test_helpers_hex2bin_ignore2)
 	BOOST_CHECK(bin.size() == 1);
 }
 
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2base64_full)
+{
+	std::string in1{ "subjects?_d" };
+	sodium::bytes b1{ in1.cbegin(), in1.cend() };
+
+	// selects sodium::bin2base64<sodium_base64_VARIANT_ORIGINAL, sodium::bytes>()
+	std::string base64b1{ sodium::bin2base64(b1) };
+
+	BOOST_CHECK(base64b1 == "c3ViamVjdHM/X2Q=");
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2base64_empty)
+{
+	sodium::bytes b1; // empty
+
+					  // selects sodium::bin2base64<sodium_base64_VARIANT_ORIGINAL, sodium::bytes>()
+	std::string base64b1{ sodium::bin2base64(b1) };
+
+	BOOST_CHECK(base64b1.size() == 0);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2base64_full_chars)
+{
+	std::string in1{ "subjects?_d" };
+	sodium::chars b1{ in1.cbegin(), in1.cend() };
+
+	// selects sodium::bin2base64<sodium_base64_VARIANT_ORIGINAL, sodium::chars>()
+	std::string base64b1{ sodium::bin2base64(b1) };
+
+	BOOST_CHECK(base64b1 == "c3ViamVjdHM/X2Q=");
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2base64_full_string)
+{
+	std::string in1{ "subjects?_d" };
+
+	// selects sodium::bin2base64<sodium_base64_VARIANT_ORIGINAL, std::string>()
+	std::string base64b1{ sodium::bin2base64(in1) };
+
+	BOOST_CHECK(base64b1 == "c3ViamVjdHM/X2Q=");
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2base64_full_bytes_protected)
+{
+	std::string in1{ "subjects?_d" };
+	sodium::bytes_protected b1{ in1.cbegin(), in1.cend() };
+
+	// selects sodium::bin2base64<sodium_base64_VARIANT_ORIGINAL, sodium::bytes_protected>()
+	std::string base64b1{ sodium::bin2base64(b1) };
+
+	BOOST_CHECK(base64b1 == "c3ViamVjdHM/X2Q=");
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2base64_full_bytes_protected_clearmem)
+{
+	std::string in1{ "subjects?_d" };
+	sodium::bytes_protected b1{ in1.cbegin(), in1.cend() };
+
+	// selects sodium::bin2base64<sodium_base64_VARIANT_ORIGINAL, sodium::bytes_protected>(BT, bool)
+	std::string base64b1{ sodium::bin2base64(b1, true) };
+
+	BOOST_CHECK(base64b1 == "c3ViamVjdHM/X2Q=");
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2base64_key)
+{
+	sodium::key<sodium::KEYSIZE_SECRETBOX> some_key; // random
+
+	// selects sodium::bin2base64<sodium_base64_VARIANT_ORIGINAL, sodium::key<sodium::KEYSIZE_SECRETBOX>()
+	// CAREFUL: temp buffer allocated on the heap with key material in base64 NOT zeroed.
+	std::string base64b1{ sodium::bin2base64(some_key) };
+
+	BOOST_TEST_MESSAGE(base64b1);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2base64_key_clearmem)
+{
+	sodium::key<sodium::KEYSIZE_SECRETBOX> some_key; // random
+
+	// selects sodium::bin2base64<sodium_base64_VARIANT_ORIGINAL, sodium::key<sodium::KEYSIZE_SECRETBOX>(BT, bool)
+	// CAREFUL: though the temp buffer on the heap with key material in base64 is zeroed,
+	// it was accessible for a small time window.
+	std::string base64b1{ sodium::bin2base64(some_key, true) };
+
+	BOOST_TEST_MESSAGE(base64b1);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2base64_full_nopadding)
+{
+	std::string in1{ "subjects?_d" };
+	sodium::bytes b1{ in1.cbegin(), in1.cend() };
+
+	// selects sodium::bin2base64<sodium_base64_VARIANT_ORIGINAL_NO_PADDING, sodium::bytes>
+	std::string base64b1{ sodium::bin2base64<sodium_base64_VARIANT_ORIGINAL_NO_PADDING>(b1) };
+
+	BOOST_CHECK(base64b1 == "c3ViamVjdHM/X2Q");
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2base64_full_urlsafe)
+{
+	std::string in1{ "subjects?_d" };
+	sodium::bytes b1{ in1.cbegin(), in1.cend() };
+
+	// selects sodium::bin2base64<sodium_base64_VARIANT_URLSAFE, sodium::bytes>
+	std::string base64b1{ sodium::bin2base64<sodium_base64_VARIANT_URLSAFE>(b1) };
+
+	BOOST_CHECK(base64b1 == "c3ViamVjdHM_X2Q=");
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2base64_full_urlsafe_nopadding)
+{
+	std::string in1{ "subjects?_d" };
+	sodium::bytes b1{ in1.cbegin(), in1.cend() };
+
+	// selects sodium::bin2base64<sodium_base64_VARIANT_URLSAFE_NO_PADDING, sodium::bytes>
+	std::string base64b1{ sodium::bin2base64<sodium_base64_VARIANT_URLSAFE_NO_PADDING>(b1) };
+
+	BOOST_CHECK(base64b1 == "c3ViamVjdHM_X2Q");
+}
+
+#if 0
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2base64_full_wrong_variant)
+{
+	std::string in1{ "subjects?_d" };
+	sodium::bytes b1{ in1.cbegin(), in1.cend() };
+
+	// should not compile, because 666 is wrong variant
+	std::string base64b1{ sodium::bin2base64<666, sodium::bytes>(b1) };
+
+	BOOST_CHECK(base64b1 == "c3ViamVjdHM/X2Q=");
+}
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()

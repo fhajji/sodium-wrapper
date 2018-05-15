@@ -146,6 +146,24 @@ std::string bin2hex(const BT &in, bool clearmem)
 	return outhex;
 }
 
+/**
+* Convert the chars stored in "in", interpreted as hexadecimal,
+* to binary.
+*
+* Set ignore to the characters that the parser should skip,
+* e.g. to ":\n\t " to interpret "30:31:32 33:34".
+*
+* The parser will convert until it hits end of in, or a
+* non-ignored char.
+* 
+* Return the result of the conversion, or raise a
+* std::runtime_error() if the underlying libsodium function
+* returned an error.
+*
+* Wrapped libsodium function:
+*   sodium_hex2bin()
+**/
+
 template <typename BT=bytes>
 BT
 hex2bin(const std::string &hex,
@@ -173,6 +191,117 @@ hex2bin(const std::string &hex,
 
 	// XXX how do we return max_end?
 }
+
+/**
+* Convert the contents in "in", interpreted as bytes, in base64.
+* 
+* Select the desired base64 algorithm via the VARIANT template
+* parameter. It MUST be one of the sodium_base64_VARIANT_*
+* values.
+*
+* Return the base64 as a string.
+*
+* Wrapped libsodium function:
+*   sodium_bin2base64()
+**/
+
+template <int VARIANT=sodium_base64_VARIANT_ORIGINAL, typename BT=bytes>
+typename std::enable_if<
+	VARIANT == sodium_base64_VARIANT_ORIGINAL ||
+	VARIANT == sodium_base64_VARIANT_ORIGINAL_NO_PADDING ||
+	VARIANT == sodium_base64_VARIANT_URLSAFE ||
+	VARIANT == sodium_base64_VARIANT_URLSAFE_NO_PADDING
+	, std::string>::type
+bin2base64(const BT &in)
+{
+	// compute size for base64 output buffer, including trailing \0 byte
+	const std::size_t base64buf_size = sodium_base64_encoded_len(in.size(), VARIANT);
+
+	// In C++17, we could construct a std::string with base64buf_size chars,
+	// and modify it directly through non-const data(). Unfortunately,
+	// in C++11 and C++14, std::string's data() is const only, so we need
+	// to copy the data over from sodium::chars to std::string for now.
+
+	// If we were sure that in.size() was small, we could
+	// also alloca() on the stack, and just before returning
+	// we could stackzero(in.size() + some_align_slack)
+	// if clearmem is true. But that would not be portable.
+	// So we don't and stick to the heap.
+
+	std::unique_ptr<char> base64buf(new char[base64buf_size]);
+
+	// convert bytes in in into base64 using sodium_bin2base64().
+	// base64buf will contain a \0-terminated C-string.
+	static_cast<void>(sodium_bin2base64(base64buf.get(), base64buf_size,
+		reinterpret_cast<const unsigned char *>(in.data()), in.size(),
+		VARIANT));
+
+	// build a std::string, stripping terminating \0 as well.
+	std::string outbase64(base64buf.get());
+
+	// return the string
+	return outbase64;
+}
+
+/**
+* Convert the contents in "in", interpreted as bytes, in base64.
+*
+* Select the desired base64 algorithm via the VARIANT template
+* parameter. It MUST be one of the sodium_base64_VARIANT_*
+* values.
+* 
+* If clearmem is true, zero temp buffer on the heap in
+* constant time.
+*
+* Return the base64 as a string.
+*
+* Wrapped libsodium function:
+*   sodium_bin2base64()
+**/
+
+template <int VARIANT = sodium_base64_VARIANT_ORIGINAL, typename BT = bytes>
+typename std::enable_if<
+	VARIANT == sodium_base64_VARIANT_ORIGINAL ||
+	VARIANT == sodium_base64_VARIANT_ORIGINAL_NO_PADDING ||
+	VARIANT == sodium_base64_VARIANT_URLSAFE ||
+	VARIANT == sodium_base64_VARIANT_URLSAFE_NO_PADDING
+	, std::string>::type
+	bin2base64(const BT &in, bool clearmem)
+{
+	// compute size for base64 output buffer, including trailing \0 byte
+	const std::size_t base64buf_size = sodium_base64_encoded_len(in.size(), VARIANT);
+
+	// In C++17, we could construct a std::string with base64buf_size chars,
+	// and modify it directly through non-const data(). Unfortunately,
+	// in C++11 and C++14, std::string's data() is const only, so we need
+	// to copy the data over from sodium::chars to std::string for now.
+
+	// If we were sure that in.size() was small, we could
+	// also alloca() on the stack, and just before returning
+	// we could stackzero(in.size() + some_align_slack)
+	// if clearmem is true. But that would not be portable.
+	// So we don't and stick to the heap.
+
+	deleted_unique_ptr<char> base64buf(new char[base64buf_size],
+		[=](char *buf) {
+		if (clearmem)
+			sodium_memzero(buf, base64buf_size);
+		delete[] buf;
+	});
+
+	// convert bytes in in into base64 using sodium_bin2base64().
+	// base64buf will contain a \0-terminated C-string.
+	static_cast<void>(sodium_bin2base64(base64buf.get(), base64buf_size,
+		reinterpret_cast<const unsigned char *>(in.data()), in.size(),
+		VARIANT));
+
+	// build a std::string, stripping terminating \0 as well.
+	std::string outbase64(base64buf.get());
+
+	// return the string
+	return outbase64;
+}
+
 
 /**
 * Clear len bytes above the current stack pointer
