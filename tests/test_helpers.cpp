@@ -25,12 +25,15 @@
 
 #include "common.h"
 #include "helpers.h"
+#include "key.h"
 #include <vector>
 #include <string>
 #include <chrono>
 #include <cstring>
 #include <sstream>
 #include <algorithm>
+#include <type_traits>
+#include <typeinfo>
 
 constexpr int TEST_COUNT_COMPARE = 50000000;
 constexpr int TEST_COUNT_IS_ZERO = 5000;
@@ -331,5 +334,98 @@ BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2hex_string_clearmem_false)
 
 	BOOST_CHECK(hexin1 == "30313233343536373839");
 }
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2hex_key)
+{
+	sodium::key<sodium::KEYSIZE_SECRETBOX> some_key; // random values
+
+	// selects sodium::bin2hex<sodium::key<>>()
+	std::string hex_some_key{ sodium::bin2hex(some_key, true) };
+
+	BOOST_TEST_MESSAGE(hex_some_key);
+
+	BOOST_CHECK(some_key.size() == sodium::KEYSIZE_SECRETBOX);
+	BOOST_CHECK(hex_some_key.size() == sodium::KEYSIZE_SECRETBOX * 2);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_hex2bin_full)
+{
+	std::string in1{ "30313233343536373839" };
+	auto bin = sodium::hex2bin(in1);
+
+	// expect something like
+	// class std::vector<unsigned char, class std::allocator<unsigned char>>
+	BOOST_TEST_MESSAGE(typeid(bin).name());
+
+	BOOST_CHECK(bin[0] == '0');
+	BOOST_CHECK(bin[1] == '1');
+	BOOST_CHECK(bin[9] == '9');
+
+	BOOST_CHECK(bin.size() == 10);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_hex2bin_empty)
+{
+	std::string in1; // empty
+	auto bin = sodium::hex2bin(in1);
+
+	BOOST_CHECK(bin.size() == 0);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_hex2bin_chars)
+{
+	std::string in1{ "30313233343536373839" };
+	auto bin = sodium::hex2bin<sodium::chars>(in1);
+
+	// expect something like
+	// class std::vector<char, class std::allocator<char>>
+	BOOST_TEST_MESSAGE(typeid(bin).name());
+
+	BOOST_CHECK(bin[0] == '0');
+	BOOST_CHECK(bin[1] == '1');
+	BOOST_CHECK(bin[9] == '9');
+
+	BOOST_CHECK(bin.size() == 10);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_hex2bin_bytes_protected)
+{
+	std::string in1{ "30313233343536373839" };
+	auto bin = sodium::hex2bin<sodium::bytes_protected>(in1);
+
+	// expect something like
+	// class std::vector<unsigned char, class sodium::allocator<unsigned char>>
+	BOOST_TEST_MESSAGE(typeid(bin).name());
+
+	BOOST_CHECK(bin[0] == '0');
+	BOOST_CHECK(bin[1] == '1');
+	BOOST_CHECK(bin[9] == '9');
+
+	BOOST_CHECK(bin.size() == 10);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_hex2bin_ignore1)
+{
+	std::string in1{ "30:31:32:33:34:35:36:37:38:39" };
+	auto bin = sodium::hex2bin(in1, ":");
+
+	BOOST_CHECK(bin[0] == '0');
+	BOOST_CHECK(bin[1] == '1');
+	BOOST_CHECK(bin[9] == '9');
+
+	BOOST_CHECK(bin.size() == 10);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_hex2bin_ignore2)
+{
+	std::string in1{ "30:31:32:33:34:35:36:37:38:39" };
+	auto bin = sodium::hex2bin(in1 /*, without specifying ":" */);
+
+	BOOST_CHECK(bin[0] == '0');
+
+	// parsing stops at first non-ignored, non-hex char in input
+	BOOST_CHECK(bin.size() == 1);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()

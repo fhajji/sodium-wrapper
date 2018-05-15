@@ -23,6 +23,7 @@
 #include <string>
 #include <functional>
 #include <memory>
+#include <tuple>
 
 namespace sodium {
 
@@ -143,6 +144,34 @@ std::string bin2hex(const BT &in, bool clearmem)
 
 	// return the string
 	return outhex;
+}
+
+template <typename BT=bytes>
+BT
+hex2bin(const std::string &hex,
+	const std::string &ignore = "")
+{
+	std::size_t bin_maxlen = hex.size() >> 1; // XXX fixed length, for now
+
+	BT bin(bin_maxlen);
+	const char *max_end;
+
+	std::size_t bin_len;
+
+	int rc = sodium_hex2bin(reinterpret_cast<unsigned char *>(bin.data()), bin.size(),
+		hex.data(), hex.size(),
+		(ignore == "" ? nullptr : ignore.data()),
+		&bin_len,
+		&max_end);
+	if (rc != 0)
+		throw std::runtime_error{ "sodium::hex2bin() failed" };
+
+	if (bin_len != bin_maxlen)
+		bin.resize(bin_len);
+
+	return bin;
+
+	// XXX how do we return max_end?
 }
 
 /**
