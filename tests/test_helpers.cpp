@@ -658,6 +658,161 @@ BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2base64_full_urlsafe_nopadding)
 	BOOST_CHECK(base64b1 == "c3ViamVjdHM_X2Q");
 }
 
+// ------------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_base642bin_full)
+{
+	std::string in1{ "c3ViamVjdHM/X2Q=" };
+	
+	// selects sodium::base642bin<sodium_base64_VARIANT_ORIGINAL, std::string, sodium::bytes>()
+	auto bin = sodium::base642bin(in1);
+
+	// expect something like
+	// class std::vector<unsigned char, class std::allocator<unsigned char>>
+	BOOST_TEST_MESSAGE(typeid(bin).name());
+
+	std::string result_as_string{ "subjects?_d" };
+	sodium::bytes result{ result_as_string.cbegin(), result_as_string.cend() };
+	BOOST_CHECK(bin == result);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_base642bin_empty)
+{
+	std::string in1; // empty
+
+	// selects sodium::base642bin<sodium_base64_VARIANT_ORIGINAL, std::string, sodium::bytes>()
+	auto bin = sodium::base642bin(in1);
+
+	BOOST_CHECK(bin.size() == 0);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_base642bin_chars)
+{
+	std::string in1{ "c3ViamVjdHM/X2Q=" };
+	
+	auto bin = sodium::base642bin<sodium_base64_VARIANT_ORIGINAL, std::string, sodium::chars>(in1);
+
+	// expect something like
+	// class std::vector<char, class std::allocator<char>>
+	BOOST_TEST_MESSAGE(typeid(bin).name());
+
+	std::string result_as_string{ "subjects?_d" };
+	sodium::chars result{ result_as_string.cbegin(), result_as_string.cend() };
+	BOOST_CHECK(bin == result);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_base642bin_bytes_protected)
+{
+	std::string in1{ "c3ViamVjdHM/X2Q=" };
+
+	// note: this combination makes little practical sense.
+	// if we are going to return protected memory, we should
+	// as well have had the input in protectes string. But,
+	// this is merely a test case.
+	auto bin = sodium::base642bin<sodium_base64_VARIANT_ORIGINAL, std::string, sodium::bytes_protected>(in1);
+
+	// expect something like
+	// class std::vector<unsigned char, class sodium::allocator<unsigned char>>
+	BOOST_TEST_MESSAGE(typeid(bin).name());
+
+	std::string result_as_string{ "subjects?_d" };
+	sodium::bytes_protected result{ result_as_string.cbegin(), result_as_string.cend() };
+	BOOST_CHECK(bin == result);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_base642bin_string_protected_bytes_protected)
+{
+	// well, the literal string still ain't protected, but anyway...
+	sodium::string_protected in1{ "c3ViamVjdHM/X2Q=" };
+
+	auto bin = sodium::base642bin<sodium_base64_VARIANT_ORIGINAL, sodium::string_protected, sodium::bytes_protected>(in1);
+
+	// expect something like
+	// class std::vector<unsigned char, class sodium::allocator<unsigned char>>
+	BOOST_TEST_MESSAGE(typeid(bin).name());
+
+	sodium::string_protected result_as_string{ "subjects?_d" };
+	sodium::bytes_protected result{ result_as_string.cbegin(), result_as_string.cend() };
+	BOOST_CHECK(bin == result);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_base642bin_ignore1)
+{
+	std::string in1{ "c3:Vi:am:Vj:dH::M/X2:Q=" };
+	auto bin = sodium::base642bin(in1, ":");
+
+	std::string result_as_string{ "subjects?_d" };
+	sodium::bytes result{ result_as_string.cbegin(), result_as_string.cend() };
+	BOOST_CHECK(bin == result);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_base642bin_ignore2)
+{
+	std::string in1{ "c3:Vi:am:Vj:dH::M/X2:Q=" };
+
+	try {
+		auto bin = sodium::base642bin(in1 /*, without specifying ":" */);
+		// we shouldn'n make it here:
+		BOOST_CHECK(false);
+	}
+	catch (std::runtime_error &e) {
+		// indeed, this is a misformed base64 input
+		BOOST_TEST_MESSAGE("caught EXPECTED base64 decoding failure");
+	}
+
+	// parsing stops at first non-ignored, non-hex char in input.
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_base642bin_full_variant2)
+{
+	std::string in1{ "c3ViamVjdHM/X2Q" };
+
+	// selects sodium::base642bin<sodium_base64_VARIANT_ORIGINAL_NO_PADDING, std::string, sodium::bytes>()
+	auto bin = sodium::base642bin<sodium_base64_VARIANT_ORIGINAL_NO_PADDING>(in1);
+
+	// expect something like
+	// class std::vector<unsigned char, class std::allocator<unsigned char>>
+	BOOST_TEST_MESSAGE(typeid(bin).name());
+
+	std::string result_as_string{ "subjects?_d" };
+	sodium::bytes result{ result_as_string.cbegin(), result_as_string.cend() };
+	BOOST_CHECK(bin == result);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_base642bin_full_variant3)
+{
+	std::string in1{ "c3ViamVjdHM_X2Q=" };
+
+	// selects sodium::base642bin<sodium_base64_VARIANT_URLSAFE, std::string, sodium::bytes>()
+	auto bin = sodium::base642bin<sodium_base64_VARIANT_URLSAFE>(in1);
+
+	// expect something like
+	// class std::vector<unsigned char, class std::allocator<unsigned char>>
+	BOOST_TEST_MESSAGE(typeid(bin).name());
+
+	std::string result_as_string{ "subjects?_d" };
+	sodium::bytes result{ result_as_string.cbegin(), result_as_string.cend() };
+	BOOST_CHECK(bin == result);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_base642bin_full_variant4)
+{
+	std::string in1{ "c3ViamVjdHM_X2Q" };
+
+	// selects sodium::base642bin<sodium_base64_VARIANT_URLSAFE_NO_PADDING, std::string, sodium::bytes>()
+	auto bin = sodium::base642bin<sodium_base64_VARIANT_URLSAFE_NO_PADDING>(in1);
+
+	// expect something like
+	// class std::vector<unsigned char, class std::allocator<unsigned char>>
+	BOOST_TEST_MESSAGE(typeid(bin).name());
+
+	std::string result_as_string{ "subjects?_d" };
+	sodium::bytes result{ result_as_string.cbegin(), result_as_string.cend() };
+	BOOST_CHECK(bin == result);
+}
+
+// ------------------------------------------------------------------------------
+
 // The following test cases are commented out, because they
 // are not supposed to compile. Uncomment to test template
 // argument verification.

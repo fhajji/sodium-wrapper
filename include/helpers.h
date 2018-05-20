@@ -372,6 +372,49 @@ bin2base64(const BT &in, bool clearmem)
 	return outbase64;
 }
 
+template <int VARIANT = sodium_base64_VARIANT_ORIGINAL, typename STRING_TYPE = std::string, typename RETURN_TYPE = bytes>
+typename std::enable_if<
+(VARIANT == sodium_base64_VARIANT_ORIGINAL ||
+	VARIANT == sodium_base64_VARIANT_ORIGINAL_NO_PADDING ||
+	VARIANT == sodium_base64_VARIANT_URLSAFE ||
+	VARIANT == sodium_base64_VARIANT_URLSAFE_NO_PADDING)
+	&&
+	(std::is_same<STRING_TYPE, std::string>::value ||
+	 std::is_same<STRING_TYPE, sodium::string_protected>::value)
+	, RETURN_TYPE>::type
+base642bin(const STRING_TYPE &b64,
+	const std::string &ignore = "")
+{
+	// since libsodium doesn't provide the reverse of
+	// sodium_base64_encoded_len(size_t bin_len, int variant)
+	// to estimate bin_maxlen, we set it conservatively to
+	// the size of the base64 representation, assuming
+	// that base64-encoded data are ALWAYS larger in terms
+	// of bytes than the input data (XXX is that so?)
+	std::size_t bin_maxlen = b64.size();
+
+	RETURN_TYPE bin(bin_maxlen);
+	const char *max_end;
+
+	std::size_t bin_len;
+
+	int rc = sodium_base642bin(reinterpret_cast<unsigned char *>(bin.data()), bin.size(),
+		reinterpret_cast<const char *>(b64.data()), b64.size(),
+		(ignore == "" ? nullptr : ignore.data()),
+		&bin_len,
+		&max_end,
+		VARIANT);
+	if (rc != 0)
+		throw std::runtime_error{ "sodium::base642bin() failed" };
+
+	if (bin_len != bin_maxlen)
+		bin.resize(bin_len);
+
+	return bin;
+
+	// XXX how do we return max_end?
+}
+
 /**
 * Clear len bytes above the current stack pointer
 * to overwrite sensitive values that may have been
