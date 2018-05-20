@@ -155,4 +155,188 @@ BOOST_AUTO_TEST_CASE(sodium_test_padding_pad_full_inplace_already_blocksize)
 		BOOST_CHECK(b1[i] == static_cast<unsigned char>(s[i]));
 }
 
+BOOST_AUTO_TEST_CASE(sodium_test_padding_unpad_full)
+{
+	std::string in_as_string{ "0123456789abcde" }; // smaller than blocksize
+	sodium::bytes in{ in_as_string.cbegin(), in_as_string.cend() };
+
+	auto padded = sodium::pad(in, 16);
+	auto unpadded = sodium::unpad(padded, 16);
+
+	BOOST_CHECK(unpadded == in);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_padding_unpad_already_blocksize)
+{
+	std::string in_as_string{ "0123456789abcdef" }; // a multiple of bloksize
+	sodium::bytes in{ in_as_string.cbegin(), in_as_string.cend() };
+
+	auto padded = sodium::pad(in, 16);
+	auto unpadded = sodium::unpad(padded, 16);
+
+	BOOST_CHECK(unpadded == in);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_padding_unpad_empty)
+{
+	sodium::bytes in; // empty, has no pad
+
+	auto padded = sodium::pad(in, 16);
+	auto unpadded = sodium::unpad(padded, 16);
+
+	BOOST_CHECK(unpadded == in);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_padding_unpad_full_original_unmodified)
+{
+	std::string in_as_string{ "0123456789abcde" }; // smaller than blocksize
+	sodium::bytes in{ in_as_string.cbegin(), in_as_string.cend() };
+
+	auto padded = sodium::pad(in, 16);
+	auto padded_copy{ padded };
+
+	auto unpadded = sodium::unpad(padded, 16);
+
+	BOOST_CHECK(unpadded == in);
+	BOOST_CHECK(padded == padded_copy); // sodium::unpad() didn't change input
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_padding_unpad_full_chars)
+{
+	std::string in_as_string{ "0123456789abcde" }; // smaller than blocksize
+	sodium::chars in{ in_as_string.cbegin(), in_as_string.cend() };
+
+	auto padded = sodium::pad(in, 16);
+
+	// selects sodium::unpad<sodium::chars>(...)
+	auto unpadded = sodium::unpad(padded, 16);
+
+	// expect something like
+	// class std::vector<char, class std::allocator<char>>
+	BOOST_TEST_MESSAGE(typeid(unpadded).name());
+
+	BOOST_CHECK(unpadded == in);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_padding_unpad_full_bytes_protected)
+{
+	std::string in_as_string{ "0123456789abcde" }; // smaller than blocksize
+	sodium::bytes_protected in{ in_as_string.cbegin(), in_as_string.cend() };
+
+	auto padded = sodium::pad(in, 16);
+
+	// selects sodium::unpad<sodium::bytes_protected>(...)
+	auto unpadded = sodium::unpad(padded, 16);
+
+	// expect something like
+	// class std::vector<unsigned char, class sodium::allocator<unsigned char>>
+	BOOST_TEST_MESSAGE(typeid(unpadded).name());
+
+	BOOST_CHECK(unpadded == in);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_padding_unpad_tamper_with_pad)
+{
+	std::string in_as_string{ "0123456789abcde" }; // smaller than blocksize
+	sodium::bytes in{ in_as_string.cbegin(), in_as_string.cend() };
+
+	auto padded = sodium::pad(in, 16);
+	++(*padded.rbegin()); // change last byte of pad
+
+	try {
+		auto unpadded = sodium::unpad(padded, 16);
+
+		// we shouldn't reach this
+		BOOST_CHECK(false); // failed test
+	}
+	catch (std::runtime_error &e) {
+		BOOST_TEST_MESSAGE("sodium::unpad() detected pad tampering, as expected");
+	}
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_padding_unpad_inplace_full)
+{
+	std::string in_as_string{ "0123456789abcde" }; // smaller than blocksize
+	sodium::bytes in{ in_as_string.cbegin(), in_as_string.cend() };
+
+	auto padded = sodium::pad(in, 16);
+	sodium::unpad_inplace(padded, 16);
+
+	BOOST_CHECK(padded == in);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_padding_unpad_inplace_already_blocksize)
+{
+	std::string in_as_string{ "0123456789abcdef" }; // a multiple of bloksize
+	sodium::bytes in{ in_as_string.cbegin(), in_as_string.cend() };
+
+	auto padded = sodium::pad(in, 16);
+	sodium::unpad_inplace(padded, 16);
+
+	BOOST_CHECK(padded == in);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_padding_unpad_inplace_empty)
+{
+	sodium::bytes in; // empty, has no pad
+
+	auto padded = sodium::pad(in, 16);
+	sodium::unpad_inplace(padded, 16);
+
+	BOOST_CHECK(padded == in);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_padding_unpad_inplace_full_chars)
+{
+	std::string in_as_string{ "0123456789abcde" }; // smaller than blocksize
+	sodium::chars in{ in_as_string.cbegin(), in_as_string.cend() };
+
+	auto padded = sodium::pad(in, 16);
+
+	// selects sodium::unpad_inplace<sodium::chars>(...)
+	sodium::unpad_inplace(padded, 16);
+
+	// expect something like
+	// class std::vector<char, class std::allocator<char>>
+	BOOST_TEST_MESSAGE(typeid(padded).name());
+
+	BOOST_CHECK(padded == in);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_padding_unpad_inplace_full_bytes_protected)
+{
+	std::string in_as_string{ "0123456789abcde" }; // smaller than blocksize
+	sodium::bytes_protected in{ in_as_string.cbegin(), in_as_string.cend() };
+
+	auto padded = sodium::pad(in, 16);
+
+	// selects sodium::unpad_inplace<sodium::bytes_protected>(...)
+	sodium::unpad_inplace(padded, 16);
+
+	// expect something like
+	// class std::vector<unsigned char, class sodium::allocator<unsigned char>>
+	BOOST_TEST_MESSAGE(typeid(padded).name());
+
+	BOOST_CHECK(padded == in);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_padding_unpad_inplace_tamper_with_pad)
+{
+	std::string in_as_string{ "0123456789abcde" }; // smaller than blocksize
+	sodium::bytes in{ in_as_string.cbegin(), in_as_string.cend() };
+
+	auto padded = sodium::pad(in, 16);
+	++(*padded.rbegin()); // change last byte of pad
+
+	try {
+		sodium::unpad_inplace(padded, 16);
+
+		// we shouldn't reach this
+		BOOST_CHECK(false); // failed test
+	}
+	catch (std::runtime_error &e) {
+		BOOST_TEST_MESSAGE("sodium::unpad_inplace() detected pad tampering, as expected");
+	}
+}
+
 BOOST_AUTO_TEST_SUITE_END()
