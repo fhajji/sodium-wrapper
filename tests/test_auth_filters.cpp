@@ -42,10 +42,10 @@ static constexpr std::size_t macsize = auth_verify_filter::MACSIZE;
 struct SodiumFixture {
   SodiumFixture()  {
     BOOST_REQUIRE(sodium_init() != -1);
-    BOOST_TEST_MESSAGE("SodiumFixture(): sodium_init() successful.");
+    // BOOST_TEST_MESSAGE("SodiumFixture(): sodium_init() successful.");
   }
   ~SodiumFixture() {
-    BOOST_TEST_MESSAGE("~SodiumFixture(): teardown -- no-op.");
+    // BOOST_TEST_MESSAGE("~SodiumFixture(): teardown -- no-op.");
   }
 };
 

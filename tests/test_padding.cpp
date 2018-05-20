@@ -20,7 +20,7 @@
 //    ./test_padding --log_level=message
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE sodium::helpers Test
+#define BOOST_TEST_MODULE sodium::padding Test
 #include <boost/test/included/unit_test.hpp>
 
 #include "common.h"
