@@ -1,4 +1,4 @@
-// cryptor_encrypt_filter.h -- Boost.Iostreams symmetric encryption with MAC
+// secretbox_encrypt_filter.h -- Boost.Iostreams symmetric encryption with MAC
 //
 // ISC License
 // 
@@ -21,7 +21,7 @@
 #include "common.h"
 #include "key.h"
 #include "nonce.h"
-#include "cryptor.h"
+#include "secretbox.h"
 
 #include <boost/iostreams/categories.hpp>       // tags
 #include <boost/iostreams/filter/aggregate.hpp> // aggregate_filter
@@ -36,15 +36,15 @@ namespace io = boost::iostreams;
 
 namespace sodium {
 
-class cryptor_encrypt_filter : public io::aggregate_filter<char> {
+class secretbox_encrypt_filter : public io::aggregate_filter<char> {
 
   /**
-   * Use cryptor_encrypt_filter as a DualUse filter like this:
+   * Use secretbox_encrypt_filter as a DualUse filter like this:
    * 
    *     #include <boost/iostreams/device/array.hpp>
    *     #include <boost/iostreams/filtering_stream.hpp>
    * 
-   *     using sodium::cryptor_encrypt_filter;
+   *     using sodium::secretbox_encrypt_filter;
    *     using chars = sodium::chars;
    * 
    *     std::string plaintext {"the quick brown fox jumps over the lazy dog"};
@@ -54,12 +54,12 @@ class cryptor_encrypt_filter : public io::aggregate_filter<char> {
    * 
    *     namespace io = boost::iostreams;
    * 
-   *     cryptor_encrypt_filter::key_type      key;      // Create a random key
-   *     cryptor_encrypt_filter::nonce_type    nonce;    // create random nonce
-   *     cryptor crypt{ std::move(key) };
-   *     cryptor_encrypt_filter encrypt_filter {std::move(crypt), nonce};  // create a cryptor filter
+   *     secretbox_encrypt_filter::key_type      key;      // Create a random key
+   *     secretbox_encrypt_filter::nonce_type    nonce;    // create random nonce
+   *     secretbox crypt{ std::move(key) };
+   *     secretbox_encrypt_filter encrypt_filter {std::move(crypt), nonce};  // create a secretbox filter
    * 
-   *     chars ciphertext(encryptor_encrypt_filter::MACSIZE + plainblob.size());
+   *     chars ciphertext(ensecretbox_encrypt_filter::MACSIZE + plainblob.size());
    * 
    *     io::array_sink        sink {ciphertext.data(), ciphertext.size()};
    *     io::filtering_ostream os   {};
@@ -78,12 +78,12 @@ class cryptor_encrypt_filter : public io::aggregate_filter<char> {
    *
    *     namespace io = boost::iostreams;
    * 
-   *     cryptor_encrypt_filter::key_type      key;      // Create a random key
-   *     cryptor_encrypt_filter::nonce_type    nonce;    // create random nonce
-   *     cryptor crypt{ std::move(key) };
-   *     cryptor_encrypt_filter encrypt_filter {std::move(crypt), nonce};  // create a cryptor filter
+   *     secretbox_encrypt_filter::key_type      key;      // Create a random key
+   *     secretbox_encrypt_filter::nonce_type    nonce;    // create random nonce
+   *     secretbox crypt{ std::move(key) };
+   *     secretbox_encrypt_filter encrypt_filter {std::move(crypt), nonce};  // create a secretbox filter
    * 
-   *     chars ciphertext ( cryptor_encrypt_filter::MACSIZE + plaintext.size() );
+   *     chars ciphertext ( secretbox_encrypt_filter::MACSIZE + plaintext.size() );
    *     io::array_source        source {plainblob.data(), plainblob.size()};
    *     io::filtering_istream   is     {};
    *     is.push(encrypt_filter); // encrypt data...
@@ -106,31 +106,31 @@ class cryptor_encrypt_filter : public io::aggregate_filter<char> {
     typedef typename base_type::category    category;
     typedef typename base_type::vector_type vector_type; // sodium::chars
 
-    static constexpr std::size_t MACSIZE   = cryptor<vector_type>::MACSIZE;
+    static constexpr std::size_t MACSIZE   = secretbox<vector_type>::MACSIZE;
     
-    using key_type   = cryptor<vector_type>::key_type;
-    using nonce_type = cryptor<vector_type>::nonce_type;
+    using key_type   = secretbox<vector_type>::key_type;
+    using nonce_type = secretbox<vector_type>::nonce_type;
 
-	cryptor_encrypt_filter(const cryptor<vector_type> &cryptor, const nonce_type &nonce) :
-		cryptor_{ cryptor }, nonce_{ nonce }
+	secretbox_encrypt_filter(const secretbox<vector_type> &secretbox, const nonce_type &nonce) :
+		secretbox_{ secretbox }, nonce_{ nonce }
 	{}
 
-	cryptor_encrypt_filter(cryptor<vector_type> &&cryptor, const nonce_type &nonce) :
-		cryptor_{ std::move(cryptor) }, nonce_{ nonce }
+	secretbox_encrypt_filter(secretbox<vector_type> &&secretbox, const nonce_type &nonce) :
+		secretbox_{ std::move(secretbox) }, nonce_{ nonce }
 	{}
 
-    virtual ~cryptor_encrypt_filter()
+    virtual ~secretbox_encrypt_filter()
     { }
    
  private:
     virtual void do_filter(const vector_type& src, vector_type& dest) {
 
 #ifndef NDEBUG
-      std::cerr << "cryptor_encrypt_filter::do_filter() called" << std::endl;
+      std::cerr << "secretbox_encrypt_filter::do_filter() called" << std::endl;
 #endif // ! NDEBUG
 
       // compute (MAC || ciphertext)
-	  vector_type ciphertext_with_mac{ cryptor_.encrypt(src, nonce_) };
+	  vector_type ciphertext_with_mac{ secretbox_.encrypt(src, nonce_) };
 			     
       dest.swap(ciphertext_with_mac);   // efficiently store it into dest
       
@@ -139,8 +139,8 @@ class cryptor_encrypt_filter : public io::aggregate_filter<char> {
     }
     
   private:
-    cryptor<vector_type> cryptor_;
+    secretbox<vector_type> secretbox_;
     nonce_type nonce_;
-}; // cryptor_encrypt_filter
+}; // secretbox_encrypt_filter
 
 } //namespace sodium

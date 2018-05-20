@@ -24,7 +24,7 @@
 #include "nonce.h"
 #include "key.h"
 #include "keyvar.h"
-#include "cryptor.h"
+#include "secretbox.h"
 #include "authenticator.h"
 #include "cryptor_aead.h"
 #include "streamcryptor.h"
@@ -39,7 +39,7 @@
 using sodium::key;
 using sodium::keyvar;
 using sodium::nonce;
-using sodium::cryptor;
+using sodium::secretbox;
 using sodium::cryptor_aead;
 using sodium::authenticator;
 using sodium::StreamCryptor;
@@ -71,8 +71,8 @@ SodiumTester::SodiumTester()
  *
  * - We use sodium::nonce<> wrapper to create a store a random nonce
  * - We store the plaintext/ciphertext in a bytes, in unprotected memory
- * - We use our wrapper sodium::cryptor<> to do the encryption
- * - We use our wrapper sodium::cryptor<> to test-decrypt the result
+ * - We use our wrapper sodium::secretbox<> to do the encryption
+ * - We use our wrapper sodium::secretbox<> to test-decrypt the result
  *   and verify that the decrypted text is the same as the plaintext.
  * - We use our wrapper sodium::bin2hex() to convert the ciphertext into
  *   hexadecimal string, which we return.
@@ -81,8 +81,8 @@ SodiumTester::SodiumTester()
 std::string
 SodiumTester::test0(const std::string &plaintext)
 {  
-  cryptor<> sc;                // cryptor with random key
-  cryptor<>::nonce_type nonce; // create random nonce;
+  secretbox<> sc;                // secretbox with random key
+  secretbox<>::nonce_type nonce; // create random nonce;
   
   // transfer plaintext into a binary blob
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -96,10 +96,10 @@ SodiumTester::test0(const std::string &plaintext)
   // test of correctness (sanity check): the ciphertext must be
   // equal to the plaintext.
   // 
-  // Note that cryptor<>::decrypt() will also have performed
+  // Note that secretbox<>::decrypt() will also have performed
   // a check and thrown a std::runtime_error, should the decryption
   // fail. It can detect corruption of the ciphertext, because
-  // cryptor<>::encrypt() encrypts both the plaintext and a MAC
+  // secretbox<>::encrypt() encrypts both the plaintext and a MAC
   // that was generated out of the plaintext and of the key/nonce before.
   //
   // We're just double-checking here.
@@ -191,8 +191,8 @@ SodiumTester::test2(const std::string &plaintext,
 		    const std::string &pw1,
 		    const std::string &pw2)
 {
-  cryptor<>::key_type   key(false); // uninitialized, r/w for now
-  cryptor<>::nonce_type nonce {};   // a random nonce
+  secretbox<>::key_type   key(false); // uninitialized, r/w for now
+  secretbox<>::nonce_type nonce {};   // a random nonce
 
   // random salt, needed by the key derivation function.
   // NOTE: can't move this into Key::setpass(),
@@ -208,17 +208,17 @@ SodiumTester::test2(const std::string &plaintext,
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // try the first key
-  key.setpass(pw1, salt, cryptor<>::key_type::strength_type::medium);
+  key.setpass(pw1, salt, secretbox<>::key_type::strength_type::medium);
   
   // now encrypt with that key
-  bytes ciphertext = cryptor<>(key).encrypt(plainblob, nonce);
+  bytes ciphertext = secretbox<>(key).encrypt(plainblob, nonce);
 
   // try the second key
-  key.setpass(pw2, salt, cryptor<>::key_type::strength_type::medium);
+  key.setpass(pw2, salt, secretbox<>::key_type::strength_type::medium);
   
   // now decrypt with that new key.
   // if the key/password was different, we will throw right here and now
-  bytes decrypted = cryptor<>(std::move(key)).decrypt(ciphertext, nonce);
+  bytes decrypted = secretbox<>(std::move(key)).decrypt(ciphertext, nonce);
 
   return (decrypted == plainblob);
 }

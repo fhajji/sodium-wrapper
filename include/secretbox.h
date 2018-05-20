@@ -1,4 +1,4 @@
-// cryptor.h -- Symmetric encryption / decryption with MAC
+// secretbox.h -- Symmetric encryption / decryption with MAC
 //
 // ISC License
 // 
@@ -27,7 +27,7 @@
 namespace sodium {
 
 template <class BT=bytes>
-class cryptor {
+class secretbox {
 
  public:
   static constexpr std::size_t NONCESIZE = sodium::NONCESIZE_SECRETBOX;
@@ -38,29 +38,29 @@ class cryptor {
   using nonce_type = nonce<NONCESIZE>;
   using key_type   = key<KEYSIZE>;
 
-  // A cryptor with a new random key
-  cryptor() : key_(std::move(key_type())) {}
+  // A secretbox with a new random key
+  secretbox() : key_(std::move(key_type())) {}
 
-  // A cryptor with a user-supplied key (copying version)
-  cryptor(const key_type &key) : key_(key) {}
+  // A secretbox with a user-supplied key (copying version)
+  secretbox(const key_type &key) : key_(key) {}
 
-  // A cryptor with a user-supplied key (moving version)
-  cryptor(key_type &&key) : key_(std::move(key)) {}
+  // A secretbox with a user-supplied key (moving version)
+  secretbox(key_type &&key) : key_(std::move(key)) {}
 
   // A copying constructor
-  cryptor(const cryptor &other) :
+  secretbox(const secretbox &other) :
 	  key_(other.key_)
   {}
 
   // A moving constructor
-  cryptor(cryptor &&other) :
+  secretbox(secretbox &&other) :
 	  key_(std::move(other.key_))
   {}
 
   // XXX copying and moving assignment operators?
 
   /**
-   * Encrypt plaintext using cryptor's key and supplied nonce,
+   * Encrypt plaintext using secretbox's key and supplied nonce,
    * returning ciphertext.
    *
    * During encryption, a MAC of the plaintext is computed with
@@ -86,7 +86,7 @@ class cryptor {
 		 const nonce_type &nonce);
 
   /**
-   * Encrypt plaintext using cryptor's key and supplied nonce,
+   * Encrypt plaintext using secretbox's key and supplied nonce,
    * returning ciphertext and MAC.
    *
    * During encryption, a MAC of the plaintext is computed with
@@ -116,7 +116,7 @@ class cryptor {
 		 BT               &mac);
   
   /**
-   * Decrypt ciphertext using cryptor's key and supplied nonce,
+   * Decrypt ciphertext using secretbox's key and supplied nonce,
    * returing decrypted plaintext.
    * 
    * The ciphertext is assumed to contain the MAC (combined mode).
@@ -132,7 +132,7 @@ class cryptor {
 		 const nonce_type &nonce);
 
   /**
-   * Decrypt ciphertext using cryptor's key and supplied nonce,
+   * Decrypt ciphertext using secretbox's key and supplied nonce,
    * returing decrypted plaintext.
    * 
    * The ciphertext is assumed NOT to contain the MAC, which is to be
@@ -156,7 +156,7 @@ private:
 
 template <class BT>
 BT
-cryptor<BT>::encrypt(const BT &plaintext,
+secretbox<BT>::encrypt(const BT &plaintext,
 	const nonce_type &nonce)
 {
 	// make space for MAC and encrypted message,
@@ -176,13 +176,13 @@ cryptor<BT>::encrypt(const BT &plaintext,
 
 template <class BT>
 BT
-cryptor<BT>::encrypt(const BT &plaintext,
+secretbox<BT>::encrypt(const BT &plaintext,
 	const nonce_type &nonce,
 	BT               &mac)
 {
 	// some sanity checks before we get started
 	if (mac.size() != MACSIZE)
-		throw std::runtime_error{ "sodium::cryptor::encrypt(detached) wrong mac size" };
+		throw std::runtime_error{ "sodium::secretbox::encrypt(detached) wrong mac size" };
 
 	// make space for encrypted message
 	// detached form, stream cipher => same size as plaintext.
@@ -202,12 +202,12 @@ cryptor<BT>::encrypt(const BT &plaintext,
 
 template <class BT>
 BT
-cryptor<BT>::decrypt(const BT &ciphertext,
+secretbox<BT>::decrypt(const BT &ciphertext,
 	const nonce_type &nonce)
 {
 	// some sanity checks before we get started
 	if (ciphertext.size() < MACSIZE)
-		throw std::runtime_error{ "sodium::cryptor::decrypt(combined) ciphertext too small for mac" };
+		throw std::runtime_error{ "sodium::secretbox::decrypt(combined) ciphertext too small for mac" };
 
 	// make space for decrypted buffer
 	BT decryptedtext(ciphertext.size() - MACSIZE);
@@ -218,20 +218,20 @@ cryptor<BT>::decrypt(const BT &ciphertext,
 		ciphertext.size(),
 		nonce.data(),
 		key_.data()) != 0)
-		throw std::runtime_error{ "sodium::cryptor::decrypt(combined) can't decrypt" };
+		throw std::runtime_error{ "sodium::secretbox::decrypt(combined) can't decrypt" };
 
 	return decryptedtext;
 }
 
 template <class BT>
 BT
-cryptor<BT>::decrypt(const BT &ciphertext,
+secretbox<BT>::decrypt(const BT &ciphertext,
 	const BT      &mac,
 	const nonce_type &nonce)
 {
 	// some sanity checks before we get started
 	if (mac.size() != MACSIZE)
-		throw std::runtime_error{ "sodium::cryptor::decrypt(detached) wrong mac size" };
+		throw std::runtime_error{ "sodium::secretbox::decrypt(detached) wrong mac size" };
 
 	// make space for decrypted buffer;
 	// detached mode. stream cipher => decryptedtext size == ciphertext size
@@ -244,7 +244,7 @@ cryptor<BT>::decrypt(const BT &ciphertext,
 		ciphertext.size(),
 		nonce.data(),
 		key_.data()) != 0)
-		throw std::runtime_error{ "sodium::cryptor::decrypt(detached) can't decrypt" };
+		throw std::runtime_error{ "sodium::secretbox::decrypt(detached) can't decrypt" };
 
 	return decryptedtext; // by move semantics
 }

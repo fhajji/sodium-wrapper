@@ -1,4 +1,4 @@
-// cryptor_decrypt_filter.h -- Boost.Iostreams symmetric encryption with MAC
+// secretbox_decrypt_filter.h -- Boost.Iostreams symmetric encryption with MAC
 //
 // ISC License
 // 
@@ -21,7 +21,7 @@
 #include "common.h"
 #include "key.h"
 #include "nonce.h"
-#include "cryptor.h"
+#include "secretbox.h"
 
 #include <boost/iostreams/categories.hpp>       // tags
 #include <boost/iostreams/filter/aggregate.hpp> // aggregate_filter
@@ -39,15 +39,15 @@ namespace io = boost::iostreams;
 
 namespace sodium {
 
-class cryptor_decrypt_filter : public io::aggregate_filter<char> {
+class secretbox_decrypt_filter : public io::aggregate_filter<char> {
 
   /**
-   * Use cryptor_decrypt_filter as a DualUse filter like this:
+   * Use secretbox_decrypt_filter as a DualUse filter like this:
    * 
    *   #include <boost/iostreams/device/array.hpp>
    *   #include <boost/iostreams/filtering_stream.hpp>
    * 
-   *   using sodium::cryptor_decrypt_filter;
+   *   using sodium::secretbox_decrypt_filter;
    *   using chars = sodium::chars;
    * 
    *   std::string ciphertext = ... // computed earlier...
@@ -57,11 +57,11 @@ class cryptor_decrypt_filter : public io::aggregate_filter<char> {
    * 
    *   namespace io = boost::iostreams;
    * 
-   *   cryptor_decrypt_filter::key_type   key { ... };   // ... with this key
-   *   cryptor_decrypt_filter::nonce_type nonce { ... }; // ... and this nonce.
-   *   cryptor<chars> crypt{std::move(key)};
-   *   cryptor_decrypt_filter decrypt_filter {std::move(crypt), nonce}; // create a decryptor filter
-   *   chars decrypted (ciphertext.size() - cryptor_decrypt_filter::MACSIZE);
+   *   secretbox_decrypt_filter::key_type   key { ... };   // ... with this key
+   *   secretbox_decrypt_filter::nonce_type nonce { ... }; // ... and this nonce.
+   *   secretbox<chars> crypt{std::move(key)};
+   *   secretbox_decrypt_filter decrypt_filter {std::move(crypt), nonce}; // create a desecretbox filter
+   *   chars decrypted (ciphertext.size() - secretbox_decrypt_filter::MACSIZE);
    * 
    *   try {
    *     io::array_sink         sink {decrypted.data(), decrypted.size()};
@@ -84,11 +84,11 @@ class cryptor_decrypt_filter : public io::aggregate_filter<char> {
    * 
    *   namespace io = boost::iostreams;
    * 
-   *   cryptor_decrypt_filter::key_type   key { ... };   // ... with this key
-   *   cryptor_decrypt_filter::nonce_type nonce { ... }; // ... and this nonce.
-   *   cryptor crypt {std::move(key)};
-   *   cryptor_decrypt_filter decrypt_filter {std::move(crypt), nonce}; // create a decryptor filter
-   *   chars decrypted (ciphertext.size() - cryptor_decrypt_filter::MACSIZE);
+   *   secretbox_decrypt_filter::key_type   key { ... };   // ... with this key
+   *   secretbox_decrypt_filter::nonce_type nonce { ... }; // ... and this nonce.
+   *   secretbox crypt {std::move(key)};
+   *   secretbox_decrypt_filter decrypt_filter {std::move(crypt), nonce}; // create a desecretbox filter
+   *   chars decrypted (ciphertext.size() - secretbox_decrypt_filter::MACSIZE);
    * 
    *   io::array_source      source {ciphertext.data(), ciphertext.size()};
    *   io::filtering_istream is     {};
@@ -118,20 +118,20 @@ class cryptor_decrypt_filter : public io::aggregate_filter<char> {
     typedef typename base_type::category    category;
     typedef typename base_type::vector_type vector_type; // sodium::chars
 
-    static constexpr std::size_t MACSIZE   = cryptor<vector_type>::MACSIZE;
+    static constexpr std::size_t MACSIZE   = secretbox<vector_type>::MACSIZE;
     
-    using key_type   = cryptor<vector_type>::key_type;
-    using nonce_type = cryptor<vector_type>::nonce_type;
+    using key_type   = secretbox<vector_type>::key_type;
+    using nonce_type = secretbox<vector_type>::nonce_type;
 
-	cryptor_decrypt_filter(const cryptor<vector_type> &cryptor, const nonce_type &nonce) :
-		cryptor_{ cryptor }, nonce_{ nonce }
+	secretbox_decrypt_filter(const secretbox<vector_type> &secretbox, const nonce_type &nonce) :
+		secretbox_{ secretbox }, nonce_{ nonce }
 	{}
 
-	cryptor_decrypt_filter(cryptor<vector_type> &&cryptor, const nonce_type &nonce) :
-		cryptor_{ std::move(cryptor) }, nonce_{ nonce }
+	secretbox_decrypt_filter(secretbox<vector_type> &&secretbox, const nonce_type &nonce) :
+		secretbox_{ std::move(secretbox) }, nonce_{ nonce }
 	{}
 
-    virtual ~cryptor_decrypt_filter()
+    virtual ~secretbox_decrypt_filter()
     { }
    
  private:
@@ -139,25 +139,25 @@ class cryptor_decrypt_filter : public io::aggregate_filter<char> {
 
 #ifndef NDEBUG
       std::string src_string { src.cbegin(), src.cend() };
-      std::cerr << "cryptor_decrypt_filter::do_filter("
+      std::cerr << "secretbox_decrypt_filter::do_filter("
 		<< src_string << ") called" << std::endl;
 #endif // ! NDEBUG
 
       try {
 	if (src.size() < MACSIZE)
-	  throw std::runtime_error {"sodium::cryptor_decrypt_filter::do_filter() ciphertext too small for mac"};
+	  throw std::runtime_error {"sodium::secretbox_decrypt_filter::do_filter() ciphertext too small for mac"};
 
 	// Try to decrypt the (MAC || ciphertext) passed in src.
-	vector_type decrypted{ cryptor_.decrypt(src, nonce_) };
+	vector_type decrypted{ secretbox_.decrypt(src, nonce_) };
 
 	dest.swap(decrypted); // efficiently store result vector into dest
     }
     catch (std::runtime_error &e) {
 	  std::string error_message {e.what()};
-	  error_message.append("\nsodium::cryptor_decrypt_filter::do_filter() can't decrypt");
+	  error_message.append("\nsodium::secretbox_decrypt_filter::do_filter() can't decrypt");
 
 #ifndef NDEBUG
-	std::cerr << "sodium::cryptor_decrypt_filter::do_filter() "
+	std::cerr << "sodium::secretbox_decrypt_filter::do_filter() "
 		  << "throwing exception {" << error_message << "}"
 		  << std::endl;
 #endif // ! NDEBUG
@@ -167,14 +167,14 @@ class cryptor_decrypt_filter : public io::aggregate_filter<char> {
 
 #ifndef NDEBUG
       std::string dest_string { dest.cbegin(), dest.cend() };
-      std::cerr << "cryptor_decrypt_filter::do_filter() returned {"
+      std::cerr << "secretbox_decrypt_filter::do_filter() returned {"
 		<< dest_string << "}" << std::endl;
 #endif // ! NDEBUG
     }
     
   private:
-    cryptor<vector_type> cryptor_;
+    secretbox<vector_type> secretbox_;
     nonce_type nonce_;
-}; // cryptor_decrypt_filter
+}; // secretbox_decrypt_filter
 
 } //namespace sodium

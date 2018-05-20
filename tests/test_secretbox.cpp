@@ -1,4 +1,4 @@
-// test_cryptor.cpp -- Test sodium::cryptor
+// test_secretbox.cpp -- Test sodium::secretbox
 //
 // ISC License
 // 
@@ -17,14 +17,14 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE sodium::cryptor Test
+#define BOOST_TEST_MODULE sodium::secretbox Test
 #include <boost/test/included/unit_test.hpp>
 
-#include "cryptor.h"
+#include "secretbox.h"
 #include <string>
 #include <sodium.h>
 
-using sodium::cryptor;
+using sodium::secretbox;
 using bytes = sodium::bytes;
 
 bool
@@ -34,23 +34,23 @@ test_of_correctness(const std::string &plaintext,
 		    bool falsify_key=false,
 		    bool falsify_nonce=false)
 {
-  cryptor<>::key_type   key;
-  cryptor<>::key_type   key2;
-  cryptor<>::nonce_type nonce {};
-  cryptor<>::nonce_type nonce2 {};
+  secretbox<>::key_type   key;
+  secretbox<>::key_type   key2;
+  secretbox<>::nonce_type nonce {};
+  secretbox<>::nonce_type nonce2 {};
 
-  cryptor<> sc{ std::move(key) };
-  cryptor<> sc2{ std::move(key2) };
+  secretbox<> sc{ std::move(key) };
+  secretbox<> sc2{ std::move(key2) };
 
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
   bytes ciphertext = sc.encrypt(plainblob, nonce);
 
-  BOOST_CHECK(ciphertext.size() == cryptor<>::MACSIZE + plainblob.size());
+  BOOST_CHECK(ciphertext.size() == secretbox<>::MACSIZE + plainblob.size());
   
   if (! plaintext.empty() && falsify_ciphertext) {
     // ciphertext is of the form: (MAC || actual_ciphertext)
-    ++ciphertext[cryptor<>::MACSIZE]; // falsify ciphertext
+    ++ciphertext[secretbox<>::MACSIZE]; // falsify ciphertext
   }
   
   if (falsify_mac) {
@@ -92,13 +92,13 @@ test_of_correctness_detached(const std::string &plaintext,
 			     bool falsify_key=false,
 			     bool falsify_nonce=false)
 {
-  cryptor<> sc;  // with random key
-  cryptor<> sc2; // with (another) random key
-  cryptor<>::nonce_type nonce {};
-  cryptor<>::nonce_type nonce2 {};
+  secretbox<> sc;  // with random key
+  secretbox<> sc2; // with (another) random key
+  secretbox<>::nonce_type nonce {};
+  secretbox<>::nonce_type nonce2 {};
 
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
-  cryptor<>::bytes_type mac(cryptor<>::MACSIZE);
+  secretbox<>::bytes_type mac(secretbox<>::MACSIZE);
 
   // encrypt, using detached form
   bytes ciphertext = sc.encrypt(plainblob, nonce, mac);
@@ -154,109 +154,109 @@ struct SodiumFixture {
 
 BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture )
 
-BOOST_AUTO_TEST_CASE( sodium_cryptor_test_full_plaintext )
+BOOST_AUTO_TEST_CASE( sodium_secretbox_test_full_plaintext )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   BOOST_CHECK(test_of_correctness(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptor_test_empty_plaintext )
+BOOST_AUTO_TEST_CASE( sodium_secretbox_test_empty_plaintext )
 {
   std::string plaintext {};
   BOOST_CHECK(test_of_correctness(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptor_test_full_plaintext_detached )
+BOOST_AUTO_TEST_CASE( sodium_secretbox_test_full_plaintext_detached )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   BOOST_CHECK(test_of_correctness_detached(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptor_test_empty_plaintext_detached )
+BOOST_AUTO_TEST_CASE( sodium_secretbox_test_empty_plaintext_detached )
 {
   std::string plaintext {};
   BOOST_CHECK(test_of_correctness_detached(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptor_test_falsify_ciphertext )
+BOOST_AUTO_TEST_CASE( sodium_secretbox_test_falsify_ciphertext )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   BOOST_CHECK(test_of_correctness(plaintext, true, false, false, false));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptor_test_falsify_mac )
+BOOST_AUTO_TEST_CASE( sodium_secretbox_test_falsify_mac )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   BOOST_CHECK(test_of_correctness(plaintext, false, true, false, false));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptor_test_falsify_key )
+BOOST_AUTO_TEST_CASE( sodium_secretbox_test_falsify_key )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   BOOST_CHECK(test_of_correctness(plaintext, false, false, true, false));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptor_test_falsify_nonce )
+BOOST_AUTO_TEST_CASE( sodium_secretbox_test_falsify_nonce )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   BOOST_CHECK(test_of_correctness(plaintext, false, false, false, true));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptor_test_falsify_mac_empty )
+BOOST_AUTO_TEST_CASE( sodium_secretbox_test_falsify_mac_empty )
 {
   std::string plaintext {};
   BOOST_CHECK(test_of_correctness(plaintext, false, true));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptor_test_falsify_ciphertext_and_mac )
+BOOST_AUTO_TEST_CASE( sodium_secretbox_test_falsify_ciphertext_and_mac )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   BOOST_CHECK(test_of_correctness(plaintext, true, true, false, false));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptor_test_falsify_ciphertext_detached )
+BOOST_AUTO_TEST_CASE( sodium_secretbox_test_falsify_ciphertext_detached )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   BOOST_CHECK(test_of_correctness_detached(plaintext, true, false, false, false));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptor_test_falsify_mac_detached )
+BOOST_AUTO_TEST_CASE( sodium_secretbox_test_falsify_mac_detached )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   BOOST_CHECK(test_of_correctness_detached(plaintext, false, true, false, false));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptor_test_falsify_key_detached )
+BOOST_AUTO_TEST_CASE( sodium_secretbox_test_falsify_key_detached )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   BOOST_CHECK(test_of_correctness_detached(plaintext, false, false, true, false));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptor_test_falsify_nonce_detached )
+BOOST_AUTO_TEST_CASE( sodium_secretbox_test_falsify_nonce_detached )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   BOOST_CHECK(test_of_correctness_detached(plaintext, false, false, false, true));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptor_test_falsify_mac_empty_detached )
+BOOST_AUTO_TEST_CASE( sodium_secretbox_test_falsify_mac_empty_detached )
 {
   std::string plaintext {};
   BOOST_CHECK(test_of_correctness_detached(plaintext, false, true, false, false));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptor_test_falsify_key_empty_detached )
+BOOST_AUTO_TEST_CASE( sodium_secretbox_test_falsify_key_empty_detached )
 {
   std::string plaintext {};
   BOOST_CHECK(test_of_correctness_detached(plaintext, false, false, true, false));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptor_test_falsify_nonce_empty_detached )
+BOOST_AUTO_TEST_CASE( sodium_secretbox_test_falsify_nonce_empty_detached )
 {
   std::string plaintext {};
   BOOST_CHECK(test_of_correctness_detached(plaintext, false, false, false, true));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptor_test_falsify_ciphertext_and_mac_detached )
+BOOST_AUTO_TEST_CASE( sodium_secretbox_test_falsify_ciphertext_and_mac_detached )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   BOOST_CHECK(test_of_correctness_detached(plaintext, true, true, false, false));
