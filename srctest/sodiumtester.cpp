@@ -26,7 +26,7 @@
 #include "keyvar.h"
 #include "secretbox.h"
 #include "authenticator.h"
-#include "cryptor_aead.h"
+#include "aead.h"
 #include "streamcryptor.h"
 #include "filecryptor.h"
 
@@ -40,7 +40,7 @@ using sodium::key;
 using sodium::keyvar;
 using sodium::nonce;
 using sodium::secretbox;
-using sodium::cryptor_aead;
+using sodium::aead;
 using sodium::authenticator;
 using sodium::StreamCryptor;
 using sodium::FileCryptor;
@@ -311,7 +311,7 @@ SodiumTester::test3()
 }
 
 /**
- * This function tests sodium::cryptor_aead.
+ * This function tests sodium::aead.
  *
  * - We encrypt a plain header and plaintext with a random key and nonce,
  *   resulting in a (MAC || ciphertext), which we display in hex format.
@@ -334,9 +334,9 @@ std::string
 SodiumTester::test4(const std::string &plaintext,
 		    const std::string &header)
 {
-  cryptor_aead<>::key_type   key;   // random key
-  cryptor_aead<>::nonce_type nonce; // random nonce
-  cryptor_aead<> sc_aead{ std::move(key) };
+  aead<>::key_type   key;   // random key
+  aead<>::nonce_type nonce; // random nonce
+  aead<> sc_aead{ std::move(key) };
 
   std::ostringstream os; // to collect output
   os << "starting AEAD test... ---------" << std::endl;
@@ -384,8 +384,8 @@ SodiumTester::test4(const std::string &plaintext,
        << std::endl;
   
   // now, intentionally corrupt the ciphertext and decrypt again:
-  if (ciphertext_with_mac.size() > sodium::cryptor_aead<>::MACSIZE)
-    ++ciphertext_with_mac[sodium::cryptor_aead<>::MACSIZE];
+  if (ciphertext_with_mac.size() > sodium::aead<>::MACSIZE)
+    ++ciphertext_with_mac[sodium::aead<>::MACSIZE];
   try {
     bytes out = sc_aead.decrypt(header_corrupted,
 				 ciphertext_with_mac,
@@ -515,8 +515,8 @@ SodiumTester::test5(const std::string &filename)
 {
   std::size_t                   MYBLKSIZE = 1024;
   
-  cryptor_aead<>::key_type   key;
-  cryptor_aead<>::nonce_type nonce;
+  aead<>::key_type   key;
+  aead<>::nonce_type nonce;
   StreamCryptor              strm_crypt (key, nonce, MYBLKSIZE);
 
   key.noaccess();
@@ -560,9 +560,9 @@ SodiumTester::test6(const std::string &filename)
 {
   std::size_t             MYBLKSIZE  = 1024;
   
-  cryptor_aead<>::key_type   key;
+  aead<>::key_type   key;
   keyvar<>                   hashkey    (FileCryptor::HASHKEYSIZE);
-  cryptor_aead<>::nonce_type nonce;
+  aead<>::nonce_type nonce;
   FileCryptor                file_crypt (key, nonce, MYBLKSIZE,
 				      hashkey, FileCryptor::HASHSIZE);
 

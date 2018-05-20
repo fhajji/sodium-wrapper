@@ -20,13 +20,13 @@
 
 using bytes = sodium::bytes;
 using sodium::StreamCryptor;
-using sodium::cryptor_aead;
+using sodium::aead;
 
 void
 StreamCryptor::encrypt(std::istream &istr, std::ostream &ostr)
 {
   bytes plaintext(blocksize_, '\0');
-  cryptor_aead<>::nonce_type running_nonce {nonce_};
+  aead<>::nonce_type running_nonce {nonce_};
   
   while (istr.read(reinterpret_cast<char *>(plaintext.data()), blocksize_)) {
     bytes ciphertext = sc_aead_.encrypt(header_, plaintext, running_nonce);
@@ -55,7 +55,7 @@ void
 StreamCryptor::decrypt(std::istream &istr, std::ostream &ostr)
 {
   bytes ciphertext(MACSIZE + blocksize_, '\0');
-  cryptor_aead<>::nonce_type running_nonce {nonce_};   // restart with saved nonce_
+  aead<>::nonce_type running_nonce {nonce_};   // restart with saved nonce_
 
   while (istr.read(reinterpret_cast<char *>(ciphertext.data()),
 		   MACSIZE + blocksize_)) {

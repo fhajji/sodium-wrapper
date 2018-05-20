@@ -1,4 +1,4 @@
-// cryptor_aead_decrypt_filter.h -- Boost.Iostreams symmetric encryption with AEAD and MAC
+// aead_decrypt_filter.h -- Boost.Iostreams symmetric encryption with AEAD and MAC
 //
 // ISC License
 // 
@@ -21,7 +21,7 @@
 #include "common.h"
 #include "key.h"
 #include "nonce.h"
-#include "cryptor_aead.h"
+#include "aead.h"
 
 #include <boost/iostreams/categories.hpp>       // tags
 #include <boost/iostreams/filter/aggregate.hpp> // aggregate_filter
@@ -39,15 +39,15 @@ namespace io = boost::iostreams;
 
 namespace sodium {
 
-	class cryptor_aead_decrypt_filter : public io::aggregate_filter<char> {
+	class aead_decrypt_filter : public io::aggregate_filter<char> {
 
 		/**
-		* Use cryptor_aead_decrypt_filter as a DualUse filter like this:
+		* Use aead_decrypt_filter as a DualUse filter like this:
 		*
 		*   #include <boost/iostreams/device/array.hpp>
 		*   #include <boost/iostreams/filtering_stream.hpp>
 		*
-		*   using sodium::cryptor_aead_decrypt_filter;
+		*   using sodium::aead_decrypt_filter;
 		*   using chars = sodium::chars;
 		*
 		*   std::string header = ...     // computer earlier...
@@ -59,11 +59,11 @@ namespace sodium {
 		*
 		*   namespace io = boost::iostreams;
 		*
-		*   cryptor_aead_decrypt_filter::key_type   key { ... };   // ... with this key
-		*   cryptor_aead_decrypt_filter::nonce_type nonce { ... }; // ... and this nonce.
-		*   cryptor_aead<chars> crypt{std::move(key)};
-		*   cryptor_aead_ decrypt_filter decrypt_filter {std::move(crypt), nonce, headerblob}; // create a decryptor filter
-		*   chars decrypted (ciphertext.size() - cryptor_aead_decrypt_filter::MACSIZE);
+		*   aead_decrypt_filter::key_type   key { ... };   // ... with this key
+		*   aead_decrypt_filter::nonce_type nonce { ... }; // ... and this nonce.
+		*   aead<chars> crypt{std::move(key)};
+		*   aead_ decrypt_filter decrypt_filter {std::move(crypt), nonce, headerblob}; // create a decryptor filter
+		*   chars decrypted (ciphertext.size() - aead_decrypt_filter::MACSIZE);
 		*
 		*   try {
 		*     io::array_sink         sink {decrypted.data(), decrypted.size()};
@@ -86,11 +86,11 @@ namespace sodium {
 		*
 		*   namespace io = boost::iostreams;
 		*
-		*   cryptor_aead_decrypt_filter::key_type   key { ... };   // ... with this key
-		*   cryptor_aead_decrypt_filter::nonce_type nonce { ... }; // ... and this nonce.
-		*   cryptor_aead<chars> crypt {std::move(key)};
-		*   cryptor_aead_decrypt_filter decrypt_filter {std::move(crypt), nonce, headerblob}; // create a decryptor filter
-		*   chars decrypted (ciphertext.size() - cryptor_aead_decrypt_filter::MACSIZE);
+		*   aead_decrypt_filter::key_type   key { ... };   // ... with this key
+		*   aead_decrypt_filter::nonce_type nonce { ... }; // ... and this nonce.
+		*   aead<chars> crypt {std::move(key)};
+		*   aead_decrypt_filter decrypt_filter {std::move(crypt), nonce, headerblob}; // create a decryptor filter
+		*   chars decrypted (ciphertext.size() - aead_decrypt_filter::MACSIZE);
 		*
 		*   io::array_source      source {ciphertext.data(), ciphertext.size()};
 		*   io::filtering_istream is     {};
@@ -120,20 +120,20 @@ namespace sodium {
 		typedef typename base_type::category    category;
 		typedef typename base_type::vector_type vector_type; // sodium::chars
 
-		static constexpr std::size_t MACSIZE = cryptor_aead<vector_type>::MACSIZE;
+		static constexpr std::size_t MACSIZE = aead<vector_type>::MACSIZE;
 
-		using key_type = cryptor_aead<vector_type>::key_type;
-		using nonce_type = cryptor_aead<vector_type>::nonce_type;
+		using key_type = aead<vector_type>::key_type;
+		using nonce_type = aead<vector_type>::nonce_type;
 
-		cryptor_aead_decrypt_filter(const cryptor_aead<vector_type> &cryptor_aead, const nonce_type &nonce, const vector_type &header) :
-			cryptor_aead_{ cryptor_aead }, nonce_{ nonce }, header_{ header }
+		aead_decrypt_filter(const aead<vector_type> &aead, const nonce_type &nonce, const vector_type &header) :
+			aead_{ aead }, nonce_{ nonce }, header_{ header }
 		{}
 
-		cryptor_aead_decrypt_filter(cryptor_aead<vector_type> &&cryptor_aead, const nonce_type &nonce, const vector_type &header) :
-			cryptor_aead_{ std::move(cryptor_aead) }, nonce_{ nonce }, header_{ header }
+		aead_decrypt_filter(aead<vector_type> &&aead, const nonce_type &nonce, const vector_type &header) :
+			aead_{ std::move(aead) }, nonce_{ nonce }, header_{ header }
 		{}
 
-		virtual ~cryptor_aead_decrypt_filter()
+		virtual ~aead_decrypt_filter()
 		{ }
 
 	private:
@@ -141,25 +141,25 @@ namespace sodium {
 
 #ifndef NDEBUG
 			std::string src_string{ src.cbegin(), src.cend() };
-			std::cerr << "cryptor_aead_decrypt_filter::do_filter("
+			std::cerr << "aead_decrypt_filter::do_filter("
 				<< src_string << ") called" << std::endl;
 #endif // ! NDEBUG
 
 			try {
 				if (src.size() < MACSIZE)
-					throw std::runtime_error{ "sodium::cryptor_aead_decrypt_filter::do_filter() ciphertext too small for mac" };
+					throw std::runtime_error{ "sodium::aead_decrypt_filter::do_filter() ciphertext too small for mac" };
 
 				// Try to decrypt the (MAC || ciphertext) passed in src.
-				vector_type decrypted{ cryptor_aead_.decrypt(header_, src, nonce_) };
+				vector_type decrypted{ aead_.decrypt(header_, src, nonce_) };
 
 				dest.swap(decrypted); // efficiently store result vector into dest
 			}
 			catch (std::runtime_error &e) {
 				std::string error_message{ e.what() };
-				error_message.append("\nsodium::cryptor_aead_decrypt_filter::do_filter() can't decrypt");
+				error_message.append("\nsodium::aead_decrypt_filter::do_filter() can't decrypt");
 
 #ifndef NDEBUG
-				std::cerr << "sodium::cryptor_aead_decrypt_filter::do_filter() "
+				std::cerr << "sodium::aead_decrypt_filter::do_filter() "
 					<< "throwing exception {" << error_message << "}"
 					<< std::endl;
 #endif // ! NDEBUG
@@ -169,15 +169,15 @@ namespace sodium {
 
 #ifndef NDEBUG
 			std::string dest_string{ dest.cbegin(), dest.cend() };
-			std::cerr << "cryptor_aead_decrypt_filter::do_filter() returned {"
+			std::cerr << "aead_decrypt_filter::do_filter() returned {"
 				<< dest_string << "}" << std::endl;
 #endif // ! NDEBUG
 		}
 
 	private:
-		cryptor_aead<vector_type> cryptor_aead_;
+		aead<vector_type> aead_;
 		nonce_type nonce_;
 		vector_type header_;
-	}; // cryptor_aead_decrypt_filter
+	}; // aead_decrypt_filter
 
 } //namespace sodium

@@ -1,4 +1,4 @@
-// test_cryptor_aead_filters.cpp -- Test sodium::cryptor_aead_{encrypt,decrypt}_filter
+// test_aead_filters.cpp -- Test sodium::aead_{encrypt,decrypt}_filter
 //
 // ISC License
 // 
@@ -17,11 +17,11 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE sodium::cryptor_aead_filters Test
+#define BOOST_TEST_MODULE sodium::aead_filters Test
 #include <boost/test/included/unit_test.hpp>
 
-#include "cryptor_aead_encrypt_filter.h"
-#include "cryptor_aead_decrypt_filter.h"
+#include "aead_encrypt_filter.h"
+#include "aead_decrypt_filter.h"
 #include "common.h"
 
 #include <string>
@@ -35,10 +35,10 @@
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 
-using sodium::cryptor_aead_encrypt_filter;
-using sodium::cryptor_aead_decrypt_filter;
+using sodium::aead_encrypt_filter;
+using sodium::aead_decrypt_filter;
 using chars = sodium::chars;
-using cryptor_aead = sodium::cryptor_aead<chars>; // NOT bytes!
+using aead = sodium::aead<chars>; // NOT bytes!
 
 namespace io = boost::iostreams;
 
@@ -55,14 +55,14 @@ struct SodiumFixture {
 bool
 test_of_correctness_combined_output_filter(const std::string &header, const std::string &plaintext)
 {
-	cryptor_aead_encrypt_filter::key_type   key;   // Create a random key
-	cryptor_aead_encrypt_filter::nonce_type nonce; // Create a random nonce
-	cryptor_aead crypt{ std::move(key) };
+	aead_encrypt_filter::key_type   key;   // Create a random key
+	aead_encrypt_filter::nonce_type nonce; // Create a random nonce
+	aead crypt{ std::move(key) };
 
 	chars headerblob{ header.cbegin(), header.cend() };
 
-	cryptor_aead_encrypt_filter encrypt_filter{ crypt, nonce, headerblob };            // COPY crypt to...
-	cryptor_aead_decrypt_filter decrypt_filter{ std::move(crypt), nonce, headerblob }; // ... reuse here.
+	aead_encrypt_filter encrypt_filter{ crypt, nonce, headerblob };            // COPY crypt to...
+	aead_decrypt_filter decrypt_filter{ std::move(crypt), nonce, headerblob }; // ... reuse here.
 
 	chars plainblob{ plaintext.cbegin(), plaintext.cend() };
 	chars decrypted(2 * plaintext.size()); // because of both writes below
@@ -112,13 +112,13 @@ test_of_correctness_combined_input_filter(const std::string &header, const std::
 	std::copy(plainblob.cbegin(), plainblob.cend(),
 		std::back_inserter(plainblob2)); // plainblob2 = (plainblob || plainblob)
 
-	cryptor_aead_encrypt_filter::key_type   key;   // Create a random key
-	cryptor_aead_encrypt_filter::nonce_type nonce; // Create a random nonce
+	aead_encrypt_filter::key_type   key;   // Create a random key
+	aead_encrypt_filter::nonce_type nonce; // Create a random nonce
 
-	cryptor_aead crypt{ std::move(key) };
+	aead crypt{ std::move(key) };
 
-	cryptor_aead_encrypt_filter encrypt_filter{ crypt, nonce, headerblob };
-	cryptor_aead_decrypt_filter decrypt_filter{ std::move(crypt), nonce, headerblob };
+	aead_encrypt_filter encrypt_filter{ crypt, nonce, headerblob };
+	aead_decrypt_filter decrypt_filter{ std::move(crypt), nonce, headerblob };
 
 	chars decrypted(2 * plaintext.size()); // because of plainblob2 above
 
@@ -163,20 +163,20 @@ test_of_correctness_output_filter(const std::string &header,
 
 	// 1. encrypt plaintext into ciphertext
 
-	cryptor_aead_encrypt_filter::key_type   key;    // Create a random key
-	cryptor_aead_decrypt_filter::key_type   key2;   // Create another random key
-	cryptor_aead_encrypt_filter::nonce_type nonce;  // Create a random nonce
-	cryptor_aead_decrypt_filter::nonce_type nonce2; // Create another random nonce
+	aead_encrypt_filter::key_type   key;    // Create a random key
+	aead_decrypt_filter::key_type   key2;   // Create another random key
+	aead_encrypt_filter::nonce_type nonce;  // Create a random nonce
+	aead_decrypt_filter::nonce_type nonce2; // Create another random nonce
 
-	cryptor_aead crypt{ std::move(key) };
-	cryptor_aead crypt2{ std::move(key2) };
+	aead crypt{ std::move(key) };
+	aead crypt2{ std::move(key2) };
 
-	cryptor_aead_encrypt_filter encrypt_filter{ crypt, nonce, headerblob };
-	cryptor_aead_decrypt_filter decrypt_filter{ (falsify_key ? std::move(crypt2) : std::move(crypt)),
+	aead_encrypt_filter encrypt_filter{ crypt, nonce, headerblob };
+	aead_decrypt_filter decrypt_filter{ (falsify_key ? std::move(crypt2) : std::move(crypt)),
 		(falsify_nonce ? nonce2 : nonce),
 		(falsify_header ? headerblob2 : headerblob)	};
 
-	chars ciphertext(cryptor_aead_encrypt_filter::MACSIZE + plaintext.size());
+	chars ciphertext(aead_encrypt_filter::MACSIZE + plaintext.size());
 
 	io::array_sink          sink1{ ciphertext.data(), ciphertext.size() };
 	io::filtering_ostream   os1{};
@@ -190,11 +190,11 @@ test_of_correctness_output_filter(const std::string &header,
 	// sink1 (i.e. ciphertext) contains (MAC || ciphertext)
 
 	BOOST_CHECK_EQUAL(ciphertext.size(),
-		cryptor_aead_encrypt_filter::MACSIZE + plainblob.size());
+		aead_encrypt_filter::MACSIZE + plainblob.size());
 
 	if (!plaintext.empty() && falsify_ciphertext) {
 		// ciphertext is of the form: (MAC || actual_ciphertext)
-		++ciphertext[cryptor_aead_encrypt_filter::MACSIZE]; // falsify ciphertext
+		++ciphertext[aead_encrypt_filter::MACSIZE]; // falsify ciphertext
 	}
 
 	if (falsify_mac) {
@@ -204,7 +204,7 @@ test_of_correctness_output_filter(const std::string &header,
 
 	// 2. now, (attempt to) decrypt ciphertext into decrypted:
 
-	chars decrypted(ciphertext.size() - cryptor_aead_decrypt_filter::MACSIZE);
+	chars decrypted(ciphertext.size() - aead_decrypt_filter::MACSIZE);
 	try {
 		io::array_sink          sink2{ decrypted.data(), decrypted.size() };
 		io::filtering_ostream   os2{};
@@ -270,18 +270,18 @@ test_of_correctness_input_filter(const std::string &header,
 
 	// 1. encrypt plaintext into ciphertext
 
-	cryptor_aead crypt;  // create a cryptor with a random key
-	cryptor_aead crypt2; // create a cryptor with another random key
-	cryptor_aead_encrypt_filter::nonce_type nonce;  // Create a random nonce
-	cryptor_aead_decrypt_filter::nonce_type nonce2; // Create another random nonce
+	aead crypt;  // create a cryptor with a random key
+	aead crypt2; // create a cryptor with another random key
+	aead_encrypt_filter::nonce_type nonce;  // Create a random nonce
+	aead_decrypt_filter::nonce_type nonce2; // Create another random nonce
 
-	cryptor_aead_encrypt_filter encrypt_filter{ crypt, nonce, headerblob };
-	cryptor_aead_decrypt_filter decrypt_filter{ (falsify_key ? std::move(crypt2) : std::move(crypt)),
+	aead_encrypt_filter encrypt_filter{ crypt, nonce, headerblob };
+	aead_decrypt_filter decrypt_filter{ (falsify_key ? std::move(crypt2) : std::move(crypt)),
 		(falsify_nonce ? nonce2 : nonce),
 		(falsify_header ? headerblob2 : headerblob)
 	};
 
-	chars ciphertext(cryptor_aead_encrypt_filter::MACSIZE + plaintext.size());
+	chars ciphertext(aead_encrypt_filter::MACSIZE + plaintext.size());
 
 	io::array_source        source1{ plainblob.data(), plainblob.size() };
 	io::filtering_istream   is1{};
@@ -296,7 +296,7 @@ test_of_correctness_input_filter(const std::string &header,
 	// variable ciphertext contains (MAC || ciphertext)
 
 	BOOST_CHECK_EQUAL(ciphertext.size(),
-		cryptor_aead_encrypt_filter::MACSIZE + plainblob.size());
+		aead_encrypt_filter::MACSIZE + plainblob.size());
 
 #ifndef NDEBUG
 	std::string ciphertext_string{ ciphertext.cbegin(), ciphertext.cend() };
@@ -308,7 +308,7 @@ test_of_correctness_input_filter(const std::string &header,
 
 	if (!plaintext.empty() && falsify_ciphertext) {
 		// ciphertext is of the form: (MAC || actual_ciphertext)
-		++ciphertext[cryptor_aead_encrypt_filter::MACSIZE]; // falsify ciphertext
+		++ciphertext[aead_encrypt_filter::MACSIZE]; // falsify ciphertext
 	}
 
 	// 3. falsify mac if asked
@@ -323,7 +323,7 @@ test_of_correctness_input_filter(const std::string &header,
 
 	// 5. now try to decrypt ciphertext into decrypted
 
-	chars decrypted(ciphertext.size() - cryptor_aead_decrypt_filter::MACSIZE);
+	chars decrypted(ciphertext.size() - aead_decrypt_filter::MACSIZE);
 
 	io::array_source        source2{ ciphertext.data(), ciphertext.size() };
 	io::filtering_istream   is2{};
@@ -399,10 +399,10 @@ length_test_output_filter(const std::string &header,
 
 	// create a filter with a random key / random nonce cryptor.
 	// multiple use of std::move semantics behing the curtain.
-	cryptor_aead_encrypt_filter encrypt_filter{ cryptor_aead(), cryptor_aead_encrypt_filter::nonce_type(), headerblob };
+	aead_encrypt_filter encrypt_filter{ aead(), aead_encrypt_filter::nonce_type(), headerblob };
 
 	chars plainblob{ plaintext.cbegin(), plaintext.cend() };
-	chars ciphertext(cryptor_aead_encrypt_filter::MACSIZE + plainblob.size());
+	chars ciphertext(aead_encrypt_filter::MACSIZE + plainblob.size());
 
 	io::array_sink        sink{ ciphertext.data(), ciphertext.size() };
 	io::filtering_ostream os{};
@@ -417,7 +417,7 @@ length_test_output_filter(const std::string &header,
 	// sink (i.e. ciphertext) has been hopefully filled with (MAC || ciphertext)
 
 	BOOST_CHECK_EQUAL(ciphertext.size(),
-		cryptor_aead_encrypt_filter::MACSIZE + plaintext.size());
+		aead_encrypt_filter::MACSIZE + plaintext.size());
 }
 
 void
@@ -427,12 +427,12 @@ length_test_input_filter(const std::string &header,
 	chars headerblob{ header.cbegin(), header.cend() };
 	chars plainblob{ plaintext.cbegin(), plaintext.cend() };
 
-	cryptor_aead_encrypt_filter::key_type   key;   // Create a random key
-	cryptor_aead_encrypt_filter::nonce_type nonce; // Create a random nonce
+	aead_encrypt_filter::key_type   key;   // Create a random key
+	aead_encrypt_filter::nonce_type nonce; // Create a random nonce
 
-	cryptor_aead_encrypt_filter encrypt_filter{ cryptor_aead(std::move(key)), nonce, headerblob };
+	aead_encrypt_filter encrypt_filter{ aead(std::move(key)), nonce, headerblob };
 
-	chars ciphertext(cryptor_aead_encrypt_filter::MACSIZE + plainblob.size());
+	chars ciphertext(aead_encrypt_filter::MACSIZE + plainblob.size());
 
 	io::array_source      source{ plainblob.data(), plainblob.size() };
 	io::filtering_istream is{};
@@ -447,68 +447,68 @@ length_test_input_filter(const std::string &header,
 	// ciphertext has been hopefully filled with (MAC || ciphertext)
 
 	BOOST_CHECK_EQUAL(ciphertext.size(),
-		cryptor_aead_encrypt_filter::MACSIZE + plaintext.size());
+		aead_encrypt_filter::MACSIZE + plaintext.size());
 }
 
 BOOST_FIXTURE_TEST_SUITE(sodium_test_suite, SodiumFixture)
 
-BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_size_full_output_filter)
+BOOST_AUTO_TEST_CASE(sodium_test_aead_filters_size_full_output_filter)
 {
 	std::string header{ "the header" };
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
 	length_test_output_filter(header, plaintext);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_size_empty_output_filter)
+BOOST_AUTO_TEST_CASE(sodium_test_aead_filters_size_empty_output_filter)
 {
 	std::string header{ "the header" };
 	std::string plaintext{};
 	length_test_output_filter(header, plaintext);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_size_empty_header_output_filter)
+BOOST_AUTO_TEST_CASE(sodium_test_aead_filters_size_empty_header_output_filter)
 {
 	std::string header{};
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
 	length_test_output_filter(header, plaintext);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_size_empty_both_output_filter)
+BOOST_AUTO_TEST_CASE(sodium_test_aead_filters_size_empty_both_output_filter)
 {
 	std::string header{};
 	std::string plaintext{};
 	length_test_output_filter(header, plaintext);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_size_full_input_filter)
+BOOST_AUTO_TEST_CASE(sodium_test_aead_filters_size_full_input_filter)
 {
 	std::string header{ "the header" };
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
 	length_test_input_filter(header, plaintext);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_size_empty_input_filter)
+BOOST_AUTO_TEST_CASE(sodium_test_aead_filters_size_empty_input_filter)
 {
 	std::string header{ "the header" };
 	std::string plaintext{};
 	length_test_input_filter(header, plaintext);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_size_empty_header_input_filter)
+BOOST_AUTO_TEST_CASE(sodium_test_aead_filters_size_empty_header_input_filter)
 {
 	std::string header{};
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
 	length_test_input_filter(header, plaintext);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_size_empty_both_input_filter)
+BOOST_AUTO_TEST_CASE(sodium_test_aead_filters_size_empty_both_input_filter)
 {
 	std::string header{};
 	std::string plaintext{};
 	length_test_input_filter(header, plaintext);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_combined_full_output_filter)
+BOOST_AUTO_TEST_CASE(sodium_test_aead_filters_correctness_combined_full_output_filter)
 {
 	std::string header{ "the header" };
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
@@ -518,7 +518,7 @@ BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_combined_full_
 	BOOST_CHECK(result);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_combined_empty_output_filter)
+BOOST_AUTO_TEST_CASE(sodium_test_aead_filters_correctness_combined_empty_output_filter)
 {
 	std::string header{ "the header" };
 	std::string plaintext{};
@@ -528,7 +528,7 @@ BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_combined_empty
 	BOOST_CHECK(result);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_combined_empty_header_output_filter)
+BOOST_AUTO_TEST_CASE(sodium_test_aead_filters_correctness_combined_empty_header_output_filter)
 {
 	std::string header{};
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
@@ -538,7 +538,7 @@ BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_combined_empty
 	BOOST_CHECK(result);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_combined_empty_both_output_filter)
+BOOST_AUTO_TEST_CASE(sodium_test_aead_filters_correctness_combined_empty_both_output_filter)
 {
 	std::string header{};
 	std::string plaintext{};
@@ -548,7 +548,7 @@ BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_combined_empty
 	BOOST_CHECK(result);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_combined_full_input_filter)
+BOOST_AUTO_TEST_CASE(sodium_test_aead_filters_correctness_combined_full_input_filter)
 {
 	std::string header{ "the header" };
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
@@ -558,7 +558,7 @@ BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_combined_full_
 	BOOST_CHECK(result);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_combined_empty_input_filter)
+BOOST_AUTO_TEST_CASE(sodium_test_aead_filters_correctness_combined_empty_input_filter)
 {
 	std::string header{ "the header" };
 	std::string plaintext{};
@@ -568,7 +568,7 @@ BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_combined_empty
 	BOOST_CHECK(result);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_combined_empty_header_input_filter)
+BOOST_AUTO_TEST_CASE(sodium_test_aead_filters_correctness_combined_empty_header_input_filter)
 {
 	std::string header{};
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
@@ -578,7 +578,7 @@ BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_combined_empty
 	BOOST_CHECK(result);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_combined_empty_both_input_filter)
+BOOST_AUTO_TEST_CASE(sodium_test_aead_filters_correctness_combined_empty_both_input_filter)
 {
 	std::string header{};
 	std::string plaintext{};
@@ -588,7 +588,7 @@ BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_combined_empty
 	BOOST_CHECK(result);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_full_output_filter)
+BOOST_AUTO_TEST_CASE(sodium_test_aead_filters_correctness_full_output_filter)
 {
 	std::string header{ "the header" };
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
@@ -598,7 +598,7 @@ BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_full_output_fi
 	BOOST_CHECK(result);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_falsify_header_full_output_filter)
+BOOST_AUTO_TEST_CASE(sodium_test_aead_filters_correctness_falsify_header_full_output_filter)
 {
 	std::string header{ "the header" };
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
@@ -608,7 +608,7 @@ BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_falsify_header
 	BOOST_CHECK(result);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_falsify_ciphertext_full_output_filter)
+BOOST_AUTO_TEST_CASE(sodium_test_aead_filters_correctness_falsify_ciphertext_full_output_filter)
 {
 	std::string header{ "the header" };
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
@@ -618,7 +618,7 @@ BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_falsify_cipher
 	BOOST_CHECK(result);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_falsify_mac_full_output_filter)
+BOOST_AUTO_TEST_CASE(sodium_test_aead_filters_correctness_falsify_mac_full_output_filter)
 {
 	std::string header{ "the header" };
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
@@ -628,7 +628,7 @@ BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_falsify_mac_fu
 	BOOST_CHECK(result);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_falsify_key_full_output_filter)
+BOOST_AUTO_TEST_CASE(sodium_test_aead_filters_correctness_falsify_key_full_output_filter)
 {
 	std::string header{ "the header" };
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
@@ -638,7 +638,7 @@ BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_falsify_key_fu
 	BOOST_CHECK(result);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_falsify_nonce_full_output_filter)
+BOOST_AUTO_TEST_CASE(sodium_test_aead_filters_correctness_falsify_nonce_full_output_filter)
 {
 	std::string header{ "the header" };
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
@@ -648,7 +648,7 @@ BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_falsify_nonce_
 	BOOST_CHECK(result);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_full_input_filter)
+BOOST_AUTO_TEST_CASE(sodium_test_aead_filters_correctness_full_input_filter)
 {
 	std::string header{ "the header" };
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
@@ -658,7 +658,7 @@ BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_full_input_fil
 	BOOST_CHECK(result);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_falsify_header_full_input_filter)
+BOOST_AUTO_TEST_CASE(sodium_test_aead_filters_correctness_falsify_header_full_input_filter)
 {
 	std::string header{ "the header" };
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
@@ -668,7 +668,7 @@ BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_falsify_header
 	BOOST_CHECK(result);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_falsify_ciphertext_full_input_filter)
+BOOST_AUTO_TEST_CASE(sodium_test_aead_filters_correctness_falsify_ciphertext_full_input_filter)
 {
 	std::string header{ "the header" };
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
@@ -678,7 +678,7 @@ BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_falsify_cipher
 	BOOST_CHECK(result);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_falsify_mac_full_input_filter)
+BOOST_AUTO_TEST_CASE(sodium_test_aead_filters_correctness_falsify_mac_full_input_filter)
 {
 	std::string header{ "the header" };
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
@@ -688,7 +688,7 @@ BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_falsify_mac_fu
 	BOOST_CHECK(result);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_falsify_key_full_input_filter)
+BOOST_AUTO_TEST_CASE(sodium_test_aead_filters_correctness_falsify_key_full_input_filter)
 {
 	std::string header{ "the header" };
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
@@ -698,7 +698,7 @@ BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_falsify_key_fu
 	BOOST_CHECK(result);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_test_cryptor_aead_filters_correctness_falsify_nonce_full_input_filter)
+BOOST_AUTO_TEST_CASE(sodium_test_aead_filters_correctness_falsify_nonce_full_input_filter)
 {
 	std::string header{ "the header" };
 	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };

@@ -1,4 +1,4 @@
-// cryptor_aead.h -- Authenticated Encryption with Added Data
+// aead.h -- Authenticated Encryption with Added Data
 //
 // ISC License
 // 
@@ -27,7 +27,7 @@
 namespace sodium {
 
 template <class BT=bytes>
-class cryptor_aead
+class aead
 {
  public:
   static constexpr unsigned int NSZA    = sodium::NONCESIZE_AEAD;
@@ -38,29 +38,29 @@ class cryptor_aead
   using key_type   = key<KEYSIZE>;
   using nonce_type = nonce<NSZA>;
 
-  // A cryptor_aead with a new random key
-  cryptor_aead() : key_(std::move(key_type())) {}
+  // A aead with a new random key
+  aead() : key_(std::move(key_type())) {}
 
-  // A cryptor_aead with a user-supplied key (copying version)
-  cryptor_aead(const key_type &key) : key_(key) {}
+  // A aead with a user-supplied key (copying version)
+  aead(const key_type &key) : key_(key) {}
 
-  // A cryptor_aead with a user-supplied key (moving version)
-  cryptor_aead(key_type &&key) : key_(std::move(key)) {}
+  // A aead with a user-supplied key (moving version)
+  aead(key_type &&key) : key_(std::move(key)) {}
 
   // A copying constructor
-  cryptor_aead(const cryptor_aead &other) :
+  aead(const aead &other) :
 	  key_(other.key_)
   {}
 
   // A moving constructor
-  cryptor_aead(cryptor_aead &&other) :
+  aead(aead &&other) :
 	  key_(std::move(other.key_))
   {}
 
   // XXX copying and moving assignment operators?
 
   /**
-   * Encrypt plaintext using cryptor_aead's key and supplied nonce.
+   * Encrypt plaintext using aead's key and supplied nonce.
    * Compute a MAC from the ciphertext and the attached plain header.
    * Return a combination (MAC || ciphertext).
    *
@@ -91,7 +91,7 @@ class cryptor_aead
 
   /**
    * Decrypt ciphertext_with_mac returned by encrypt() along with
-   * plain header, using cryptor_aead's secret key,
+   * plain header, using aead's secret key,
    * and supplied public nonce.
    * 
    * If decryption succeeds, return plaintext.
@@ -115,7 +115,7 @@ private:
 
 template <class BT>
 BT
-cryptor_aead<BT>::encrypt(const BT &header,
+aead<BT>::encrypt(const BT &header,
 	const BT         &plaintext,
 	const nonce_type &nonce)
 {
@@ -139,13 +139,13 @@ cryptor_aead<BT>::encrypt(const BT &header,
 
 template <class BT>
 BT
-cryptor_aead<BT>::decrypt(const BT &header,
+aead<BT>::decrypt(const BT &header,
 	const BT         &ciphertext_with_mac,
 	const nonce_type &nonce)
 {
 	// some sanity checks before we get started
 	if (ciphertext_with_mac.size() < MACSIZE)
-		throw std::runtime_error{ "sodium::cryptor_aead::decrypt() ciphertext length too small for a tag" };
+		throw std::runtime_error{ "sodium::aead::decrypt() ciphertext length too small for a tag" };
 
 	// make space for decrypted buffer
 	BT plaintext(ciphertext_with_mac.size() - MACSIZE);
@@ -160,7 +160,7 @@ cryptor_aead<BT>::decrypt(const BT &header,
 		(header.empty() ? nullptr : reinterpret_cast<const unsigned char *>(header.data())), header.size(),
 		nonce.data(),
 		key_.data()) == -1)
-		throw std::runtime_error{ "sodium::cryptor_aead::decrypt() can't decrypt or message/tag corrupt" };
+		throw std::runtime_error{ "sodium::aead::decrypt() can't decrypt or message/tag corrupt" };
 	plaintext.resize(static_cast<std::size_t>(mlen));
 
 	return plaintext;
