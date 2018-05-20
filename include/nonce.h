@@ -19,6 +19,7 @@
 #pragma once
 
 #include "common.h"
+#include "random.h"
 #include <sodium.h>
 
 #ifndef NDEBUG
@@ -70,7 +71,7 @@ class nonce
  
   nonce(bool init=true) : noncedata_(N) {
     if (init)
-      randombytes_buf(noncedata_.data(), noncedata_.size());
+      sodium::randombytes_buf_inplace(noncedata_);
   }
 
   // there's nothing special about copy operations: allow them.

@@ -20,6 +20,7 @@
 
 #include "common.h"
 #include "allocator.h"
+#include "random.h"
 
 #include <vector>
 #include <string>
@@ -285,7 +286,7 @@ class key
    **/
   
   void initialize() {
-    randombytes_buf(keydata_.data(), keydata_.size());
+    sodium::randombytes_buf_inplace(keydata_);
   }
 
   /**

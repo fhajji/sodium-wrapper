@@ -21,6 +21,7 @@
 #include "common.h"
 #include "allocator.h"
 #include "key.h"     // for KEYSIZE constants
+#include "random.h"
 #include <vector>
 #include <string>
 #include <utility>
@@ -252,7 +253,7 @@ class keyvar
    **/
   
   void initialize() {
-    randombytes_buf(keydata_.data(), keydata_.size());
+    sodium::randombytes_buf_inplace(keydata_);
   }
 
   /**

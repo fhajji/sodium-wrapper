@@ -22,6 +22,7 @@
 
 #include "common.h"
 #include "keypair.h"
+#include "random.h"
 #include <stdexcept>
 #include <sodium.h>
 
@@ -79,7 +80,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypair_size_ctor_default )
 BOOST_AUTO_TEST_CASE( sodium_test_keypair_size_ctor_seed )
 {
   bytes  seed(ks_seed);
-  randombytes_buf(seed.data(), seed.size());
+  sodium::randombytes_buf_inplace(seed);
   
   KeyPair keypair(seed);
 
@@ -127,7 +128,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypair_nonzero_ctor_default )
 BOOST_AUTO_TEST_CASE( sodium_test_keypair_nonzero_ctor_seed )
 {
   bytes seed(ks_seed);
-  randombytes_buf(seed.data(), seed.size());
+  sodium::randombytes_buf_inplace(seed);
 
   KeyPair keypair(seed);
 
@@ -155,7 +156,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypair_different_ctor_default )
 BOOST_AUTO_TEST_CASE( sodium_test_keypair_different_ctor_seed )
 {
   bytes seed(ks_seed);
-  randombytes_buf(seed.data(), seed.size());
+  sodium::randombytes_buf_inplace(seed);
 
   KeyPair keypair(seed);
 
@@ -175,7 +176,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypair_different_ctor_privkey )
 BOOST_AUTO_TEST_CASE( sodium_test_keypair_seedcompare_ctor_same_seed )
 {
   bytes seed(ks_seed);
-  randombytes_buf(seed.data(), seed.size());
+  sodium::randombytes_buf_inplace(seed);
 
   KeyPair keypair1(seed);
   KeyPair keypair2(seed); // same seed
@@ -190,10 +191,8 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypair_seedcompare_ctor_same_seed )
 
 BOOST_AUTO_TEST_CASE( sodium_test_keypair_seedcompare_ctor_different_seed )
 {
-  bytes seed1(ks_seed);
-  randombytes_buf(seed1.data(), seed1.size());
-  bytes seed2(ks_seed);
-  randombytes_buf(seed2.data(), seed2.size());
+  bytes seed1{ sodium::randombytes_buf(ks_seed) };
+  bytes seed2{ sodium::randombytes_buf(ks_seed) };
 
   BOOST_CHECK(seed1 != seed2); // very unlikely that they are the same
   

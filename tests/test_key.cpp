@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_key_copy_assign )
 BOOST_AUTO_TEST_CASE( sodium_test_key_setpass )
 {
   bytes salt1(ks_salt);
-  randombytes_buf(salt1.data(), salt1.size());
+  sodium::randombytes_buf_inplace(salt1);
 
   std::string pw1 { "CPE1704TKS" };
   std::string pw2 { "12345" };
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_key_setpass )
   // invoking setpass() with same password but different salt
   // must yield different bytes
   bytes salt2(ks_salt);
-  randombytes_buf(salt2.data(), salt2.size());
+  sodium::randombytes_buf_inplace(salt2);
   key2.setpass(pw1, salt2, sodium::key<ks3>::strength_type::medium);
   BOOST_CHECK(! isAllZero(key2.data(), key2.size()));
   

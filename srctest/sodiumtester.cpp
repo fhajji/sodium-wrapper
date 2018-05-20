@@ -20,6 +20,7 @@
 
 #include "common.h"
 #include "helpers.h"
+#include "random.h"
 #include "nonce.h"
 #include "key.h"
 #include "keyvar.h"
@@ -201,7 +202,7 @@ SodiumTester::test2(const std::string &plaintext,
   // way to recreate the key -- that would be throw-away
   // use-once keys.
   bytes salt(sodium::KEYSIZE_SALT);
-  randombytes_buf(salt.data(), salt.size());
+  sodium::randombytes_buf_inplace(salt);
 
   // transfer plaintext into a binary blob
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};

@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_size_ctor_default )
 BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_size_ctor_seed )
 {
   bytes seed(ks_seed);
-  randombytes_buf(seed.data(), seed.size());
+  sodium::randombytes_buf_inplace(seed);
   
   KeyPairSign keypair(seed);
 
