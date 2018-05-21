@@ -21,22 +21,34 @@
 #include "common.h"
 #include "key.h"
 #include "nonce.h"
+#include "aead_chacha20_poly1305.h"
+#include "aead_chacha20_poly1305_ietf.h"
+#include "aead_xchacha20_poly1305_ietf.h"
 #include <sodium.h>
 #include <stdexcept>
+#include <type_traits>
 
 namespace sodium {
 
-template <class BT=bytes>
+template <typename BT=bytes,
+  typename F=sodium::aead_xchacha20_poly1305_ietf,
+  typename std::enable_if<
+	   std::is_same<F, sodium::aead_chacha20_poly1305>::value
+	|| std::is_same<F, sodium::aead_chacha20_poly1305_ietf>::value
+	|| std::is_same<F, sodium::aead_xchacha20_poly1305_ietf>::value
+	, int
+  >::type = 0
+>
 class aead
 {
  public:
-  static constexpr unsigned int NSZA    = sodium::NONCESIZE_AEAD;
-  static constexpr std::size_t  KEYSIZE = sodium::KEYSIZE_AEAD;
-  static constexpr std::size_t  MACSIZE = crypto_aead_chacha20poly1305_ABYTES;
+  static constexpr std::size_t NONCESIZE = F::NPUBBYTES;
+  static constexpr std::size_t KEYSIZE   = F::KEYBYTES;
+  static constexpr std::size_t MACSIZE   = F::ABYTES;
 
   using bytes_type = BT;
   using key_type   = key<KEYSIZE>;
-  using nonce_type = nonce<NSZA>;
+  using nonce_type = nonce<NONCESIZE>;
 
   // A aead with a new random key
   aead() : key_(std::move(key_type())) {}
@@ -77,8 +89,7 @@ class aead
    * way to achieve this is to increment nonce after or prior to each
    * encrypt() invocation.
    * 
-   * Limits: Up to 2^64 messages with the same key,
-   *         Up to 2^70 bytes per message.
+   * Limits: See comments in the selected F type.
    *
    * The (MAC || ciphertext) size is 
    *    MACSIZE + plaintext.size()
@@ -86,8 +97,26 @@ class aead
    **/
 
   BT encrypt(const BT &header,
-		 const BT      &plaintext,
-		 const nonce_type &nonce);
+	  const BT      &plaintext,
+	  const nonce_type &nonce)
+  {
+	  // make space for MAC and encrypted message, i.e. (MAC || encrypted)
+	  BT ciphertext(MACSIZE + plaintext.size());
+
+	  // so many bytes will really be written into output buffer
+	  unsigned long long clen;
+
+	  // let's encrypt now!
+	  F::encrypt(reinterpret_cast<unsigned char *>(ciphertext.data()), &clen,
+		  reinterpret_cast<const unsigned char *>(plaintext.data()), plaintext.size(),
+		  (header.empty() ? nullptr : reinterpret_cast<const unsigned char *>(header.data())), header.size(),
+		  NULL /* nsec */,
+		  nonce.data(),
+		  key_.data());
+	  ciphertext.resize(static_cast<std::size_t>(clen));
+
+	  return ciphertext;
+  };
 
   /**
    * Decrypt ciphertext_with_mac returned by encrypt() along with
@@ -106,64 +135,37 @@ class aead
    **/
 
   BT decrypt(const BT &header,
-		 const BT         &ciphertext_with_mac,
-		 const nonce_type &nonce);
+	  const BT         &ciphertext_with_mac,
+	  const nonce_type &nonce)
+  {
+	  // some sanity checks before we get started
+	  if (ciphertext_with_mac.size() < MACSIZE)
+		  throw std::runtime_error{ "sodium::aead::decrypt() ciphertext length too small for a tag" };
+
+	  // make space for decrypted buffer
+	  BT plaintext(ciphertext_with_mac.size() - MACSIZE);
+
+	  // how many bytes we decrypt
+	  unsigned long long mlen;
+
+	  // and now decrypt!
+	  if (F::decrypt(reinterpret_cast<unsigned char *>(plaintext.data()), &mlen,
+		  nullptr /* nsec */,
+		  reinterpret_cast<const unsigned char *>(ciphertext_with_mac.data()), ciphertext_with_mac.size(),
+		  (header.empty() ? nullptr : reinterpret_cast<const unsigned char *>(header.data())), header.size(),
+		  nonce.data(),
+		  key_.data()) == -1)
+		  throw std::runtime_error{ "sodium::aead::decrypt() can't decrypt or message/tag corrupt" };
+	  plaintext.resize(static_cast<std::size_t>(mlen));
+
+	  return plaintext;
+  }
+
+  // XXX TODO: encrypt_detached()
+  // XXX TODO: decrypt_detached()
 
 private:
 	key_type key_;
 };
-
-template <class BT>
-BT
-aead<BT>::encrypt(const BT &header,
-	const BT         &plaintext,
-	const nonce_type &nonce)
-{
-	// make space for MAC and encrypted message, i.e. (MAC || encrypted)
-	BT ciphertext(MACSIZE + plaintext.size());
-
-	// so many bytes will really be written into output buffer
-	unsigned long long clen;
-
-	// let's encrypt now!
-	crypto_aead_chacha20poly1305_encrypt(reinterpret_cast<unsigned char *>(ciphertext.data()), &clen,
-		reinterpret_cast<const unsigned char *>(plaintext.data()), plaintext.size(),
-		(header.empty() ? nullptr : reinterpret_cast<const unsigned char *>(header.data())), header.size(),
-		NULL /* nsec */,
-		nonce.data(),
-		key_.data());
-	ciphertext.resize(static_cast<std::size_t>(clen));
-
-	return ciphertext;
-}
-
-template <class BT>
-BT
-aead<BT>::decrypt(const BT &header,
-	const BT         &ciphertext_with_mac,
-	const nonce_type &nonce)
-{
-	// some sanity checks before we get started
-	if (ciphertext_with_mac.size() < MACSIZE)
-		throw std::runtime_error{ "sodium::aead::decrypt() ciphertext length too small for a tag" };
-
-	// make space for decrypted buffer
-	BT plaintext(ciphertext_with_mac.size() - MACSIZE);
-
-	// how many bytes we decrypt
-	unsigned long long mlen;
-
-	// and now decrypt!
-	if (crypto_aead_chacha20poly1305_decrypt(reinterpret_cast<unsigned char *>(plaintext.data()), &mlen,
-		nullptr /* nsec */,
-		reinterpret_cast<const unsigned char *>(ciphertext_with_mac.data()), ciphertext_with_mac.size(),
-		(header.empty() ? nullptr : reinterpret_cast<const unsigned char *>(header.data())), header.size(),
-		nonce.data(),
-		key_.data()) == -1)
-		throw std::runtime_error{ "sodium::aead::decrypt() can't decrypt or message/tag corrupt" };
-	plaintext.resize(static_cast<std::size_t>(mlen));
-
-	return plaintext;
-}
 
 } // namespace sodium

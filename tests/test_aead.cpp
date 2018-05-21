@@ -203,4 +203,12 @@ BOOST_AUTO_TEST_CASE( sodium_aead_test_big_header )
   BOOST_CHECK(! test_of_correctness(header, plaintext, csize, true, false));
 }
 
+// XXX TODO: test sodium::aead with other template arguments
+// such as sodium::bytes_protected for BT and
+//    sodium::aead_chacha20_poly1305
+//    sodium::aead_chacha20_poly1305_ietf
+//    sodium::aead_aes_gcm (when implemented)
+// for F.
+// Test also that other types for F are being rejected at compile-time.
+
 BOOST_AUTO_TEST_SUITE_END ()

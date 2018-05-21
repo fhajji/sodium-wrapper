@@ -342,7 +342,7 @@ SodiumTester::test4(const std::string &plaintext,
   os << "starting AEAD test... ---------" << std::endl;
 
   // check at compile time that we got the right size of the nonce
-  static_assert(nonce.size() == sodium::NONCESIZE_AEAD,
+  static_assert(nonce.size() == aead<>::NONCESIZE,
 		"SodiumTester::test4() wrong nonce size");
   
   // transfer plaintext and header into binary blobs
