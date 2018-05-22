@@ -24,6 +24,7 @@
 #include "aead_chacha20_poly1305.h"
 #include "aead_chacha20_poly1305_ietf.h"
 #include "aead_xchacha20_poly1305_ietf.h"
+#include "aead_aesgcm.h"
 #include <sodium.h>
 #include <stdexcept>
 #include <type_traits>
@@ -36,6 +37,7 @@ template <typename BT=bytes,
 	   std::is_same<F, sodium::aead_chacha20_poly1305>::value
 	|| std::is_same<F, sodium::aead_chacha20_poly1305_ietf>::value
 	|| std::is_same<F, sodium::aead_xchacha20_poly1305_ietf>::value
+	|| std::is_same<F, sodium::aead_aesgcm>::value
 	, int
   >::type = 0
 >
