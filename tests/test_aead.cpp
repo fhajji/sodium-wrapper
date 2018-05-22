@@ -34,7 +34,7 @@ test_of_correctness(const std::string &header,
 		    bool falsify_ciphertext = false)
 {
   sodium::aead<BT,F> sc;                // with random key
-  sodium::aead<BT,F>::nonce_type nonce; // random nonce
+  typename sodium::aead<BT,F>::nonce_type nonce; // random nonce
 
   BT plainblob    {plaintext.cbegin(), plaintext.cend()};
   BT headerblob   {header.cbegin(), header.cend()};
