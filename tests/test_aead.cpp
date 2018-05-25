@@ -649,6 +649,122 @@ BOOST_AUTO_TEST_CASE(sodium_aead_test_big_header_5)
 	BOOST_TEST((!test_of_correctness<sodium::bytes, sodium::aead_aesgcm>(header, plaintext, csize, true, false)));
 }
 
+// ---- *_6: BT=sodium::bytes, F=sodium::aead_aesgcm_precomputed -------
+
+BOOST_AUTO_TEST_CASE(sodium_aead_test_full_plaintext_full_header_6)
+{
+	std::string header{ "the head" };
+	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
+	std::size_t csize;
+
+	BOOST_TEST((test_of_correctness<sodium::bytes, sodium::aead_aesgcm_precomputed>(header, plaintext, csize, false, false)));
+	BOOST_TEST((csize == plaintext.size() + sodium::aead<sodium::bytes, sodium::aead_aesgcm_precomputed>::MACSIZE));
+}
+
+BOOST_AUTO_TEST_CASE(sodium_aead_test_full_plaintext_empty_header_6)
+{
+	std::string header{};
+	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
+	std::size_t csize;
+
+	BOOST_TEST((test_of_correctness<sodium::bytes, sodium::aead_aesgcm_precomputed>(header, plaintext, csize, false, false)));
+	BOOST_TEST((csize, plaintext.size() + sodium::aead<sodium::bytes, sodium::aead_aesgcm_precomputed>::MACSIZE));
+}
+
+BOOST_AUTO_TEST_CASE(sodium_aead_test_empty_plaintext_full_header_6)
+{
+	std::string header{ "the head" };
+	std::string plaintext{};
+	std::size_t csize;
+
+	BOOST_TEST((test_of_correctness<sodium::bytes, sodium::aead_aesgcm_precomputed>(header, plaintext, csize, false, false)));
+	BOOST_TEST((csize == plaintext.size() + sodium::aead<sodium::bytes, sodium::aead_aesgcm_precomputed>::MACSIZE));
+}
+
+BOOST_AUTO_TEST_CASE(sodium_aead_test_empty_plaintext_empty_header_6)
+{
+	std::string header{};
+	std::string plaintext{};
+	std::size_t csize;
+
+	BOOST_TEST((test_of_correctness<sodium::bytes, sodium::aead_aesgcm_precomputed>(header, plaintext, csize, false, false)));
+	BOOST_TEST((csize == plaintext.size() + sodium::aead<sodium::bytes, sodium::aead_aesgcm_precomputed>::MACSIZE));
+}
+
+BOOST_AUTO_TEST_CASE(sodium_aead_test_empty_plaintext_falsify_header_6)
+{
+	std::string header{ "the head" };
+	std::string plaintext{};
+	std::size_t csize;
+
+	BOOST_TEST((!test_of_correctness<sodium::bytes, sodium::aead_aesgcm_precomputed>(header, plaintext, csize, true, false)));
+	BOOST_TEST((csize == plaintext.size() + sodium::aead<sodium::bytes, sodium::aead_aesgcm_precomputed>::MACSIZE));
+}
+
+BOOST_AUTO_TEST_CASE(sodium_aead_test_full_plaintext_falsify_header_6)
+{
+	std::string header{ "the head" };
+	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
+	std::size_t csize;
+
+	BOOST_TEST((!test_of_correctness<sodium::bytes, sodium::aead_aesgcm_precomputed>(header, plaintext, csize, true, false)));
+	BOOST_TEST((csize == plaintext.size() + sodium::aead<sodium::bytes, sodium::aead_aesgcm_precomputed>::MACSIZE));
+}
+
+BOOST_AUTO_TEST_CASE(sodium_aead_test_falsify_plaintext_empty_header_6)
+{
+	std::string header{};
+	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
+	std::size_t csize;
+
+	BOOST_TEST((!test_of_correctness<sodium::bytes, sodium::aead_aesgcm_precomputed>(header, plaintext, csize, false, true)));
+	BOOST_TEST((csize == plaintext.size() + sodium::aead<sodium::bytes, sodium::aead_aesgcm_precomputed>::MACSIZE));
+}
+
+BOOST_AUTO_TEST_CASE(sodium_aead_test_falsify_plaintext_full_header_6)
+{
+	std::string header{ "the head" };
+	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
+	std::size_t csize;
+
+	BOOST_TEST((!test_of_correctness<sodium::bytes, sodium::aead_aesgcm_precomputed>(header, plaintext, csize, false, true)));
+	BOOST_TEST((csize == plaintext.size() + sodium::aead<sodium::bytes, sodium::aead_aesgcm_precomputed>::MACSIZE));
+}
+
+BOOST_AUTO_TEST_CASE(sodium_aead_test_falsify_plaintext_falsify_header_6)
+{
+	std::string header{ "the head" };
+	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
+	std::size_t csize;
+
+	BOOST_TEST((!test_of_correctness<sodium::bytes, sodium::aead_aesgcm_precomputed>(header, plaintext, csize, true, true)));
+	BOOST_TEST((csize == plaintext.size() + sodium::aead<sodium::bytes, sodium::aead_aesgcm_precomputed>::MACSIZE));
+}
+
+BOOST_AUTO_TEST_CASE(sodium_aead_test_big_header_6)
+{
+	std::string header(sodium::aead<sodium::bytes, sodium::aead_aesgcm_precomputed>::MACSIZE * 200, 'A');
+	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
+	std::size_t csize;
+
+	// The following test shows that the header is NOT included in
+	// the ciphertext. Only the plaintext and the MAC are included
+	// in the ciphertext, no matter how big the header may be.
+	// It is the responsability of the user to transmit the header
+	// separately from the ciphertext, i.e. to tag it along.
+
+	BOOST_TEST((header.size() == sodium::aead<sodium::bytes, sodium::aead_aesgcm_precomputed>::MACSIZE * 200));
+	BOOST_TEST((test_of_correctness<sodium::bytes, sodium::aead_aesgcm_precomputed>(header, plaintext, csize, false, false)));
+	BOOST_TEST((csize == plaintext.size() + sodium::aead<sodium::bytes, sodium::aead_aesgcm_precomputed>::MACSIZE));
+
+	// However, a modification of the header WILL be detected.
+	// We modify only the 0-th byte right now, but a modification
+	// SHOULD also be detected past MACSIZE bytes... (not tested)
+
+	BOOST_TEST((!test_of_correctness<sodium::bytes, sodium::aead_aesgcm_precomputed>(header, plaintext, csize, true, false)));
+}
+
+
 // XXX TODO: Test that other types for F are being rejected at compile-time.
 
 BOOST_AUTO_TEST_SUITE_END ()

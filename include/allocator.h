@@ -1,4 +1,4 @@
-// allocator.h -- An allocator for keys in wired memory
+// allocator.h -- An allocator for wired / protected memory
 //
 // ISC License
 // 
@@ -116,7 +116,7 @@ namespace sodium {
 #endif // ! NDEBUG
 
 			// XXX slowly increase num until we reach at least 64 bytes
-			while (num * sizeof(T) <= 64) ++num;
+			// while (num * sizeof(T) <= 64) ++num;
 
 			void *ptr = sodium_allocarray(num, sizeof(T));
 

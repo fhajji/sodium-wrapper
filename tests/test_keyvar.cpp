@@ -36,6 +36,7 @@
 #include "common.h"
 #include "key.h"
 #include "keyvar.h"
+#include "aead.h"
 
 #include <utility>
 #include <stdexcept>
@@ -48,7 +49,7 @@ using bytes = sodium::bytes;
 
 static constexpr std::size_t ks1     = sodium::KEYSIZE_SECRETBOX;
 static constexpr std::size_t ks2     = sodium::KEYSIZE_AUTH;
-static constexpr std::size_t ks3     = sodium::KEYSIZE_AEAD;
+static constexpr std::size_t ks3     = sodium::aead<>::KEYSIZE;
 static constexpr std::size_t ks_salt = sodium::KEYSIZE_SALT;
 
 bool isAllZero(const unsigned char *bytes, const std::size_t &size)

@@ -33,6 +33,7 @@
 
 #include "common.h"
 #include "key.h"
+#include "aead.h" // for sodium::aead<>::KEYSIZE
 
 #include <utility>
 #include <stdexcept>
@@ -42,7 +43,7 @@
 
 static constexpr std::size_t ks1     = sodium::KEYSIZE_SECRETBOX;
 static constexpr std::size_t ks2     = sodium::KEYSIZE_AUTH;
-static constexpr std::size_t ks3     = sodium::KEYSIZE_AEAD;
+static constexpr std::size_t ks3     = sodium::aead<>::KEYSIZE;
 static constexpr std::size_t ks_salt = sodium::KEYSIZE_SALT;
 
 using bytes = sodium::bytes;

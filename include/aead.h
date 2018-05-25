@@ -25,6 +25,8 @@
 #include "aead_chacha20_poly1305_ietf.h"
 #include "aead_xchacha20_poly1305_ietf.h"
 #include "aead_aesgcm.h"
+#include "aead_aesgcm_precomputed.h"
+#include "aes_ctx.h"
 #include <sodium.h>
 #include <stdexcept>
 #include <type_traits>
@@ -33,13 +35,14 @@ namespace sodium {
 
 template <typename BT=bytes,
   typename F=sodium::aead_xchacha20_poly1305_ietf,
-  typename std::enable_if<
+  typename T=std::enable_if<
 	   std::is_same<F, sodium::aead_chacha20_poly1305>::value
 	|| std::is_same<F, sodium::aead_chacha20_poly1305_ietf>::value
 	|| std::is_same<F, sodium::aead_xchacha20_poly1305_ietf>::value
 	|| std::is_same<F, sodium::aead_aesgcm>::value
+    || std::is_same<F, sodium::aead_aesgcm_precomputed>::value
 	, int
-  >::type = 0
+  >::type
 >
 class aead
 {
@@ -53,22 +56,22 @@ class aead
   using nonce_type = nonce<NONCESIZE>;
 
   // A aead with a new random key
-  aead() : key_(std::move(key_type())) {}
+  aead() : key_state_(std::move(key_type())) {}
 
   // A aead with a user-supplied key (copying version)
-  aead(const key_type &key) : key_(key) {}
+  aead(const key_type &key) : key_state_(key) {}
 
   // A aead with a user-supplied key (moving version)
-  aead(key_type &&key) : key_(std::move(key)) {}
+  aead(key_type &&key) : key_state_(std::move(key)) {}
 
   // A copying constructor
   aead(const aead &other) :
-	  key_(other.key_)
+	  key_state_(other.key_state_)
   {}
 
   // A moving constructor
   aead(aead &&other) :
-	  key_(std::move(other.key_))
+	  key_state_(std::move(other.key_state_))
   {}
 
   // XXX copying and moving assignment operators?
@@ -114,7 +117,7 @@ class aead
 		  (header.empty() ? nullptr : reinterpret_cast<const unsigned char *>(header.data())), header.size(),
 		  NULL /* nsec */,
 		  nonce.data(),
-		  key_.data());
+		  key_state_.data());
 	  ciphertext.resize(static_cast<std::size_t>(clen));
 
 	  return ciphertext;
@@ -156,7 +159,7 @@ class aead
 		  reinterpret_cast<const unsigned char *>(ciphertext_with_mac.data()), ciphertext_with_mac.size(),
 		  (header.empty() ? nullptr : reinterpret_cast<const unsigned char *>(header.data())), header.size(),
 		  nonce.data(),
-		  key_.data()) == -1)
+		  key_state_.data()) == -1)
 		  throw std::runtime_error{ "sodium::aead::decrypt() can't decrypt or message/tag corrupt" };
 	  plaintext.resize(static_cast<std::size_t>(mlen));
 
@@ -167,7 +170,107 @@ class aead
   // XXX TODO: decrypt_detached()
 
 private:
-	key_type key_;
+	// In all but aead_aesgcm_precomputed, key_state_ is the AEAD key.
+	// In aead_aesgcm_precomputed, key_state_ is the state precomputed
+	// from the AEAD key with crypto_aead_aes256gcm_beforenm().
+	typename std::conditional<std::is_same<F, sodium::aead_aesgcm_precomputed>::value,
+		aes_ctx,
+		key_type>::type key_state_;
+};
+
+// ----------------------------------------------------------------------------
+// Partial specialization for the case F=aead_aesgcm_precomputed
+
+template <typename BT>
+class aead<BT, sodium::aead_aesgcm_precomputed, int>
+{
+public:
+	static constexpr std::size_t NONCESIZE = sodium::aead_aesgcm_precomputed::NPUBBYTES;
+	static constexpr std::size_t KEYSIZE   = sodium::aead_aesgcm_precomputed::KEYBYTES;
+	static constexpr std::size_t MACSIZE   = sodium::aead_aesgcm_precomputed::ABYTES;
+
+	using bytes_type = BT;
+	using key_type = key<KEYSIZE>;
+	using nonce_type = nonce<NONCESIZE>;
+
+	// A aead with a new random key
+	aead() {
+		sodium::aead_aesgcm_precomputed::init_ctx(key_state_.data(),
+			key_type().data());
+	}
+
+	// A aead with a user-supplied key (copying version)
+	aead(const key_type &key) {
+		sodium::aead_aesgcm_precomputed::init_ctx(key_state_.data(),
+			key.data());
+	}
+
+	// A aead with a user-supplied key (moving version)
+	aead(key_type &&key) {
+		sodium::aead_aesgcm_precomputed::init_ctx(key_state_.data(),
+			key.data());
+		// XXX what do we do with key now? let it go out of scope?
+	}
+
+	// A copying constructor
+	aead(const aead &other) :
+		key_state_(other.key_state_) {}
+
+	// A moving constructor
+	aead(aead &&other) :
+		key_state_(std::move(other.key_state_)) {}
+
+	BT encrypt(const BT &header,
+		const BT      &plaintext,
+		const nonce_type &nonce)
+	{
+		// make space for MAC and encrypted message, i.e. (MAC || encrypted)
+		BT ciphertext(MACSIZE + plaintext.size());
+
+		// so many bytes will really be written into output buffer
+		unsigned long long clen;
+
+		// let's encrypt now!
+		sodium::aead_aesgcm_precomputed::encrypt(reinterpret_cast<unsigned char *>(ciphertext.data()), &clen,
+			reinterpret_cast<const unsigned char *>(plaintext.data()), plaintext.size(),
+			(header.empty() ? nullptr : reinterpret_cast<const unsigned char *>(header.data())), header.size(),
+			NULL /* nsec */,
+			nonce.data(),
+			key_state_.data());
+		ciphertext.resize(static_cast<std::size_t>(clen));
+
+		return ciphertext;
+	}
+
+	BT decrypt(const BT &header,
+		const BT         &ciphertext_with_mac,
+		const nonce_type &nonce)
+	{
+		// some sanity checks before we get started
+		if (ciphertext_with_mac.size() < MACSIZE)
+			throw std::runtime_error{ "sodium::aead::decrypt() ciphertext length too small for a tag" };
+
+		// make space for decrypted buffer
+		BT plaintext(ciphertext_with_mac.size() - MACSIZE);
+
+		// how many bytes we decrypt
+		unsigned long long mlen;
+
+		// and now decrypt!
+		if (sodium::aead_aesgcm_precomputed::decrypt(reinterpret_cast<unsigned char *>(plaintext.data()), &mlen,
+			nullptr /* nsec */,
+			reinterpret_cast<const unsigned char *>(ciphertext_with_mac.data()), ciphertext_with_mac.size(),
+			(header.empty() ? nullptr : reinterpret_cast<const unsigned char *>(header.data())), header.size(),
+			nonce.data(),
+			key_state_.data()) == -1)
+			throw std::runtime_error{ "sodium::aead::decrypt() can't decrypt or message/tag corrupt" };
+		plaintext.resize(static_cast<std::size_t>(mlen));
+
+		return plaintext;
+	}
+
+private:
+	aes_ctx key_state_;
 };
 
 } // namespace sodium

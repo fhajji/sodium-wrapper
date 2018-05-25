@@ -40,7 +40,7 @@ namespace sodium {
   static constexpr std::size_t KEYSIZE_AUTH           = crypto_auth_KEYBYTES;
   static constexpr std::size_t KEYSIZE_POLY1305       = crypto_onetimeauth_KEYBYTES;
   static constexpr std::size_t KEYSIZE_SALT           = crypto_pwhash_SALTBYTES;
-  static constexpr std::size_t KEYSIZE_AEAD           = crypto_aead_chacha20poly1305_KEYBYTES;
+  // static constexpr std::size_t KEYSIZE_AEAD           = crypto_aead_xchacha20poly1305_KEYBYTES;
   static constexpr std::size_t KEYSIZE_HASHKEY        = crypto_generichash_KEYBYTES;
   static constexpr std::size_t KEYSIZE_HASHKEY_MIN    = crypto_generichash_KEYBYTES_MIN;
   static constexpr std::size_t KEYSIZE_HASHKEY_MAX    = crypto_generichash_KEYBYTES_MAX;

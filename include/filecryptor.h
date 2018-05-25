@@ -34,7 +34,7 @@ class FileCryptor {
    * We're encrypting with AEAD.
    **/
   
-  constexpr static std::size_t KEYSIZE = sodium::KEYSIZE_AEAD;
+  constexpr static std::size_t KEYSIZE = aead<>::KEYSIZE;
   
   /**
    * Each block of plaintext will be encrypted to a block of the same
