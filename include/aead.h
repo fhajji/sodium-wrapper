@@ -35,7 +35,7 @@ namespace sodium {
 
 template <typename BT=bytes,
   typename F=sodium::aead_xchacha20_poly1305_ietf,
-  typename T=std::enable_if<
+  typename T=typename std::enable_if<
 	   std::is_same<F, sodium::aead_chacha20_poly1305>::value
 	|| std::is_same<F, sodium::aead_chacha20_poly1305_ietf>::value
 	|| std::is_same<F, sodium::aead_xchacha20_poly1305_ietf>::value

@@ -80,8 +80,8 @@ timing_encrypt_decrypt(const unsigned long ntries = TEST_TIMING_COUNT_DEFAULT,
 {
 	// timing encryption with various algorithms
 	
-	sodium::aead<BT, F>::key_type key;       // random
-	sodium::aead<BT, F>::nonce_type nonce;   // random
+	typename sodium::aead<BT, F>::key_type key;       // random
+	typename sodium::aead<BT, F>::nonce_type nonce;   // random
 	sodium::aead<BT, F> aead(std::move(key));
 
 	BT header(data_header_size); // header is all-zeroes
@@ -120,7 +120,7 @@ timing_encrypt_decrypt(const unsigned long ntries = TEST_TIMING_COUNT_DEFAULT,
 		static_cast<void>(aead.decrypt(header, ciphertext_with_mac, nonce));
 	}
 	auto t3 = std::chrono::system_clock::now();
-	auto time_decrypt = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0);
+	auto time_decrypt = std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2);
 
 	oss << "decrypt_" << F::construction_name << "("
 		<< "header=" << data_header_size

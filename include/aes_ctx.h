@@ -42,7 +42,7 @@ public:
 		return retval;
 	}
 
-	const std::size_t size() const { return ctx_.size(); }
+	std::size_t size() const { return ctx_.size(); }
 
 private:
 	alignas(16) bytes_protected ctx_;

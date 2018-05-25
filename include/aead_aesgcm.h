@@ -57,7 +57,7 @@ namespace sodium {
 class aead_aesgcm
 {
 public:
-	constexpr static char *construction_name = "aesgcm";
+	constexpr static const char *construction_name = "aesgcm";
 
 	static int encrypt(unsigned char *c,
 		unsigned long long *clen,

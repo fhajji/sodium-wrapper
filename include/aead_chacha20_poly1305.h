@@ -47,7 +47,7 @@ namespace sodium {
 class aead_chacha20_poly1305
 {
 public:
-	constexpr static char *construction_name = "chacha20_poly1305";
+	constexpr static const char *construction_name = "chacha20_poly1305";
 
 	static int encrypt(unsigned char *c,
 		unsigned long long *clen,
