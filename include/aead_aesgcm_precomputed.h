@@ -68,6 +68,8 @@ namespace sodium {
 class aead_aesgcm_precomputed
 {
 public:
+	constexpr static char *construction_name = "aesgcm_precomputed";
+
 	using ctx_type = crypto_aead_aes256gcm_state;
 
 	/**

@@ -16,13 +16,22 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+// To see test messages, including timing results:
+//    ./test_aead --log_level=message
+
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE sodium::aead Test
 #include <boost/test/included/unit_test.hpp>
 
 #include "aead.h"
-#include <string>
 #include <sodium.h>
+#include <string>
+#include <chrono>
+#include <sstream>
+
+constexpr unsigned long TEST_TIMING_COUNT_DEFAULT       = 10000UL;
+constexpr std::size_t   TEST_TIMING_HEADER_SIZE_DEFAULT = 350;
+constexpr std::size_t   TEST_TIMING_BODY_SIZE_DEFAULT   = 32000;
 
 template <typename BT=sodium::bytes,
 	typename F=sodium::aead_xchacha20_poly1305_ietf>
@@ -60,6 +69,67 @@ test_of_correctness(const std::string &header,
   }
 
   return plainblob == decrypted;
+}
+
+template <typename BT = sodium::bytes,
+	typename F = sodium::aead_xchacha20_poly1305_ietf>
+void
+timing_encrypt_decrypt(const unsigned long ntries = TEST_TIMING_COUNT_DEFAULT,
+	const std::size_t data_header_size = TEST_TIMING_HEADER_SIZE_DEFAULT, 
+	const std::size_t data_body_size = TEST_TIMING_BODY_SIZE_DEFAULT)
+{
+	// timing encryption with various algorithms
+	
+	sodium::aead<BT, F>::key_type key;       // random
+	sodium::aead<BT, F>::nonce_type nonce;   // random
+	sodium::aead<BT, F> aead(std::move(key));
+
+	BT header(data_header_size); // header is all-zeroes
+	BT body(data_body_size);     // body is just zeroes
+
+	std::ostringstream oss;
+
+	// timing encrypt():
+
+	auto t0 = std::chrono::system_clock::now();
+	for (unsigned long i = 0; i != ntries; ++i) {
+		// We reuse the same nonce with the same key
+		// instead of incrementing it with each iteration.
+		// 
+		// This is BAD in practice. But since we are only
+		// interested in timing encrypt() and since we throw
+		// the result away anyway, that's okay in this case.
+		static_cast<void>(aead.encrypt(header, body, nonce));
+	}
+	auto t1 = std::chrono::system_clock::now();
+	auto time_encrypt = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0);
+
+	oss << "encrypt_" << F::construction_name << "("
+		<< "header=" << data_header_size
+		<< ",body=" << data_body_size
+		<< ",tries=" << ntries << "): "
+		<< time_encrypt.count()
+		<< " msecs\n";
+
+	// timing decrypt():
+
+	BT ciphertext_with_mac = aead.encrypt(header, body, nonce);
+
+	auto t2 = std::chrono::system_clock::now();
+	for (unsigned long i = 0; i != ntries; ++i) {
+		static_cast<void>(aead.decrypt(header, ciphertext_with_mac, nonce));
+	}
+	auto t3 = std::chrono::system_clock::now();
+	auto time_decrypt = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0);
+
+	oss << "decrypt_" << F::construction_name << "("
+		<< "header=" << data_header_size
+		<< ",body=" << data_body_size
+		<< ",tries=" << ntries << "): "
+		<< time_decrypt.count()
+		<< " msecs\n";
+
+	BOOST_TEST_MESSAGE(oss.str());
 }
 
 struct SodiumFixture {
@@ -764,6 +834,32 @@ BOOST_AUTO_TEST_CASE(sodium_aead_test_big_header_6)
 	BOOST_TEST((!test_of_correctness<sodium::bytes, sodium::aead_aesgcm_precomputed>(header, plaintext, csize, true, false)));
 }
 
+// ----- timing tests --------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(sodium_aead_test_timing_aead_chacha20_poly1305)
+{
+	timing_encrypt_decrypt<sodium::bytes, sodium::aead_chacha20_poly1305>();
+}
+
+BOOST_AUTO_TEST_CASE(sodium_aead_test_timing_aead_chacha20_poly1305_ietf)
+{
+	timing_encrypt_decrypt<sodium::bytes, sodium::aead_chacha20_poly1305_ietf>();
+}
+
+BOOST_AUTO_TEST_CASE(sodium_aead_test_timing_aead_xchacha20_poly1305_ietf)
+{
+	timing_encrypt_decrypt<sodium::bytes, sodium::aead_xchacha20_poly1305_ietf>();
+}
+
+BOOST_AUTO_TEST_CASE(sodium_aead_test_timing_aead_aesgcm)
+{
+	timing_encrypt_decrypt<sodium::bytes, sodium::aead_aesgcm>();
+}
+
+BOOST_AUTO_TEST_CASE(sodium_aead_test_timing_aead_aead_aesgcm_precomputed)
+{
+	timing_encrypt_decrypt<sodium::bytes, sodium::aead_aesgcm_precomputed>();
+}
 
 // XXX TODO: Test that other types for F are being rejected at compile-time.
 
