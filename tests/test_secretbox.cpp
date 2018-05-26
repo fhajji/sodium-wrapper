@@ -112,10 +112,10 @@ test_of_correctness_detached(const std::string &plaintext,
     ++mac[0]; // falsify MAC
 
   try {
-	bytes decrypted = (falsify_key ? sc2 : sc).decrypt(
+	  bytes decrypted = (falsify_key ? sc2 : sc).decrypt(
 		  ciphertext,
-		  mac,
-		  (falsify_nonce ? nonce2 : nonce)
+		  (falsify_nonce ? nonce2 : nonce),
+		  mac
 	);
 
     BOOST_CHECK(decrypted.size()  == plainblob.size());

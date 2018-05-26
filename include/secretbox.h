@@ -146,9 +146,9 @@ class secretbox {
    * the mac isn't MACSIZE.
    **/
   
-  BT decrypt(const BT &ciphertext,
-		 const BT     &mac,
-		 const nonce_type &nonce);
+  BT decrypt(const BT  &ciphertext,
+	  const nonce_type &nonce,
+	  const BT         &mac);
 
 private:
 	key_type key_;
@@ -226,8 +226,8 @@ secretbox<BT>::decrypt(const BT &ciphertext,
 template <class BT>
 BT
 secretbox<BT>::decrypt(const BT &ciphertext,
-	const BT      &mac,
-	const nonce_type &nonce)
+	const nonce_type &nonce,
+	const BT         &mac)
 {
 	// some sanity checks before we get started
 	if (mac.size() != MACSIZE)
