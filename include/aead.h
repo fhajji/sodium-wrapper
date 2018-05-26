@@ -101,8 +101,8 @@ class aead
    * bytes.
    **/
 
-  BT encrypt(const BT &header,
-	  const BT      &plaintext,
+  BT encrypt(const BT  &header,
+	  const BT         &plaintext,
 	  const nonce_type &nonce)
   {
 	  // make space for MAC and encrypted message, i.e. (MAC || encrypted)
@@ -124,6 +124,64 @@ class aead
   };
 
   /**
+  * Encrypt plaintext using aead's key and supplied nonce,
+  * returning ciphertext and MAC.
+  *
+  * During encryption, a MAC of the plaintext _and_ header is
+  * computed with key/nonce and saved in mac, which must be
+  * MACSIZE bytes long (detached mode). This helps detect
+  * tampering of the ciphertext and header and will also
+  * prevent decryption.
+  *
+  * This function will throw a std::runtime_error if the size of
+  * the mac isn't MACSIZE.
+  *
+  * The returned ciphertext size is equal to plaintext.size().
+  *
+  * Any modification of MAC, ciphertext, or of the
+  * header, will render decryption impossible. The intended
+  * application is to send encrypted message bodies along with
+  * unencrypted message headers, but to protect both the bodies and
+  * headers with the MAC. The nonce is public and can be sent along
+  * the MAC and ciphertext. The key is private and MUST NOT be sent
+  * over the channel.
+  *
+  * This function can be used repeately with the same key, but you
+  * MUST then make sure never to reuse the same nonce. The easiest
+  * way to achieve this is to increment nonce after or prior to each
+  * encrypt() invocation.
+  *
+  * Limits: See comments in the selected F type.
+  **/
+
+  BT encrypt(const BT  &header,
+	  const BT         &plaintext,
+	  const nonce_type &nonce,
+	  BT               &mac)
+  {
+	  // some sanity checks before we get started
+	  if (mac.size() != MACSIZE)
+		  throw std::runtime_error{ "sodium::aead::encrypt(detached) wrong mac size" };
+
+	  // make space for encrypted message, without mac
+	  BT ciphertext(plaintext.size());
+
+	  // XXX unused...
+	  unsigned long long maclen;
+
+	  // let's encrypt now!
+	  F::encrypt_detached(reinterpret_cast<unsigned char *>(ciphertext.data()),
+		  reinterpret_cast<unsigned char *>(mac.data()), &maclen,
+		  reinterpret_cast<const unsigned char *>(plaintext.data()), plaintext.size(),
+		  (header.empty() ? nullptr : reinterpret_cast<const unsigned char *>(header.data())), header.size(),
+		  NULL /* nsec */,
+		  nonce.data(),
+		  key_state_.data());
+
+	  return ciphertext;
+  };
+
+  /**
    * Decrypt ciphertext_with_mac returned by encrypt() along with
    * plain header, using aead's secret key,
    * and supplied public nonce.
@@ -139,7 +197,7 @@ class aead
    * the same value as those used when encrypting.
    **/
 
-  BT decrypt(const BT &header,
+  BT decrypt(const BT  &header,
 	  const BT         &ciphertext_with_mac,
 	  const nonce_type &nonce)
   {
@@ -166,8 +224,49 @@ class aead
 	  return plaintext;
   }
 
-  // XXX TODO: encrypt_detached()
-  // XXX TODO: decrypt_detached()
+  /**
+  * Decrypt ciphertext using aead's key and supplied header
+  * and nonce, returing decrypted plaintext.
+  *
+  * The ciphertext is assumed NOT to contain the MAC, which is to be
+  * provided separatly in 'mac', a variable with MACSIZE bytes
+  * (detached mode).
+  *
+  * If the ciphertext, the header, or the MAC have been tampered
+  * with, decryption will fail and this function with throw a
+  * std::runtime_error.
+  *
+  * This function will also throw a std::runtime_error if the size of
+  * the mac isn't MACSIZE.
+  *
+  * The size of the returned ciphertext will be the same as
+  * the size of the plaintext.
+  **/
+
+  BT decrypt(const BT  &header,
+	  const BT         &ciphertext,
+	  const nonce_type &nonce,
+	  const BT         &mac)
+  {
+	  // some sanity checks before we get started
+	  if (mac.size() != MACSIZE)
+		  throw std::runtime_error{ "sodium::aead::decrypt(detached) wrong mac size" };
+
+	  // make space for decrypted buffer
+	  BT plaintext(ciphertext.size());
+
+	  // and now decrypt!
+	  if (F::decrypt_detached(reinterpret_cast<unsigned char *>(plaintext.data()),
+		  nullptr /* nsec */,
+		  reinterpret_cast<const unsigned char *>(ciphertext.data()), ciphertext.size(),
+		  reinterpret_cast<const unsigned char *>(mac.data()),
+		  (header.empty() ? nullptr : reinterpret_cast<const unsigned char *>(header.data())), header.size(),
+		  nonce.data(),
+		  key_state_.data()) == -1)
+		  throw std::runtime_error{ "sodium::aead::decrypt(detached) can't decrypt or message/tag corrupt" };
+
+	  return plaintext;
+  }
 
 private:
 	// In all but aead_aesgcm_precomputed, key_state_ is the AEAD key.
@@ -220,8 +319,8 @@ public:
 	aead(aead &&other) :
 		key_state_(std::move(other.key_state_)) {}
 
-	BT encrypt(const BT &header,
-		const BT      &plaintext,
+	BT encrypt(const BT  &header,
+		const BT         &plaintext,
 		const nonce_type &nonce)
 	{
 		// make space for MAC and encrypted message, i.e. (MAC || encrypted)
@@ -242,7 +341,34 @@ public:
 		return ciphertext;
 	}
 
-	BT decrypt(const BT &header,
+	BT encrypt(const BT  &header,
+		const BT         &plaintext,
+		const nonce_type &nonce,
+		BT               &mac)
+	{
+		// some sanity checks before we get started
+		if (mac.size() != MACSIZE)
+			throw std::runtime_error{ "sodium::aead::encrypt(detached) wrong mac size" };
+
+		// make space for encrypted message, without mac
+		BT ciphertext(plaintext.size());
+
+		// XXX unused...
+		unsigned long long maclen;
+
+		// let's encrypt now!
+		sodium::aead_aesgcm_precomputed::encrypt_detached(reinterpret_cast<unsigned char *>(ciphertext.data()),
+			reinterpret_cast<unsigned char *>(mac.data()), &maclen,
+			reinterpret_cast<const unsigned char *>(plaintext.data()), plaintext.size(),
+			(header.empty() ? nullptr : reinterpret_cast<const unsigned char *>(header.data())), header.size(),
+			NULL /* nsec */,
+			nonce.data(),
+			key_state_.data());
+
+		return ciphertext;
+	}
+
+	BT decrypt(const BT  &header,
 		const BT         &ciphertext_with_mac,
 		const nonce_type &nonce)
 	{
@@ -265,6 +391,31 @@ public:
 			key_state_.data()) == -1)
 			throw std::runtime_error{ "sodium::aead::decrypt() can't decrypt or message/tag corrupt" };
 		plaintext.resize(static_cast<std::size_t>(mlen));
+
+		return plaintext;
+	}
+
+	BT decrypt(const BT  &header,
+		const BT         &ciphertext,
+		const nonce_type &nonce,
+		const BT         &mac)
+	{
+		// some sanity checks before we get started
+		if (mac.size() != MACSIZE)
+			throw std::runtime_error{ "sodium::aead::decrypt(detached) wrong mac size" };
+
+		// make space for decrypted buffer
+		BT plaintext(ciphertext.size());
+
+		// and now decrypt!
+		if (sodium::aead_aesgcm_precomputed::decrypt_detached(reinterpret_cast<unsigned char *>(plaintext.data()),
+			nullptr /* nsec */,
+			reinterpret_cast<const unsigned char *>(ciphertext.data()), ciphertext.size(),
+			reinterpret_cast<const unsigned char *>(mac.data()),
+			(header.empty() ? nullptr : reinterpret_cast<const unsigned char *>(header.data())), header.size(),
+			nonce.data(),
+			key_state_.data()) == -1)
+			throw std::runtime_error{ "sodium::aead::decrypt(detached) can't decrypt or message/tag corrupt" };
 
 		return plaintext;
 	}

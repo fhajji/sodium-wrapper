@@ -91,8 +91,8 @@ class secretbox {
    *
    * During encryption, a MAC of the plaintext is computed with
    * key/nonce and saved in mac, which must be MACSIZE bytes long
-   * (detached mode). This helps detect tampering of the ciphertext
-   * and will also prevent decryption.
+   * (detached mode). This helps detect tampering of the ciphertext,
+   * or of the MAC, and will also prevent decryption.
    *
    * This function will throw a std::runtime_error if the size of
    * the mac isn't MACSIZE.
@@ -139,8 +139,8 @@ class secretbox {
    * provided separatly in 'mac', a variable with MACSIZE bytes
    * (detached mode).
    * 
-   * If the ciphertext has been tampered with, decryption will fail and
-   * this function with throw a std::runtime_error.
+   * If the ciphertext or the MAC have been tampered with, decryption
+   * will fail and this function with throw a std::runtime_error.
    *
    * This function will also throw a std::runtime_error if the size of
    * the mac isn't MACSIZE.
