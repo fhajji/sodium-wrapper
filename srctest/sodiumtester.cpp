@@ -28,7 +28,7 @@
 #include "authenticator.h"
 #include "aead.h"
 #include "streamcryptor_aead.h"
-#include "filecryptor.h"
+#include "filecryptor_aead.h"
 
 #include <stdexcept>
 #include <string>
@@ -43,7 +43,7 @@ using sodium::secretbox;
 using sodium::aead;
 using sodium::authenticator;
 using sodium::streamcryptor_aead;
-using sodium::FileCryptor;
+using sodium::filecryptor_aead;
 
 #ifndef NDEBUG
 #include <iostream>
@@ -561,10 +561,9 @@ SodiumTester::test6(const std::string &filename)
   std::size_t             MYBLKSIZE  = 1024;
   
   aead<>::key_type   key;
-  keyvar<>                   hashkey    (FileCryptor::HASHKEYSIZE);
+  keyvar<>           hashkey    (filecryptor_aead<>::HASHKEYSIZE);
   aead<>::nonce_type nonce;
-  FileCryptor                file_crypt (key, nonce, MYBLKSIZE,
-				      hashkey, FileCryptor::HASHSIZE);
+  filecryptor_aead<> file_crypt (key, nonce, MYBLKSIZE, hashkey, filecryptor_aead<>::HASHSIZE);
 
   key.noaccess();
   hashkey.noaccess();
