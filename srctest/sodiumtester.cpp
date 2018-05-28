@@ -27,7 +27,7 @@
 #include "secretbox.h"
 #include "authenticator.h"
 #include "aead.h"
-#include "streamcryptor.h"
+#include "streamcryptor_aead.h"
 #include "filecryptor.h"
 
 #include <stdexcept>
@@ -42,7 +42,7 @@ using sodium::nonce;
 using sodium::secretbox;
 using sodium::aead;
 using sodium::authenticator;
-using sodium::StreamCryptor;
+using sodium::streamcryptor_aead;
 using sodium::FileCryptor;
 
 #ifndef NDEBUG
@@ -463,17 +463,17 @@ SodiumTester::test4(const std::string &plaintext,
 }
 
 /**
- * This function tests sodium::StreamCryptor:
+ * This function tests sodium::streamcryptor_aead:
  *
- * We will test the stream cryptors streamCryptor::encrypt() and
- * streamCryptor::decrypt() on std::ifstream and std::ofstream,
+ * We will test the stream cryptors streamcryptor_aead::encrypt() and
+ * streamcryptor_aead::decrypt() on std::ifstream and std::ofstream,
  * i.e. on regular binary files.
  *
- * The preparations consist in intantiating a sodium::StreamCryptor object.
+ * The preparations consist in intantiating a sodium::streamcryptor_aead object.
  *
  * - we first create a random key with the right number of bytes
  * - we also create a random nonce with the right number of bytes
- * - from this, we create a sodium::StreamCryptor strm_crypt;
+ * - from this, we create a sodium::streamcryptor_aead strm_crypt;
  *   we also specify a granularity of 1024 bytes to be used for
  *   the chunking.
  * - since we squirreled away a copy of the key in strm_crypt, we disable
@@ -497,7 +497,7 @@ SodiumTester::test4(const std::string &plaintext,
  * - since ifs2 and ofs2 are also std::istream resp. std::ostream, we
  *   can directly chunkwise decrypt the input stream into the output
  *   stream.
- * - we reuse the same sodium::StreamCryptor object strm_crypt, which
+ * - we reuse the same sodium::streamcryptor_aead object strm_crypt, which
  *   already contains the good key, the right initial nonce, and
  *   the correct blocksize (the decryption takes care to adjust the
  *   block size with MACSIZE, the added MACs for each chunk, automatically).
@@ -517,7 +517,7 @@ SodiumTester::test5(const std::string &filename)
   
   aead<>::key_type   key;
   aead<>::nonce_type nonce;
-  StreamCryptor              strm_crypt (key, nonce, MYBLKSIZE);
+  streamcryptor_aead<> strm_crypt (key, nonce, MYBLKSIZE);
 
   key.noaccess();
   

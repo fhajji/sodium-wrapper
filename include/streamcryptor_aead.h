@@ -1,4 +1,4 @@
-// streamcryptor.h -- Symmetric blockwise stream encryption/decryption
+// streamcryptor_aead.h -- Symmetric blockwise stream encryption/decryption (ad hoc)
 //
 // ISC License
 // 
@@ -29,15 +29,23 @@
 
 #include <sodium.h>
 
+/**
+* Deprecated: use sodium::secretstream instead.
+*
+* Currently only used in sodiumtester. It will be deleted
+* as soom as it is re-implemented using sodium::secretstream.
+**/
+
 namespace sodium {
 
-class StreamCryptor {
- public:
+template <typename BT=bytes>
+class streamcryptor_aead {
+public:
 
   /**
    * We encrypt with AEAD.
    **/
-  constexpr static std::size_t KEYSIZE = aead<>::KEYSIZE;
+  constexpr static std::size_t KEYSIZE = aead<BT>::KEYSIZE;
   
   /**
    * Each block of plaintext will be encrypted to a block of the same
@@ -45,7 +53,7 @@ class StreamCryptor {
    * that the total blocksize of the (MAC || ciphertext)s will be
    * MACSIZE + plaintext.size() for each block.
    **/
-  constexpr static std::size_t MACSIZE = aead<>::MACSIZE;
+  constexpr static std::size_t MACSIZE = aead<BT>::MACSIZE;
 
   /**
    * A StreamCryptor will encrypt/decrypt streams blockwise using a
@@ -67,15 +75,16 @@ class StreamCryptor {
    * the constructor throws a std::runtime_error.
    **/
   
- StreamCryptor(const aead<>::key_type   &key,
-	       const aead<>::nonce_type &nonce,
+  streamcryptor_aead(const typename aead<BT>::key_type   &key,
+	       const typename aead<BT>::nonce_type &nonce,
 	       const std::size_t blocksize) :
-  sc_aead_{aead<>(key)},
-  nonce_ {nonce}, header_ {},
-  blocksize_ {blocksize} {
+    sc_aead_{aead<>(key)},
+    nonce_ {nonce}, header_ {},
+    blocksize_ {blocksize}
+  {
     // some sanity checks, before we start
     if (blocksize < 1)
-      throw std::runtime_error {"sodium::StreamCryptor::StreamCryptor(): wrong blocksize"};
+      throw std::runtime_error {"sodium::streamcryptor_aead::streamcryptor_aead(): wrong blocksize"};
   }
 
   /**
@@ -108,7 +117,33 @@ class StreamCryptor {
    * If an error occurs while writing to ostr, throw a std::runtime_error.
    **/
   
-  void encrypt(std::istream &istr, std::ostream &ostr);
+  void encrypt(std::istream &istr, std::ostream &ostr)
+  {
+	  BT plaintext(blocksize_, '\0');
+	  typename aead<BT>::nonce_type running_nonce{ nonce_ };
+
+	  while (istr.read(reinterpret_cast<char *>(plaintext.data()), blocksize_)) {
+		  BT ciphertext = sc_aead_.encrypt(header_, plaintext, running_nonce);
+		  running_nonce.increment();
+
+		  ostr.write(reinterpret_cast<char *>(ciphertext.data()), ciphertext.size());
+		  if (!ostr)
+			  throw std::runtime_error{ "sodium::streamcryptor_aead::encrypt() error writing full chunk to stream" };
+	  }
+
+	  // check to see if we've read a final partial chunk
+	  std::size_t s = static_cast<std::size_t>(istr.gcount());
+	  if (s != 0) {
+		  if (s != plaintext.size())
+			  plaintext.resize(s);
+
+		  BT ciphertext = sc_aead_.encrypt(header_, plaintext, running_nonce);
+		  // running_nonce.increment() not needed anymore...
+		  ostr.write(reinterpret_cast<char *>(ciphertext.data()), ciphertext.size());
+		  if (!ostr)
+			  throw std::runtime_error{ "sodium::streamcryptor_aead::encrypt() error writing final chunk to stream" };
+	  }
+  }
 
   /**
    * Decrypt data read from input stream istr in a blockwise fashion,
@@ -146,13 +181,43 @@ class StreamCryptor {
    * nonce during decryption.
    **/
   
-  void decrypt(std::istream &istr, std::ostream &ostr);
+  void decrypt(std::istream &istr, std::ostream &ostr)
+  {
+	  BT ciphertext(MACSIZE + blocksize_, '\0');
+	  typename aead<BT>::nonce_type running_nonce{ nonce_ };   // restart with saved nonce_
+
+	  while (istr.read(reinterpret_cast<char *>(ciphertext.data()),
+		  MACSIZE + blocksize_)) {
+		  // we've got a whole MACSIZE + blocksize_ chunk
+		  BT plaintext = sc_aead_.decrypt(header_, ciphertext, running_nonce);
+		  running_nonce.increment();
+
+		  ostr.write(reinterpret_cast<char *>(plaintext.data()), plaintext.size());
+		  if (!ostr)
+			  throw std::runtime_error{ "sodium::streamcryptor_aead::decrypt() error writing full chunk to stream" };
+	  }
+
+	  // check to see if we've read a final partial chunk
+	  std::size_t s = static_cast<std::size_t>(istr.gcount());
+	  if (s != 0) {
+		  // we've got a partial chunk
+		  if (s != ciphertext.size())
+			  ciphertext.resize(s);
+
+		  BT plaintext = sc_aead_.decrypt(header_, ciphertext, running_nonce);
+		  // no need to running_nonce.increment() anymore...
+
+		  ostr.write(reinterpret_cast<char *>(plaintext.data()), plaintext.size());
+		  if (!ostr)
+			  throw std::runtime_error{ "sodium::streamcryptor_aead::decrypt() error writing final chunk to stream" };
+	  }
+  }
   
  private:
-  aead<>             sc_aead_;
-  aead<>::nonce_type nonce_;
-  bytes                      header_;
-  std::size_t                blocksize_;
+  aead<BT>                      sc_aead_;
+  typename aead<BT>::nonce_type nonce_;
+  BT                            header_;
+  std::size_t                   blocksize_;
 };
 
 } // namespace sodium

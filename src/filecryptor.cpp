@@ -172,7 +172,7 @@ FileCryptor::decrypt(std::ifstream &ifs, std::ostream &ostr)
 	ostr.write(reinterpret_cast<char *>(plaintext.data()),
 		   plaintext.size());
 	if (!ostr)
-	  throw std::runtime_error {"sodium::StreamCryptor::decrypt() error writing final chunk to file"};
+	  throw std::runtime_error {"sodium::FileCryptor::decrypt() error writing final chunk to file"};
 
 	crypto_generichash_update(&state, ciphertext.data(), ciphertext.size());
       }

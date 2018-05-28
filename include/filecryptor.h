@@ -68,7 +68,7 @@ class FileCryptor {
   
   /**
    * Encrypt/Decrypt a file using a key, an initial nonce, and a
-   * fixed blocksize, using the algorithm of sodium::StreamCryptor:
+   * fixed blocksize, using the algorithm of sodium::streamcryptor_aead:
    *
    * Each block is encrypted individually, using the key and a running
    * nonce initialized with the initial nonce; and an authenticated
