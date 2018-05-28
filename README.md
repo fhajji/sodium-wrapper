@@ -25,6 +25,7 @@ Criticism and pull requests welcome, of course.
 * Try to turn it into a header-only wrapper (in progress).
 * Change API to lower case to make it more C++11, STL- and Boost-ish (in progress).
 * Change API to reflect more faithfully libsodium's C-API naming scheme.
+* Add wrappers to new 1.0.14+ streaming API (done).
 * Replace ad-hoc streaming classes by new 1.0.14+ streaming API.
 * Adapt Boost.Iostreams filters to use the new 1.0.14+ streaming API.
 * Use updated API in some (toy) projects to test for suitability.
