@@ -1,4 +1,4 @@
-// cryptormultipk.h -- PK enc/dec with MAC, with precalculated shared key
+// box_precomputed.h -- PK enc/dec with MAC, with precomputed shared key
 //
 // ISC License
 // 
@@ -30,19 +30,20 @@
 
 namespace sodium {
 
-class CryptorMultiPK {
+template <typename BT=bytes>
+class box_precomputed {
 
  public:
 
-  static constexpr unsigned int NSZPK               = crypto_box_NONCEBYTES;
-  static constexpr std::size_t  KEYSIZE_PUBLIC_KEY  = keypair<>::KEYSIZE_PUBLIC_KEY;
-  static constexpr std::size_t  KEYSIZE_PRIVATE_KEY = keypair<>::KEYSIZE_PRIVATE_KEY;
-  static constexpr std::size_t  KEYSIZE_SHAREDKEY   = sodium::KEYSIZE_SHAREDKEY;
+  static constexpr unsigned int NONCESIZE           = crypto_box_NONCEBYTES;
+  static constexpr std::size_t  KEYSIZE_PUBLIC_KEY  = keypair<BT>::KEYSIZE_PUBLIC_KEY;
+  static constexpr std::size_t  KEYSIZE_PRIVATE_KEY = keypair<BT>::KEYSIZE_PRIVATE_KEY;
+  static constexpr std::size_t  KEYSIZE_SHAREDKEY   = crypto_box_BEFORENMBYTES;
   static constexpr std::size_t  MACSIZE             = crypto_box_MACBYTES;
 
-  using private_key_type = keypair<>::private_key_type;
-  using public_key_type =  keypair<>::public_key_type;
-  using nonce_type   = nonce<NSZPK>;
+  using private_key_type = typename keypair<BT>::private_key_type;
+  using public_key_type  = typename keypair<BT>::public_key_type;
+  using nonce_type       = nonce<NONCESIZE>;
   
   /**
    * Create and store an internal shared key built out of a
@@ -63,27 +64,45 @@ class CryptorMultiPK {
    * multiple ciphertexts from the sender (assuming the public key
    * is the sender's, and the private key is the recipient's).
    *
-   * pubkey, the public key, must be KEYSIZE_PUBLIC_KEY  bytes long.
+   * public_key, the public key, must be KEYSIZE_PUBLIC_KEY bytes long.
    *
    * If the size of the key isn't correct, the constructor
    * will throw a std::runtime_error.
    **/
   
-  CryptorMultiPK(const private_key_type &private_key,
-		 const public_key_type &public_key)
-    : shared_key_(false),
-      shared_key_ready_(false)
+  box_precomputed(const private_key_type &private_key,
+		 const public_key_type &public_key) :
+	shared_key_(false),
+    shared_key_ready_(false)
   {
     set_shared_key(private_key, public_key);
   }
 
-  CryptorMultiPK(const keypair<> &keypair)
+  box_precomputed(const keypair<BT> &keypair)
     : shared_key_(false),
       shared_key_ready_(false)
   {
     set_shared_key(keypair.private_key(), keypair.public_key());
   }
+
+  /**
+  * Copy and move constructors
+  **/
   
+  template <typename U>
+  box_precomputed(const box_precomputed<U> &other)
+	  : shared_key(other.shared_key_),
+	  shared_key_ready_(other.shared_key_ready_)
+  {}
+
+  template <typename U>
+  box_precomputed(box_precomputed<U> &&other)
+	  : shared_key_(std::move(other.shared_key_)),
+	  shared_key_ready_(other.shared_key_ready_)
+  {
+	  other.shared_key_ready_ = false;
+  }
+
   /**
    * Change the shared key by setting it so that it is built out of
    * the public key public_key, and the private key private_key.
@@ -100,7 +119,25 @@ class CryptorMultiPK {
    **/
   
   void set_shared_key(const private_key_type &private_key,
-		      const public_key_type &public_key);
+	  const public_key_type &public_key)
+  {
+	  // some sanity checks before we get started
+	  if (public_key.size() != KEYSIZE_PUBLIC_KEY)
+		  throw std::runtime_error{ "sodium::box_precomputed::set_shared_key() wrong public_key size" };
+
+	  // now, ready to go
+	  shared_key_.readwrite();
+	  if (crypto_box_beforenm(shared_key_.setdata(),
+		  reinterpret_cast<const unsigned char *>(public_key.data()),
+		  reinterpret_cast<const unsigned char *>(private_key.data())) == -1) {
+		  shared_key_ready_ = false; // XXX: undefined?
+		  throw std::runtime_error{ "sodium::box_precomputed::set_shared_key() crypto_box_beforenm() -1" };
+	  }
+	  shared_key_.readonly();
+	  shared_key_ready_ = true;
+  }
+
+  // XXX add set_shared_key(const keypair &)...
 
   /**
    * Destroy the shared key by zeroing its contents after it is no
@@ -153,8 +190,25 @@ class CryptorMultiPK {
    *  - the shared key is not ready
    **/
 
-  bytes encrypt(const bytes &plaintext,
-		 const nonce_type &nonce);
+  BT encrypt(const BT &plaintext,
+	  const nonce_type &nonce)
+  {
+	  // some sanity checks before we start
+	  if (!shared_key_ready_)
+		  throw std::runtime_error{ "sodium::box_precomputed::encrypt() shared key not ready" };
+
+	  // make space for ciphertext, i.e. for (MAC || encrypted)
+	  BT ciphertext(MACSIZE + plaintext.size());
+
+	  // and now, encrypt!
+	  if (crypto_box_easy_afternm(reinterpret_cast<unsigned char *>(ciphertext.data()),
+		  reinterpret_cast<const unsigned char *>(plaintext.data()), plaintext.size(),
+		  nonce.data(),
+		  reinterpret_cast<const unsigned char *>(shared_key_.data())) == -1)
+		  throw std::runtime_error{ "sodium::box_precomputed::encrypt() crypto_box_easy_afternm() -1" };
+
+	  return ciphertext; // move semantics
+  }
   
   /**
    * Decrypt and verify the signature of the ciphertext using the
@@ -178,8 +232,28 @@ class CryptorMultiPK {
    *  - the shared key isn't ready
    **/
 
-  bytes decrypt(const bytes &ciphertext_with_mac,
-		 const nonce_type &nonce);
+  BT decrypt(const BT &ciphertext_with_mac,
+	  const nonce_type &nonce)
+  {
+	  // some sanity checks before we start
+	  if (ciphertext_with_mac.size() < MACSIZE)
+		  throw std::runtime_error{ "sodium::box_precomputed::decrypt() ciphertext too small for even for MAC" };
+	  if (!shared_key_ready_)
+		  throw std::runtime_error{ "sodium::box_precomputed::decrypt() shared key not ready" };
+
+	  // make space for decrypted text
+	  BT decrypted(ciphertext_with_mac.size() - MACSIZE);
+
+	  // and now, decrypt!
+	  if (crypto_box_open_easy_afternm(reinterpret_cast<unsigned char *>(decrypted.data()),
+		  reinterpret_cast<const unsigned char *>(ciphertext_with_mac.data()),
+		  ciphertext_with_mac.size(),
+		  nonce.data(),
+		  reinterpret_cast<const unsigned char *>(shared_key_.data())) == -1)
+		  throw std::runtime_error{ "sodium::box_precomputed::decrypt() decryption failed" };
+
+	  return decrypted; // move semantics
+  }
 
  private:
   key<KEYSIZE_SHAREDKEY> shared_key_;
