@@ -97,8 +97,9 @@ class keypair
     : public_key_(KEYSIZE_PUBLIC_KEY, '\0'), private_key_(false) {
     if (seed.size() != KEYSIZE_SEEDBYTES)
       throw std::runtime_error {"sodium::keypair::keypair(seed) wrong seed size"};
-    crypto_box_seed_keypair(public_key_.data(), private_key_.setdata(),
-			    seed.data());
+    crypto_box_seed_keypair(reinterpret_cast<unsigned char *>(public_key_.data()),
+		private_key_.setdata(),
+		seed.data());
     private_key_.readonly();
   }
 
@@ -131,7 +132,7 @@ class keypair
     
     // public key can be reconstructed from private key
     // previously computed by crypto_box_[seed_]keypair()!
-    crypto_scalarmult_base(public_key_.data(), private_key_.data());
+    crypto_scalarmult_base(reinterpret_cast<unsigned char *>(public_key_.data()), private_key_.data());
 
     private_key_.readonly();
   }
