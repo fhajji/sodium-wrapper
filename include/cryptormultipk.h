@@ -19,6 +19,7 @@
 #pragma once
 
 #include "common.h"
+#include "nonce.h"
 #include "key.h"
 #include "keypair.h"
 #include "nonce.h"
@@ -33,7 +34,7 @@ class CryptorMultiPK {
 
  public:
 
-  static constexpr unsigned int NSZPK               = sodium::NONCESIZE_PK;
+  static constexpr unsigned int NSZPK               = crypto_box_NONCEBYTES;
   static constexpr std::size_t  KEYSIZE_PUBLIC_KEY  = keypair<>::KEYSIZE_PUBLIC_KEY;
   static constexpr std::size_t  KEYSIZE_PRIVATE_KEY = keypair<>::KEYSIZE_PRIVATE_KEY;
   static constexpr std::size_t  KEYSIZE_SHAREDKEY   = sodium::KEYSIZE_SHAREDKEY;

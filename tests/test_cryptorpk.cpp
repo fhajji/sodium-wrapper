@@ -1,4 +1,4 @@
-// test_CryptorPK.cpp -- Test sodium::CryptorPK
+// test_cryptorpk.cpp -- Test sodium::cryptorpk
 //
 // ISC License
 // 
@@ -17,7 +17,7 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE sodium::CryptorPK Test
+#define BOOST_TEST_MODULE sodium::cryptorpk Test
 #include <boost/test/included/unit_test.hpp>
 
 #include "cryptorpk.h"
@@ -26,16 +26,16 @@
 #include <sodium.h>
 
 using sodium::keypair;
-using sodium::CryptorPK;
+using sodium::cryptorpk;
 using bytes = sodium::bytes;
 
 bool
 test_of_correctness(const std::string &plaintext)
 {
-  CryptorPK             sc            {};
+  cryptorpk<>             sc            {};
   keypair<>             keypair_alice {};
   keypair<>             keypair_bob   {};
-  CryptorPK::nonce_type nonce         {};
+  cryptorpk<>::nonce_type nonce         {};
 
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -89,9 +89,9 @@ test_of_correctness(const std::string &plaintext)
 bool
 falsify_mac(const std::string &plaintext)
 {
-  CryptorPK             sc            {};
+  cryptorpk<>             sc            {};
   keypair<>             keypair_alice {};
-  CryptorPK::nonce_type nonce         {};
+  cryptorpk<>::nonce_type nonce         {};
 
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -100,7 +100,7 @@ falsify_mac(const std::string &plaintext)
 				 keypair_alice,
 				 nonce);
 
-  BOOST_CHECK(ciphertext.size() >= CryptorPK::MACSIZE);
+  BOOST_CHECK(ciphertext.size() >= cryptorpk<>::MACSIZE);
 
   // falsify mac, which starts before the ciphertext proper
   ++ciphertext[0];
@@ -129,9 +129,9 @@ falsify_ciphertext(const std::string &plaintext)
   BOOST_CHECK_MESSAGE(! plaintext.empty(),
 		      "Nothing to falsify, empty plaintext");
   
-  CryptorPK             sc            {};
+  cryptorpk<>             sc            {};
   keypair<>             keypair_alice {};
-  CryptorPK::nonce_type nonce         {};
+  cryptorpk<>::nonce_type nonce         {};
 
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -140,10 +140,10 @@ falsify_ciphertext(const std::string &plaintext)
 				 keypair_alice,
 				 nonce);
 
-  BOOST_CHECK(ciphertext.size() > CryptorPK::MACSIZE);
+  BOOST_CHECK(ciphertext.size() > cryptorpk<>::MACSIZE);
 
   // falsify ciphertext, which starts just after MAC
-  ++ciphertext[CryptorPK::MACSIZE];
+  ++ciphertext[cryptorpk<>::MACSIZE];
 
   try {
     bytes decrypted = sc.decrypt(ciphertext,
@@ -164,11 +164,11 @@ falsify_ciphertext(const std::string &plaintext)
 bool
 falsify_sender(const std::string &plaintext)
 {
-  CryptorPK             sc            {};
+  cryptorpk<>             sc            {};
   keypair<>             keypair_alice {}; // recipient
   keypair<>             keypair_bob   {}; // impersonated sender
   keypair<>             keypair_oscar {}; // real sender
-  CryptorPK::nonce_type nonce         {};
+  cryptorpk<>::nonce_type nonce         {};
 
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -242,9 +242,9 @@ BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_empty_plaintext )
 
 BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_encrypt_to_self )
 {
-  CryptorPK             sc            {};
+  cryptorpk<>             sc            {};
   keypair<>             keypair_alice {};
-  CryptorPK::nonce_type nonce         {};
+  cryptorpk<>::nonce_type nonce         {};
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_encrypt_to_self )
 				 keypair_alice,
 				 nonce);
 
-  BOOST_CHECK_EQUAL(ciphertext.size(), plainblob.size() + CryptorPK::MACSIZE);
+  BOOST_CHECK_EQUAL(ciphertext.size(), plainblob.size() + cryptorpk<>::MACSIZE);
 
   bytes decrypted = sc.decrypt(ciphertext,
 				keypair_alice,

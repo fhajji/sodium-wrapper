@@ -36,7 +36,7 @@
 using namespace std::chrono;
 
 using sodium::keypair;
-using sodium::CryptorPK;
+using sodium::cryptorpk;
 using sodium::CryptorMultiPK;
 
 using bytes = sodium::bytes;
@@ -272,14 +272,14 @@ time_encrypt(const unsigned long nr_of_messages)
 {
   keypair<>                  keypair_alice   {};
   CryptorMultiPK::nonce_type nonce_multi     {};
-  CryptorPK::nonce_type      nonce_single    {};
-  CryptorPK                  sc_single_alice {};
+  cryptorpk<>::nonce_type      nonce_single    {};
+  cryptorpk<>                  sc_single_alice {};
   CryptorMultiPK             sc_multi_alice  (keypair_alice);
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
   bytes ciphertext_multi (plaintext.size() + CryptorMultiPK::MACSIZE);
-  bytes ciphertext_single(plaintext.size() + CryptorPK::MACSIZE);
+  bytes ciphertext_single(plaintext.size() + cryptorpk<>::MACSIZE);
 
   std::ostringstream os;
   
@@ -320,9 +320,9 @@ void
 time_decrypt(const unsigned long nr_of_messages)
 {
   keypair<>                  keypair_alice   {};
-  CryptorPK::nonce_type      nonce_single    {};
+  cryptorpk<>::nonce_type      nonce_single    {};
   CryptorMultiPK::nonce_type nonce_multi     {};
-  CryptorPK                  sc_single_alice {};
+  cryptorpk<>                  sc_single_alice {};
   CryptorMultiPK             sc_multi_alice  (keypair_alice);
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};

@@ -31,7 +31,7 @@ namespace sodium {
 // Typical values for number of bytes of Nonces (from <sodium.h>):
 static constexpr std::size_t NONCESIZE_SECRETBOX = crypto_secretbox_NONCEBYTES;
 static constexpr std::size_t NONCESIZE_AEAD      = crypto_aead_chacha20poly1305_NPUBBYTES;
-static constexpr std::size_t NONCESIZE_PK        = crypto_box_NONCEBYTES;
+// static constexpr std::size_t NONCESIZE_PK        = crypto_box_NONCEBYTES;
 static constexpr std::size_t NONCESIZE_CHACHA20  = crypto_stream_chacha20_NONCEBYTES;
 static constexpr std::size_t NONCESIZE_XCHACHA20 = crypto_stream_xchacha20_NONCEBYTES;
 static constexpr std::size_t NONCESIZE_SALSA20   = crypto_stream_salsa20_NONCEBYTES;
