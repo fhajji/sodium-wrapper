@@ -33,13 +33,14 @@ class CryptorMultiPK {
 
  public:
 
-  static constexpr unsigned int NSZPK             = sodium::NONCESIZE_PK;
-  static constexpr std::size_t  KEYSIZE_PUBKEY    = sodium::KEYSIZE_PUBKEY;
-  static constexpr std::size_t  KEYSIZE_PRIVKEY   = sodium::KEYSIZE_PRIVKEY;
-  static constexpr std::size_t  KEYSIZE_SHAREDKEY = sodium::KEYSIZE_SHAREDKEY;
-  static constexpr std::size_t  MACSIZE           = crypto_box_MACBYTES;
+  static constexpr unsigned int NSZPK               = sodium::NONCESIZE_PK;
+  static constexpr std::size_t  KEYSIZE_PUBLIC_KEY  = keypair<>::KEYSIZE_PUBLIC_KEY;
+  static constexpr std::size_t  KEYSIZE_PRIVATE_KEY = keypair<>::KEYSIZE_PRIVATE_KEY;
+  static constexpr std::size_t  KEYSIZE_SHAREDKEY   = sodium::KEYSIZE_SHAREDKEY;
+  static constexpr std::size_t  MACSIZE             = crypto_box_MACBYTES;
 
-  using privkey_type = key<KEYSIZE_PRIVKEY>;
+  using private_key_type = keypair<>::private_key_type;
+  using public_key_type =  keypair<>::public_key_type;
   using nonce_type   = nonce<NSZPK>;
   
   /**
@@ -47,7 +48,7 @@ class CryptorMultiPK {
    * private key and a public key.
    *
    * The private and the public key need not be related, i.e. they
-   * need not belong to the same KeyPair and need not necessarily
+   * need not belong to the same keypair and need not necessarily
    * be generated as a pair by the underlying libsodium function(s)
    * crypto_box_[seed_]keypair().
    *
@@ -61,32 +62,32 @@ class CryptorMultiPK {
    * multiple ciphertexts from the sender (assuming the public key
    * is the sender's, and the private key is the recipient's).
    *
-   * pubkey , the public key,  must be KEYSIZE_PUBKEY  bytes long.
+   * pubkey, the public key, must be KEYSIZE_PUBLIC_KEY  bytes long.
    *
    * If the size of the key isn't correct, the constructor
    * will throw a std::runtime_error.
    **/
   
-  CryptorMultiPK(const privkey_type &privkey,
-		 const bytes       &pubkey)
+  CryptorMultiPK(const private_key_type &private_key,
+		 const public_key_type &public_key)
     : shared_key_(false),
       shared_key_ready_(false)
   {
-    set_shared_key(privkey, pubkey);
+    set_shared_key(private_key, public_key);
   }
 
-  CryptorMultiPK(const KeyPair &keypair)
+  CryptorMultiPK(const keypair<> &keypair)
     : shared_key_(false),
       shared_key_ready_(false)
   {
-    set_shared_key(keypair.privkey(), keypair.pubkey());
+    set_shared_key(keypair.private_key(), keypair.public_key());
   }
   
   /**
    * Change the shared key by setting it so that it is built out of
-   * the public key pubkey, and the private key privkey.
+   * the public key public_key, and the private key private_key.
    *
-   * pubkey  must be KEYSIZE_PUBKEY  bytes long.
+   * public_key  must be KEYSIZE_PUBLIC_KEY  bytes long.
    *
    * If the size of the key isn't correct, this function will throw
    * a std::runtime_error and the old shared key (if any) will remain
@@ -97,8 +98,8 @@ class CryptorMultiPK {
    * of the shared key is undefined. 
    **/
   
-  void set_shared_key(const privkey_type &privkey,
-		      const bytes &pubkey);
+  void set_shared_key(const private_key_type &private_key,
+		      const public_key_type &public_key);
 
   /**
    * Destroy the shared key by zeroing its contents after it is no

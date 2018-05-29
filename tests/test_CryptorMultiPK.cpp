@@ -35,7 +35,7 @@
 
 using namespace std::chrono;
 
-using sodium::KeyPair;
+using sodium::keypair;
 using sodium::CryptorPK;
 using sodium::CryptorMultiPK;
 
@@ -44,14 +44,14 @@ using bytes = sodium::bytes;
 bool
 test_of_correctness(const std::string &plaintext)
 {
-  KeyPair                    keypair_alice {};
-  KeyPair                    keypair_bob   {};
-  CryptorMultiPK::nonce_type nonce         {};
+  keypair<> keypair_alice;
+  keypair<> keypair_bob;
+  CryptorMultiPK::nonce_type nonce;
 
-  CryptorMultiPK          sc_alice(keypair_alice.privkey(),
-				   keypair_bob.pubkey());
-  CryptorMultiPK          sc_bob(keypair_bob.privkey(),
-				 keypair_alice.pubkey());
+  CryptorMultiPK sc_alice(keypair_alice.private_key(),
+				   keypair_bob.public_key());
+  CryptorMultiPK sc_bob(keypair_bob.private_key(),
+				   keypair_alice.public_key());
 
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -95,9 +95,9 @@ test_of_correctness(const std::string &plaintext)
 bool
 falsify_mac(const std::string &plaintext)
 {
-  KeyPair                    keypair_alice {};
-  CryptorMultiPK::nonce_type nonce         {};
-  CryptorMultiPK             sc(keypair_alice);
+  keypair<> keypair_alice;
+  CryptorMultiPK::nonce_type nonce;
+  CryptorMultiPK sc(keypair_alice);
   
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -130,9 +130,9 @@ falsify_ciphertext(const std::string &plaintext)
   BOOST_CHECK_MESSAGE(! plaintext.empty(),
 		      "Nothing to falsify, empty plaintext");
   
-  KeyPair                    keypair_alice {};
-  CryptorMultiPK::nonce_type nonce         {};
-  CryptorMultiPK             sc(keypair_alice);
+  keypair<> keypair_alice;
+  CryptorMultiPK::nonce_type nonce;
+  CryptorMultiPK sc(keypair_alice);
   
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -161,17 +161,17 @@ falsify_ciphertext(const std::string &plaintext)
 bool
 falsify_sender(const std::string &plaintext)
 {
-  KeyPair                    keypair_alice {}; // recipient
-  KeyPair                    keypair_bob   {}; // impersonated sender
-  KeyPair                    keypair_oscar {}; // real sender
-  CryptorMultiPK::nonce_type nonce    {};
+  keypair<> keypair_alice; // recipient
+  keypair<> keypair_bob;   // impersonated sender
+  keypair<> keypair_oscar; // real sender
+  CryptorMultiPK::nonce_type nonce;
 
-  CryptorMultiPK             sc_alice(keypair_alice.privkey(),
-				      keypair_bob.pubkey());
-  CryptorMultiPK             sc_bob  (keypair_bob.privkey(),
-				      keypair_alice.pubkey());
-  CryptorMultiPK             sc_oscar(keypair_oscar.privkey(),
-				      keypair_alice.pubkey());
+  CryptorMultiPK             sc_alice(keypair_alice.private_key(),
+				      keypair_bob.public_key());
+  CryptorMultiPK             sc_bob  (keypair_bob.private_key(),
+				      keypair_alice.public_key());
+  CryptorMultiPK             sc_oscar(keypair_oscar.private_key(),
+				      keypair_alice.public_key());
 
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -216,9 +216,9 @@ falsify_sender(const std::string &plaintext)
 bool
 destroy_shared_key_then_encrypt(const bytes &plaintext)
 {
-  KeyPair                    keypair_alice {};
-  CryptorMultiPK::nonce_type nonce         {};
-  CryptorMultiPK             sc_alice(keypair_alice);
+  keypair<> keypair_alice {};
+  CryptorMultiPK::nonce_type nonce {};
+  CryptorMultiPK sc_alice(keypair_alice);
   
   // 1. alice panics and destroys the shared key:
   sc_alice.destroy_shared_key();
@@ -241,8 +241,8 @@ destroy_shared_key_then_encrypt(const bytes &plaintext)
 }
 
 bool
-destroy_shared_key_then_decrypt(const bytes                     &ciphertext,
-				const KeyPair                    &keypair,
+destroy_shared_key_then_decrypt(const bytes &ciphertext,
+				const keypair<> &keypair,
 				const CryptorMultiPK::nonce_type &nonce)
 {
   CryptorMultiPK sc_alice(keypair);
@@ -270,7 +270,7 @@ destroy_shared_key_then_decrypt(const bytes                     &ciphertext,
 void
 time_encrypt(const unsigned long nr_of_messages)
 {
-  KeyPair                    keypair_alice   {};
+  keypair<>                  keypair_alice   {};
   CryptorMultiPK::nonce_type nonce_multi     {};
   CryptorPK::nonce_type      nonce_single    {};
   CryptorPK                  sc_single_alice {};
@@ -319,7 +319,7 @@ time_encrypt(const unsigned long nr_of_messages)
 void
 time_decrypt(const unsigned long nr_of_messages)
 {
-  KeyPair                    keypair_alice   {};
+  keypair<>                  keypair_alice   {};
   CryptorPK::nonce_type      nonce_single    {};
   CryptorMultiPK::nonce_type nonce_multi     {};
   CryptorPK                  sc_single_alice {};
@@ -399,7 +399,7 @@ BOOST_AUTO_TEST_CASE( sodium_cryptormultipk_test_empty_plaintext )
 
 BOOST_AUTO_TEST_CASE( sodium_cryptomultipk_test_encrypt_to_self )
 {
-  KeyPair                    keypair_alice {};
+  keypair<>                  keypair_alice {};
   CryptorMultiPK::nonce_type nonce         {};
   CryptorMultiPK             sc_alice(keypair_alice);
   
@@ -464,7 +464,7 @@ BOOST_AUTO_TEST_CASE( sodium_cryptormultipk_test_destroysharedkey_encrypt )
 
 BOOST_AUTO_TEST_CASE( sodium_cryptormultipk_test_destroysharedkey_decrypt )
 {
-  KeyPair                    keypair_alice {};
+  keypair<>                  keypair_alice {};
   CryptorMultiPK::nonce_type nonce         {};
   CryptorMultiPK             sc_alice(keypair_alice);
   

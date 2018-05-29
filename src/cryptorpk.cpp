@@ -24,16 +24,16 @@
 
 using bytes = sodium::bytes;
 using sodium::CryptorPK;
-using sodium::KeyPair;
+using sodium::keypair;
 
 bytes
-CryptorPK::encrypt (const bytes       &plaintext,
-		    const bytes       &pubkey,
-		    const privkey_type &privkey,
-		    const nonce_type   &nonce)
+CryptorPK::encrypt (const bytes    &plaintext,
+		    const public_key_type  &public_key,
+		    const private_key_type &private_key,
+		    const nonce_type       &nonce)
 {
   // some sanity checks before we get started
-  if (pubkey.size() != CryptorPK::KEYSIZE_PUBKEY)
+  if (public_key.size() != CryptorPK::KEYSIZE_PUBLIC_KEY)
     throw std::runtime_error {"sodium::CryptorPK::encrypt() wrong pubkey size"};
 
   // make space for MAC and encrypted message, i.e. for (MAC || encrypted)
@@ -43,7 +43,7 @@ CryptorPK::encrypt (const bytes       &plaintext,
   if (crypto_box_easy(ciphertext_with_mac.data(),
 		      plaintext.data(), plaintext.size(),
 		      nonce.data(),
-		      pubkey.data(), privkey.data()) == -1)
+		      public_key.data(), private_key.data()) == -1)
     throw std::runtime_error {"sodium::CryptorPK::encrypt() crypto_box_easy() failed (-1)"};
 
   // return with move semantics
@@ -51,9 +51,9 @@ CryptorPK::encrypt (const bytes       &plaintext,
 }
 
 bytes
-CryptorPK::encrypt (const bytes     &plaintext,
-		    const KeyPair    &keypair,
-		    const nonce_type &nonce)
+CryptorPK::encrypt (const bytes &plaintext,
+		    const keypair<>     &keypair,
+		    const nonce_type    &nonce)
 {
   // no sanity checks necessary before we get started
 
@@ -64,7 +64,7 @@ CryptorPK::encrypt (const bytes     &plaintext,
   if (crypto_box_easy(ciphertext_with_mac.data(),
 		      plaintext.data(), plaintext.size(),
 		      nonce.data(),
-		      keypair.pubkey().data(), keypair.privkey().data()) == -1)
+		      keypair.public_key().data(), keypair.private_key().data()) == -1)
     throw std::runtime_error {"sodium::CryptorPK::encrypt(keypair...) crypto_box_easy() failed (-1)"};
 
   // return with move semantics
@@ -72,15 +72,15 @@ CryptorPK::encrypt (const bytes     &plaintext,
 }
 
 bytes
-CryptorPK::decrypt (const bytes       &ciphertext_with_mac,
-		    const privkey_type &privkey,
-		    const bytes        &pubkey,
-		    const nonce_type   &nonce)
+CryptorPK::decrypt (const bytes    &ciphertext_with_mac,
+		    const private_key_type &private_key,
+		    const public_key_type  &public_key,
+		    const nonce_type       &nonce)
 {
   // some sanity checks before we get started
   if (ciphertext_with_mac.size() < CryptorPK::MACSIZE)
     throw std::runtime_error {"sodium::CryptorPK::decrypt() ciphertext too small for MAC"};
-  if (pubkey.size()  != KEYSIZE_PUBKEY)
+  if (public_key.size()  != KEYSIZE_PUBLIC_KEY)
     throw std::runtime_error {"sodium::CryptorPK::decrypt() pubkey wrong size"};
 
   // make room for decrypted text
@@ -91,15 +91,15 @@ CryptorPK::decrypt (const bytes       &ciphertext_with_mac,
 			   ciphertext_with_mac.data(),
 			   ciphertext_with_mac.size(),
 			   nonce.data(),
-			   pubkey.data(), privkey.data()) == -1)
+			   public_key.data(), private_key.data()) == -1)
     throw std::runtime_error {"sodium::CryptorPK::decrypt() decryption or verification failed"};
   
   return decrypted;    			       
 }
 
 bytes
-CryptorPK::decrypt (const bytes     &ciphertext_with_mac,
-		    const KeyPair    &keypair,
+CryptorPK::decrypt (const bytes &ciphertext_with_mac,
+		    const keypair<>  &keypair,
 		    const nonce_type &nonce)
 {
   // some sanity checks before we get started
@@ -114,8 +114,8 @@ CryptorPK::decrypt (const bytes     &ciphertext_with_mac,
 			   ciphertext_with_mac.data(),
 			   ciphertext_with_mac.size(),
 			   nonce.data(),
-			   keypair.pubkey().data(),
-			   keypair.privkey().data()) == -1)
+			   keypair.public_key().data(),
+			   keypair.private_key().data()) == -1)
     throw std::runtime_error {"sodium::CryptorPK::decrypt(keypair...) decryption or verification failed"};
   
   return decrypted;    			       

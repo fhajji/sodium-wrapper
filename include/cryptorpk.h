@@ -30,11 +30,12 @@ class CryptorPK {
  public:
 
   static constexpr unsigned int NSZPK               = sodium::NONCESIZE_PK;
-  static constexpr std::size_t  KEYSIZE_PUBKEY      = sodium::KEYSIZE_PUBKEY;
-  static constexpr std::size_t  KEYSIZE_PRIVKEY     = sodium::KEYSIZE_PRIVKEY;
+  static constexpr std::size_t  KEYSIZE_PUBLIC_KEY  = sodium::keypair<>::KEYSIZE_PUBLIC_KEY;
+  static constexpr std::size_t  KEYSIZE_PRIVATE_KEY = sodium::keypair<>::KEYSIZE_PRIVATE_KEY;
   static constexpr std::size_t  MACSIZE             = crypto_box_MACBYTES;
 
-  using privkey_type = key<KEYSIZE_PRIVKEY>;
+  using public_key_type = sodium::keypair<>::public_key_type;
+  using private_key_type = sodium::keypair<>::private_key_type;
   using nonce_type   = nonce<NSZPK>;
   
   /**
@@ -61,17 +62,17 @@ class CryptorPK {
    * then make sure never to reuse the same nonce. The easiest way to achieve
    * this is to increment nonce after or prior to each encrypt() invocation.
    * 
-   * The public  key must be KEYSIZE_PUBKEY  bytes long
+   * The public  key must be KEYSIZE_PUBLIC_KEY  bytes long
    * 
    * The (MAC || ciphertext) size is 
    *    MACSIZE + plaintext.size()
    * bytes long.
    **/
 
-  bytes encrypt(const bytes       &plaintext,
-		 const bytes        &pubkey,
-		 const privkey_type &privkey,
-		 const nonce_type   &nonce);
+  bytes encrypt(const bytes     &plaintext,
+		 const public_key_type  &public_key,
+		 const private_key_type &private_key,
+		 const nonce_type       &nonce);
 
   /**
    * Encrypt plaintext using recipient's public key, sign it using
@@ -85,9 +86,9 @@ class CryptorPK {
    *
    * Otherwise, see encrypt() above.
    **/
-  bytes encrypt(const bytes     &plaintext,
-		 const KeyPair    &keypair,
-		 const nonce_type &nonce);
+  bytes encrypt(const bytes &plaintext,
+		 const keypair<>    &keypair,
+		 const nonce_type   &nonce);
   
   /**
    * Decrypt ciphertext using recipient's private key and nonce, and
@@ -100,14 +101,14 @@ class CryptorPK {
    * this function with throw a std::runtime_error.
    *
    * This function will also throw a std::runtime_error if the size
-   * of the public key isn't KEYSIZE_PUBKEY, or if the ciphertext
+   * of the public key isn't KEYSIZE_PUBLIC_KEY, or if the ciphertext
    * is even too small to hold the MAC (i.e. less than MACSIZE).
    **/
 
-  bytes decrypt(const bytes       &ciphertext_with_mac,
-		 const privkey_type &privkey,
-		 const bytes        &pubkey,
-		 const nonce_type   &nonce);
+  bytes decrypt(const bytes     &ciphertext_with_mac,
+		 const private_key_type &private_key,
+		 const public_key_type  &public_key,
+		 const nonce_type       &nonce);
 
   /**
    * Decrypt ciphertext using recipient's private key and nonce,
@@ -121,9 +122,9 @@ class CryptorPK {
    * Otherwise, see decrypt() above.
    **/
   
-  bytes decrypt(const bytes     &ciphertext_with_mac,
-		 const KeyPair    &keypair,
-		 const nonce_type &nonce);
+  bytes decrypt(const bytes &ciphertext_with_mac,
+		 const keypair<>    &keypair,
+		 const nonce_type   &nonce);
 };
 
 } // namespace sodium

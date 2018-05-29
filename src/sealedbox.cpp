@@ -25,27 +25,28 @@ using sodium::SealedBox;
 
 bytes
 SealedBox::encrypt(const bytes &plaintext,
-		   const bytes &pubkey)
+		   const public_key_type &public_key)
 {
   // some sanity checks before we get started
-  if (pubkey.size() != KEYSIZE_PUBKEY)
-    throw std::runtime_error {"sodium::SealedBox::encrypt() wrong pubkey size"};
+  if (public_key.size() != KEYSIZE_PUBLIC_KEY)
+    throw std::runtime_error {"sodium::SealedBox::encrypt() wrong public_key size"};
   
   bytes ciphertext(SEALSIZE + plaintext.size());
   crypto_box_seal(ciphertext.data(),
 		  plaintext.data(), plaintext.size(),
-		  pubkey.data());
+		  public_key.data());
   
   return ciphertext; // by move semantics
 }
 
 bytes
 SealedBox::decrypt(const bytes &ciphertext_with_seal,
-		   const privkey_type &privkey,
-		   const bytes        &pubkey) {
+		   const private_key_type &private_key,
+		   const public_key_type  &public_key)
+{
   // some sanity checks before we get started
-  if (pubkey.size() != KEYSIZE_PUBKEY)
-    throw std::runtime_error {"sodium::SealedBox::decrypt() wrong pubkey size"};
+  if (public_key.size() != KEYSIZE_PUBLIC_KEY)
+    throw std::runtime_error {"sodium::SealedBox::decrypt() wrong public_key size"};
   if (ciphertext_with_seal.size() < SEALSIZE)
     throw std::runtime_error {"sodium::SealedBox::decrypt() sealed ciphertext too small"};
   
@@ -54,8 +55,8 @@ SealedBox::decrypt(const bytes &ciphertext_with_seal,
   if (crypto_box_seal_open(decrypted.data(),
 			   ciphertext_with_seal.data(),
 			   ciphertext_with_seal.size(),
-			   pubkey.data(),
-			   privkey.data()) == -1)
+			   public_key.data(),
+			   private_key.data()) == -1)
     throw std::runtime_error {"sodium::SealedBox::decrypt() can't decrypt"};
   
   return decrypted; // by move semantics

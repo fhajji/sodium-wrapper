@@ -25,16 +25,16 @@
 #include <string>
 #include <sodium.h>
 
-using sodium::KeyPair;
+using sodium::keypair;
 using sodium::SealedBox;
 using bytes = sodium::bytes;
 
 bool
 test_of_correctness(const std::string &plaintext)
 {
-  SealedBox sb            {};
-  KeyPair   keypair_alice {};
-  KeyPair   keypair_bob   {};
+  SealedBox   sb            {};
+  keypair<>   keypair_alice {};
+  keypair<>   keypair_bob   {};
 
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -42,14 +42,14 @@ test_of_correctness(const std::string &plaintext)
   
   bytes ciphertext_from_alice_to_bob =
     sb.encrypt(plainblob,
-	       keypair_bob.pubkey());
+	       keypair_bob.public_key());
 
   // 2. bob decrypts the message
   
   bytes decrypted_by_bob_from_someone =
     sb.decrypt(ciphertext_from_alice_to_bob,
-	       keypair_bob.privkey(),
-	       keypair_bob.pubkey());
+	       keypair_bob.private_key(),
+	       keypair_bob.public_key());
 
   // 3. if decryption (MAC or signature) fails, decrypt() would throw,
   // but we manually check anyway.
@@ -82,7 +82,7 @@ bool
 falsify_seal(const std::string &plaintext)
 {
   SealedBox sb            {};
-  KeyPair   keypair_alice {};
+  keypair<> keypair_alice {};
 
   bytes    plainblob     {plaintext.cbegin(), plaintext.cend()};
 
@@ -119,7 +119,7 @@ falsify_ciphertext(const std::string &plaintext)
 		      "Nothing to falsify, empty plaintext");
   
   SealedBox sb            {};
-  KeyPair   keypair_alice {};
+  keypair<> keypair_alice {};
 
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -151,9 +151,9 @@ bool
 falsify_recipient(const std::string &plaintext)
 {
   SealedBox sb            {};
-  KeyPair   keypair_alice {}; // sender
-  KeyPair   keypair_bob   {}; // intended recipient
-  KeyPair   keypair_oscar {}; // real recipient
+  keypair<> keypair_alice {}; // sender
+  keypair<> keypair_bob   {}; // intended recipient
+  keypair<> keypair_oscar {}; // real recipient
 
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
 
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE( sodium_sealedbox_test_empty_plaintext )
 BOOST_AUTO_TEST_CASE( sodium_sealedbox_test_encrypt_to_self )
 {
   SealedBox sb            {};
-  KeyPair   keypair_alice {};
+  keypair<> keypair_alice {};
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};

@@ -40,8 +40,8 @@ using deleted_unique_ptr = std::unique_ptr<T, std::function<void(T*)>>;
 *   sodium_memcmp()
 **/
 
-template <typename BT=bytes>
-bool compare(const BT &b1, const BT &b2) {
+template <typename BT1=bytes, typename BT2=bytes>
+bool compare(const BT1 &b1, const BT2 &b2) {
 	if (b1.size() != b2.size())
 		throw std::runtime_error{ "sodium::compare() different sizes" };
 

@@ -26,18 +26,18 @@ using bytes = sodium::bytes;
 using sodium::CryptorMultiPK;
 
 void
-CryptorMultiPK::set_shared_key (const privkey_type &privkey,
-				const bytes       &pubkey)
+CryptorMultiPK::set_shared_key (const private_key_type &private_key,
+				const public_key_type       &public_key)
 {
   // some sanity checks before we get started
-  if (pubkey.size() != KEYSIZE_PUBKEY)
-    throw std::runtime_error {"sodium::CryptorMultiPK::initkey() wrong pubkey size"};
+  if (public_key.size() != KEYSIZE_PUBLIC_KEY)
+    throw std::runtime_error {"sodium::CryptorMultiPK::initkey() wrong public_key size"};
     
   // now, ready to go
   shared_key_.readwrite();
   if (crypto_box_beforenm(shared_key_.setdata(),
-			  pubkey.data(),
-			  privkey.data()) == -1) {
+			  public_key.data(),
+			  private_key.data()) == -1) {
     shared_key_ready_ = false; // XXX: undefined?
     throw std::runtime_error {"sodium::CryptorMultiPK::initkey() crypto_box_beforenm() -1"};
   }

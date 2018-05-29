@@ -25,7 +25,7 @@
 #include <string>
 #include <sodium.h>
 
-using sodium::KeyPair;
+using sodium::keypair;
 using sodium::CryptorPK;
 using bytes = sodium::bytes;
 
@@ -33,8 +33,8 @@ bool
 test_of_correctness(const std::string &plaintext)
 {
   CryptorPK             sc            {};
-  KeyPair               keypair_alice {};
-  KeyPair               keypair_bob   {};
+  keypair<>             keypair_alice {};
+  keypair<>             keypair_bob   {};
   CryptorPK::nonce_type nonce         {};
 
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -43,16 +43,16 @@ test_of_correctness(const std::string &plaintext)
   
   bytes ciphertext_from_alice_to_bob =
     sc.encrypt(plainblob,
-	       keypair_bob.pubkey(),
-	       keypair_alice.privkey(),
+	       keypair_bob.public_key(),
+	       keypair_alice.private_key(),
 	       nonce);
 
   // 2. bob gets the public key from alice, and decrypts the message
   
   bytes decrypted_by_bob_from_alice =
     sc.decrypt(ciphertext_from_alice_to_bob,
-	       keypair_bob.privkey(),
-	       keypair_alice.pubkey(),
+	       keypair_bob.private_key(),
+	       keypair_alice.public_key(),
 	       nonce);
 
   // 3. if decryption (MAC or signature) fails, decrypt() would throw,
@@ -66,15 +66,15 @@ test_of_correctness(const std::string &plaintext)
 
   bytes ciphertext_from_bob_to_alice =
     sc.encrypt(decrypted_by_bob_from_alice,
-	       keypair_alice.pubkey(),
-	       keypair_bob.privkey(),
+	       keypair_alice.public_key(),
+	       keypair_bob.private_key(),
 	       nonce);
 
   // 5. alice attempts to decrypt again (also with the incremented nonce)
   bytes decrypted_by_alice_from_bob =
     sc.decrypt(ciphertext_from_bob_to_alice,
-	       keypair_alice.privkey(),
-	       keypair_bob.pubkey(),
+	       keypair_alice.private_key(),
+	       keypair_bob.public_key(),
 	       nonce);
 
   // 6. if decryption (MAC or signature) fails, decrypt() would throw,
@@ -90,7 +90,7 @@ bool
 falsify_mac(const std::string &plaintext)
 {
   CryptorPK             sc            {};
-  KeyPair               keypair_alice {};
+  keypair<>             keypair_alice {};
   CryptorPK::nonce_type nonce         {};
 
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -130,7 +130,7 @@ falsify_ciphertext(const std::string &plaintext)
 		      "Nothing to falsify, empty plaintext");
   
   CryptorPK             sc            {};
-  KeyPair               keypair_alice {};
+  keypair<>             keypair_alice {};
   CryptorPK::nonce_type nonce         {};
 
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -165,9 +165,9 @@ bool
 falsify_sender(const std::string &plaintext)
 {
   CryptorPK             sc            {};
-  KeyPair               keypair_alice {}; // recipient
-  KeyPair               keypair_bob   {}; // impersonated sender
-  KeyPair               keypair_oscar {}; // real sender
+  keypair<>             keypair_alice {}; // recipient
+  keypair<>             keypair_bob   {}; // impersonated sender
+  keypair<>             keypair_oscar {}; // real sender
   CryptorPK::nonce_type nonce         {};
 
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -176,8 +176,8 @@ falsify_sender(const std::string &plaintext)
   // with Alice's public key, and signs it with his own private key.
   
   bytes ciphertext = sc.encrypt(plainblob,
-				 keypair_alice.pubkey(),
-				 keypair_oscar.privkey(), // !!!
+				 keypair_alice.public_key(),
+				 keypair_oscar.private_key(), // !!!
 				 nonce);
 
   // 2. Oscar prepends forged headers to the ciphertext, making it appear
@@ -194,8 +194,8 @@ falsify_sender(const std::string &plaintext)
 
   try {
     bytes decrypted = sc.decrypt(ciphertext,
-				  keypair_alice.privkey(),
-				  keypair_bob.pubkey(),  // !!!
+				  keypair_alice.private_key(),
+				  keypair_bob.public_key(),  // !!!
 				  nonce);
 
     // if decryption succeeded, Oscar was successful in impersonating Bob.
@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_empty_plaintext )
 BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_encrypt_to_self )
 {
   CryptorPK             sc            {};
-  KeyPair               keypair_alice {};
+  keypair<>             keypair_alice {};
   CryptorPK::nonce_type nonce         {};
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};

@@ -30,21 +30,22 @@ class SealedBox {
 
  public:
 
-  static constexpr std::size_t KEYSIZE_PUBKEY  = sodium::KEYSIZE_PUBKEY;
-  static constexpr std::size_t KEYSIZE_PRIVKEY = sodium::KEYSIZE_PRIVKEY;
+  static constexpr std::size_t KEYSIZE_PUBLIC_KEY  = sodium::keypair<>::KEYSIZE_PUBLIC_KEY;
+  static constexpr std::size_t KEYSIZE_PRIVATE_KEY = sodium::keypair<>::KEYSIZE_PRIVATE_KEY;
   static constexpr std::size_t SEALSIZE        = crypto_box_SEALBYTES;
 
-  using privkey_type = key<KEYSIZE_PRIVKEY>;
+  using public_key_type = sodium::keypair<>::public_key_type;
+  using private_key_type = sodium::keypair<>::private_key_type;
   
   /**
-   * Encrypt plaintext using recipient's public key pubkey. Return
+   * Encrypt plaintext using recipient's public key public_key. Return
    * ciphertext combined with a seal.
    *
    * This function allows decryption of the sealed ciphertext without
    * knowledge of the sender (anonymous senders), provided that the
    * recipient has the corresponding private key.
    *
-   * The public key of the recipient must be KEYSIZE_PUBKEY  bytes long.
+   * The public key of the recipient must be KEYSIZE_PUBLIC_KEY  bytes long.
    * 
    * Internally, the sealed ciphertext contains a MAC so that
    * tampering will render decryption impossible.
@@ -61,7 +62,7 @@ class SealedBox {
    **/
 
   bytes encrypt(const bytes &plaintext,
-		 const bytes &pubkey);
+		 const public_key_type &public_key);
 
   /**
    * Encrypt plaintext using recipient's public key part of
@@ -71,13 +72,13 @@ class SealedBox {
    **/
 
   bytes encrypt(const bytes &plaintext,
-		 const KeyPair &keypair) {
-    return encrypt(plaintext, keypair.pubkey());
+		 const keypair<> &keypair) {
+    return encrypt(plaintext, keypair.public_key());
   }
   
   /**
-   * Decrypt the sealed ciphertext with the private key privkey, and
-   * the corresponding public key pubkey. Return decrypted text on
+   * Decrypt the sealed ciphertext with the private key private_key, and
+   * the corresponding public key public_key. Return decrypted text on
    * success.
    * 
    * The decryption can fail for two reasons:
@@ -87,23 +88,23 @@ class SealedBox {
    * 
    * The seal contains enough information to decrypt the ciphertext,
    * provided a private key is given, but not enough information for
-   * the decrypter to recover the identity / privkey of the encrypter.
+   * the decrypter to recover the identity / private_key of the encrypter.
    *
-   * The private key of the recipient must be KEYSIZE_PRIVKEY bytes long.
-   * The public  key of the recipient must be KEYSIZE_PUBKEY  bytes long.
+   * The private key of the recipient must be KEYSIZE_PRIVATE_KEY bytes long.
+   * The public  key of the recipient must be KEYSIZE_PUBLIC_KEY  bytes long.
    * Both keys must be inter-related, i.e. created either by
    *   - libsodium's crypto_box_[seed_]keypair()
    *   or by
-   *   - sodium::KeyPair
+   *   - sodium::keypair
    **/
   
-  bytes decrypt(const bytes &ciphertext_with_seal,
-		 const privkey_type &privkey,
-		 const bytes &pubkey);
+  bytes decrypt(const bytes     &ciphertext_with_seal,
+		 const private_key_type &privkey,
+		 const public_key_type  &pubkey);
 
   /**
-   * Decrypt the sealed ciphertext with the private key part privkey,
-   * and the corresponding public key part pubkey, both from
+   * Decrypt the sealed ciphertext with the private key part private_key,
+   * and the corresponding public key part public_key, both from
    * keypair. Return decrypted text on success. Throw std::runtime_error
    * on failure.
    * 
@@ -111,10 +112,10 @@ class SealedBox {
    **/
   
   bytes decrypt(const bytes &ciphertext_with_seal,
-		 const KeyPair &keypair) {
+		 const keypair<> &keypair) {
     return decrypt(ciphertext_with_seal,
-		   keypair.privkey(),
-		   keypair.pubkey());
+		   keypair.private_key(),
+		   keypair.public_key());
   }
 };
 

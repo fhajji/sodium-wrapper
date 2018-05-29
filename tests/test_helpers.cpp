@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(sodium_test_helpers_compare_equal)
 	sodium::bytes b1(s.cbegin(), s.cend());
 	sodium::bytes b2(b1); // a copy
 
-	// selects sodium::compare<bytes>():
+	// selects sodium::compare<bytes,bytes>():
 	bool result = sodium::compare(b1, b2);
 
 	BOOST_CHECK(result == true);
@@ -107,7 +107,31 @@ BOOST_AUTO_TEST_CASE(sodium_test_helpers_compare_equal_chars)
 	sodium::chars b1(s.cbegin(), s.cend());
 	sodium::chars b2(b1); // a copy
 
-	// selects sodium::compare<chars>():
+	// selects sodium::compare<chars,chars>():
+	bool result = sodium::compare(b1, b2);
+
+	BOOST_CHECK(result == true);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_compare_equal_different_types_1)
+{
+	std::string s{ "0123456789abced" };
+	sodium::chars b1(s.cbegin(), s.cend());
+	sodium::bytes b2(s.cbegin(), s.cend());
+
+	// selects sodium::compare<chars,bytes>():
+	bool result = sodium::compare(b1, b2);
+
+	BOOST_CHECK(result == true);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_helpers_compare_equal_different_types_2)
+{
+	std::string s{ "0123456789abced" };
+	sodium::bytes           b1(s.cbegin(), s.cend());
+	sodium::bytes_protected b2(s.cbegin(), s.cend());
+
+	// selects sodium::compare<bytes,bytes_protected>():
 	bool result = sodium::compare(b1, b2);
 
 	BOOST_CHECK(result == true);
