@@ -1,4 +1,4 @@
-// sealedbox.h -- Sealed boxes / Anonymous senders with Public-key scheme
+// box_seal.h -- Sealed boxes / Anonymous senders with Public-key scheme
 //
 // ISC License
 // 
@@ -26,16 +26,17 @@
 
 namespace sodium {
 
-class SealedBox {
+template <typename BT=bytes>
+class box_seal {
 
  public:
 
-  static constexpr std::size_t KEYSIZE_PUBLIC_KEY  = sodium::keypair<>::KEYSIZE_PUBLIC_KEY;
-  static constexpr std::size_t KEYSIZE_PRIVATE_KEY = sodium::keypair<>::KEYSIZE_PRIVATE_KEY;
-  static constexpr std::size_t SEALSIZE        = crypto_box_SEALBYTES;
+  static constexpr std::size_t KEYSIZE_PUBLIC_KEY  = sodium::keypair<BT>::KEYSIZE_PUBLIC_KEY;
+  static constexpr std::size_t KEYSIZE_PRIVATE_KEY = sodium::keypair<BT>::KEYSIZE_PRIVATE_KEY;
+  static constexpr std::size_t SEALSIZE            = crypto_box_SEALBYTES;
 
-  using public_key_type = sodium::keypair<>::public_key_type;
-  using private_key_type = sodium::keypair<>::private_key_type;
+  using public_key_type  = typename sodium::keypair<BT>::public_key_type;
+  using private_key_type = typename sodium::keypair<BT>::private_key_type;
   
   /**
    * Encrypt plaintext using recipient's public key public_key. Return
@@ -61,8 +62,20 @@ class SealedBox {
    * this function here.
    **/
 
-  bytes encrypt(const bytes &plaintext,
-		 const public_key_type &public_key);
+  BT encrypt(const BT &plaintext,
+	  const public_key_type &public_key)
+  {
+	  // some sanity checks before we get started
+	  if (public_key.size() != KEYSIZE_PUBLIC_KEY)
+		  throw std::runtime_error{ "sodium::box_seal::encrypt() wrong public_key size" };
+
+	  BT ciphertext(SEALSIZE + plaintext.size());
+	  crypto_box_seal(reinterpret_cast<unsigned char *>(ciphertext.data()),
+		  reinterpret_cast<const unsigned char *>(plaintext.data()), plaintext.size(),
+		  reinterpret_cast<const unsigned char *>(public_key.data()));
+
+	  return ciphertext; // by move semantics
+  }
 
   /**
    * Encrypt plaintext using recipient's public key part of
@@ -71,8 +84,8 @@ class SealedBox {
    * Otherwise, see encrypt() above.
    **/
 
-  bytes encrypt(const bytes &plaintext,
-		 const keypair<> &keypair) {
+  BT encrypt(const BT &plaintext,
+		 const keypair<BT> &keypair) {
     return encrypt(plaintext, keypair.public_key());
   }
   
@@ -98,9 +111,27 @@ class SealedBox {
    *   - sodium::keypair
    **/
   
-  bytes decrypt(const bytes     &ciphertext_with_seal,
-		 const private_key_type &privkey,
-		 const public_key_type  &pubkey);
+  BT decrypt(const BT           &ciphertext_with_seal,
+	  const private_key_type &private_key,
+	  const public_key_type  &public_key)
+  {
+	  // some sanity checks before we get started
+	  if (public_key.size() != KEYSIZE_PUBLIC_KEY)
+		  throw std::runtime_error{ "sodium::box_seal::decrypt() wrong public_key size" };
+	  if (ciphertext_with_seal.size() < SEALSIZE)
+		  throw std::runtime_error{ "sodium::box_seal::decrypt() sealed ciphertext too small" };
+
+	  BT decrypted(ciphertext_with_seal.size() - SEALSIZE);
+
+	  if (crypto_box_seal_open(reinterpret_cast<unsigned char *>(decrypted.data()),
+		  reinterpret_cast<const unsigned char *>(ciphertext_with_seal.data()),
+		  ciphertext_with_seal.size(),
+		  reinterpret_cast<const unsigned char *>(public_key.data()),
+		  private_key.data()) == -1)
+		  throw std::runtime_error{ "sodium::box_seal::decrypt() can't decrypt" };
+
+	  return decrypted; // by move semantics
+  }
 
   /**
    * Decrypt the sealed ciphertext with the private key part private_key,
@@ -111,8 +142,8 @@ class SealedBox {
    * Otherwise, see decrypt() above.
    **/
   
-  bytes decrypt(const bytes &ciphertext_with_seal,
-		 const keypair<> &keypair) {
+  BT decrypt(const BT &ciphertext_with_seal,
+		 const keypair<BT> &keypair) {
     return decrypt(ciphertext_with_seal,
 		   keypair.private_key(),
 		   keypair.public_key());
