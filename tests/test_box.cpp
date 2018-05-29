@@ -238,6 +238,18 @@ BOOST_AUTO_TEST_CASE( sodium_box_test_full_plaintext )
   BOOST_CHECK(test_of_correctness<>(plaintext));
 }
 
+BOOST_AUTO_TEST_CASE(sodium_box_test_full_plaintext_chars)
+{
+	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
+	BOOST_CHECK(test_of_correctness<sodium::chars>(plaintext));
+}
+
+BOOST_AUTO_TEST_CASE(sodium_box_test_full_plaintext_bytes_protected)
+{
+	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
+	BOOST_CHECK(test_of_correctness<sodium::bytes_protected>(plaintext));
+}
+
 BOOST_AUTO_TEST_CASE( sodium_box_test_empty_plaintext )
 {
   std::string plaintext {};

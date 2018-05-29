@@ -77,7 +77,7 @@ class keypair
   
   keypair()
     : public_key_(KEYSIZE_PUBLIC_KEY, '\0'), private_key_(false) {
-    crypto_box_keypair(public_key_.data(), private_key_.setdata());
+    crypto_box_keypair(reinterpret_cast<unsigned char *>(public_key_.data()), private_key_.setdata());
     private_key_.readonly();
   }
 

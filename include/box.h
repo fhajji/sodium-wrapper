@@ -31,12 +31,13 @@ class box {
  public:
 
   static constexpr unsigned int NONCESIZE           = crypto_box_NONCEBYTES;
-  static constexpr std::size_t  KEYSIZE_PUBLIC_KEY  = sodium::keypair<>::KEYSIZE_PUBLIC_KEY;
-  static constexpr std::size_t  KEYSIZE_PRIVATE_KEY = sodium::keypair<>::KEYSIZE_PRIVATE_KEY;
+  static constexpr std::size_t  KEYSIZE_PUBLIC_KEY  = sodium::keypair<BT>::KEYSIZE_PUBLIC_KEY;
+  static constexpr std::size_t  KEYSIZE_PRIVATE_KEY = sodium::keypair<BT>::KEYSIZE_PRIVATE_KEY;
   static constexpr std::size_t  MACSIZE             = crypto_box_MACBYTES;
 
-  using public_key_type = sodium::keypair<>::public_key_type;
-  using private_key_type = sodium::keypair<>::private_key_type;
+  using keypair_type = typename sodium::keypair<BT>;
+  using public_key_type = typename sodium::keypair<BT>::public_key_type;
+  using private_key_type = typename sodium::keypair<BT>::private_key_type;
   using nonce_type   = nonce<NONCESIZE>;
   
   /**
@@ -86,7 +87,7 @@ class box {
 	  if (crypto_box_easy(reinterpret_cast<unsigned char *>(ciphertext_with_mac.data()),
 		  reinterpret_cast<const unsigned char *>(plaintext.data()), plaintext.size(),
 		  nonce.data(),
-		  public_key.data(), private_key.data()) == -1)
+		  reinterpret_cast<const unsigned char *>(public_key.data()), private_key.data()) == -1)
 		  throw std::runtime_error{ "sodium::box::encrypt() crypto_box_easy() failed (-1)" };
 
 	  // return with move semantics
@@ -106,7 +107,7 @@ class box {
    * Otherwise, see encrypt() above.
    **/
   BT encrypt(const BT &plaintext,
-	  const keypair<>    &keypair,
+	  const keypair_type &keypair,
 	  const nonce_type   &nonce)
   {
 	  // no sanity checks necessary before we get started
@@ -180,7 +181,7 @@ class box {
    **/
   
   BT decrypt(const BT &ciphertext_with_mac,
-	  const keypair<>    &keypair,
+	  const keypair_type &keypair,
 	  const nonce_type   &nonce)
   {
 	  // some sanity checks before we get started
