@@ -23,7 +23,7 @@
 #define BOOST_TEST_MODULE sodium::CryptorMultiPK Test
 #include <boost/test/included/unit_test.hpp>
 
-#include "cryptorpk.h"
+#include "box.h"
 #include "cryptormultipk.h"
 #include "keypair.h"
 
@@ -36,7 +36,7 @@
 using namespace std::chrono;
 
 using sodium::keypair;
-using sodium::cryptorpk;
+using sodium::box;
 using sodium::CryptorMultiPK;
 
 using bytes = sodium::bytes;
@@ -272,14 +272,14 @@ time_encrypt(const unsigned long nr_of_messages)
 {
   keypair<>                  keypair_alice   {};
   CryptorMultiPK::nonce_type nonce_multi     {};
-  cryptorpk<>::nonce_type      nonce_single    {};
-  cryptorpk<>                  sc_single_alice {};
+  box<>::nonce_type      nonce_single    {};
+  box<>                  sc_single_alice {};
   CryptorMultiPK             sc_multi_alice  (keypair_alice);
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
   bytes ciphertext_multi (plaintext.size() + CryptorMultiPK::MACSIZE);
-  bytes ciphertext_single(plaintext.size() + cryptorpk<>::MACSIZE);
+  bytes ciphertext_single(plaintext.size() + box<>::MACSIZE);
 
   std::ostringstream os;
   
@@ -296,7 +296,7 @@ time_encrypt(const unsigned long nr_of_messages)
   os << "Encrypting " << nr_of_messages << " messages (multi ): "
      << tmulti << " milliseconds." << std::endl;
   
-  // 2. time encrypting nr_of_messages with CryptorPK
+  // 2. time encrypting nr_of_messages with box
   auto t10 = system_clock::now();
   for (unsigned long i=0; i!=nr_of_messages; ++i) {
     ciphertext_single = sc_single_alice.encrypt(plainblob,
@@ -313,16 +313,16 @@ time_encrypt(const unsigned long nr_of_messages)
   BOOST_TEST_MESSAGE(os.str());
   
   BOOST_CHECK_MESSAGE(tmulti < tsingle,
-		      "sodium::CryptorMultiPK::encrypt() slower than sodium::CryptorPK::encrypt()");
+		      "sodium::CryptorMultiPK::encrypt() slower than sodium::box::encrypt()");
 }
 
 void
 time_decrypt(const unsigned long nr_of_messages)
 {
   keypair<>                  keypair_alice   {};
-  cryptorpk<>::nonce_type      nonce_single    {};
+  box<>::nonce_type      nonce_single    {};
   CryptorMultiPK::nonce_type nonce_multi     {};
-  cryptorpk<>                  sc_single_alice {};
+  box<>                  sc_single_alice {};
   CryptorMultiPK             sc_multi_alice  (keypair_alice);
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
@@ -352,7 +352,7 @@ time_decrypt(const unsigned long nr_of_messages)
   os << "Decrypting " << nr_of_messages << " messages (multi ): "
      << tmulti << " milliseconds." << std::endl;
   
-  // 2. time decrypting nr_of_messages with CryptorPK
+  // 2. time decrypting nr_of_messages with box
   auto t10 = system_clock::now();
   for (unsigned long i=0; i!=nr_of_messages; ++i) {
     decrypted_single = sc_single_alice.decrypt(ciphertext_single,
@@ -370,7 +370,7 @@ time_decrypt(const unsigned long nr_of_messages)
   BOOST_TEST_MESSAGE(os.str());
   
   BOOST_CHECK_MESSAGE(tmulti < tsingle,
-		      "Sodium::CryptorMultiPK::decrypt() slower than Sodium::CryptorPK::decrypt()");
+		      "Sodium::CryptorMultiPK::decrypt() slower than Sodium::box::decrypt()");
 }
 
 struct SodiumFixture {

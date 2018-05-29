@@ -1,4 +1,4 @@
-// cryptorpk.h -- Public-key encryption / decryption with MAC
+// box.h -- Public-key encryption / decryption with MAC
 //
 // ISC License
 // 
@@ -26,7 +26,7 @@
 namespace sodium {
 
 template <typename BT=bytes>
-class cryptorpk {
+class box {
 
  public:
 
@@ -77,7 +77,7 @@ class cryptorpk {
   {
 	  // some sanity checks before we get started
 	  if (public_key.size() != KEYSIZE_PUBLIC_KEY)
-		  throw std::runtime_error{ "sodium::cryptorpk::encrypt() wrong pubkey size" };
+		  throw std::runtime_error{ "sodium::box::encrypt() wrong pubkey size" };
 
 	  // make space for MAC and encrypted message, i.e. for (MAC || encrypted)
 	  BT ciphertext_with_mac(MACSIZE + plaintext.size());
@@ -87,7 +87,7 @@ class cryptorpk {
 		  reinterpret_cast<const unsigned char *>(plaintext.data()), plaintext.size(),
 		  nonce.data(),
 		  public_key.data(), private_key.data()) == -1)
-		  throw std::runtime_error{ "sodium::cryptorpk::encrypt() crypto_box_easy() failed (-1)" };
+		  throw std::runtime_error{ "sodium::box::encrypt() crypto_box_easy() failed (-1)" };
 
 	  // return with move semantics
 	  return ciphertext_with_mac;
@@ -120,7 +120,7 @@ class cryptorpk {
 		  nonce.data(),
 		  reinterpret_cast<const unsigned char *>(keypair.public_key().data()),
 		  keypair.private_key().data()) == -1)
-		  throw std::runtime_error{ "sodium::cryptorpk::encrypt(keypair...) crypto_box_easy() failed (-1)" };
+		  throw std::runtime_error{ "sodium::box::encrypt(keypair...) crypto_box_easy() failed (-1)" };
 
 	  // return with move semantics
 	  return ciphertext_with_mac;
@@ -148,9 +148,9 @@ class cryptorpk {
   {
 	  // some sanity checks before we get started
 	  if (ciphertext_with_mac.size() < MACSIZE)
-		  throw std::runtime_error{ "sodium::cryptorpk::decrypt() ciphertext too small for MAC" };
+		  throw std::runtime_error{ "sodium::box::decrypt() ciphertext too small for MAC" };
 	  if (public_key.size() != KEYSIZE_PUBLIC_KEY)
-		  throw std::runtime_error{ "sodium::cryptorpk::decrypt() pubkey wrong size" };
+		  throw std::runtime_error{ "sodium::box::decrypt() pubkey wrong size" };
 
 	  // make room for decrypted text
 	  BT decrypted(ciphertext_with_mac.size() - MACSIZE);
@@ -162,7 +162,7 @@ class cryptorpk {
 		  nonce.data(),
 		  reinterpret_cast<const unsigned char *>(public_key.data()),
 		  private_key.data()) == -1)
-		  throw std::runtime_error{ "sodium::cryptorpk::decrypt() decryption or verification failed" };
+		  throw std::runtime_error{ "sodium::box::decrypt() decryption or verification failed" };
 
 	  return decrypted;
   }
@@ -185,7 +185,7 @@ class cryptorpk {
   {
 	  // some sanity checks before we get started
 	  if (ciphertext_with_mac.size() < MACSIZE)
-		  throw std::runtime_error{ "sodium::cryptorpk::decrypt() ciphertext too small for MAC" };
+		  throw std::runtime_error{ "sodium::box::decrypt() ciphertext too small for MAC" };
 
 	  // make room for decrypted text
 	  BT decrypted(ciphertext_with_mac.size() - MACSIZE);
@@ -197,7 +197,7 @@ class cryptorpk {
 		  nonce.data(),
 		  reinterpret_cast<const unsigned char *>(keypair.public_key().data()),
 		  keypair.private_key().data()) == -1)
-		  throw std::runtime_error{ "sodium::cryptorpk::decrypt(keypair...) decryption or verification failed" };
+		  throw std::runtime_error{ "sodium::box::decrypt(keypair...) decryption or verification failed" };
 
 	  return decrypted;
   }

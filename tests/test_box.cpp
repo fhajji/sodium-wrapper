@@ -1,4 +1,4 @@
-// test_cryptorpk.cpp -- Test sodium::cryptorpk
+// test_box.cpp -- Test sodium::box
 //
 // ISC License
 // 
@@ -17,31 +17,32 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE sodium::cryptorpk Test
+#define BOOST_TEST_MODULE sodium::box Test
 #include <boost/test/included/unit_test.hpp>
 
-#include "cryptorpk.h"
+#include "box.h"
 #include "keypair.h"
 #include <string>
 #include <sodium.h>
 
 using sodium::keypair;
-using sodium::cryptorpk;
+using sodium::box;
 using bytes = sodium::bytes;
 
+template <typename BT=bytes>
 bool
 test_of_correctness(const std::string &plaintext)
 {
-  cryptorpk<>             sc            {};
-  keypair<>             keypair_alice {};
-  keypair<>             keypair_bob   {};
-  cryptorpk<>::nonce_type nonce         {};
+  box<BT> sc;
+  keypair<BT> keypair_alice;
+  keypair<BT> keypair_bob;
+  typename box<BT>::nonce_type nonce;
 
-  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
+  BT plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // 1. alice gets the public key from bob, and sends him a message
   
-  bytes ciphertext_from_alice_to_bob =
+  BT ciphertext_from_alice_to_bob =
     sc.encrypt(plainblob,
 	       keypair_bob.public_key(),
 	       keypair_alice.private_key(),
@@ -49,7 +50,7 @@ test_of_correctness(const std::string &plaintext)
 
   // 2. bob gets the public key from alice, and decrypts the message
   
-  bytes decrypted_by_bob_from_alice =
+  BT decrypted_by_bob_from_alice =
     sc.decrypt(ciphertext_from_alice_to_bob,
 	       keypair_bob.private_key(),
 	       keypair_alice.public_key(),
@@ -64,14 +65,14 @@ test_of_correctness(const std::string &plaintext)
 
   nonce.increment(); // IMPORTANT! before calling encrypt() again
 
-  bytes ciphertext_from_bob_to_alice =
+  BT ciphertext_from_bob_to_alice =
     sc.encrypt(decrypted_by_bob_from_alice,
 	       keypair_alice.public_key(),
 	       keypair_bob.private_key(),
 	       nonce);
 
   // 5. alice attempts to decrypt again (also with the incremented nonce)
-  bytes decrypted_by_alice_from_bob =
+  BT decrypted_by_alice_from_bob =
     sc.decrypt(ciphertext_from_bob_to_alice,
 	       keypair_alice.private_key(),
 	       keypair_bob.public_key(),
@@ -86,27 +87,28 @@ test_of_correctness(const std::string &plaintext)
   return plainblob == decrypted_by_alice_from_bob;
 }
 
+template <typename BT=bytes>
 bool
 falsify_mac(const std::string &plaintext)
 {
-  cryptorpk<>             sc            {};
-  keypair<>             keypair_alice {};
-  cryptorpk<>::nonce_type nonce         {};
+  box<BT> sc;
+  keypair<BT> keypair_alice;
+  typename box<BT>::nonce_type nonce;
 
-  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
+  BT plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // encrypt to self
-  bytes ciphertext = sc.encrypt(plainblob,
+  BT ciphertext = sc.encrypt(plainblob,
 				 keypair_alice,
 				 nonce);
 
-  BOOST_CHECK(ciphertext.size() >= cryptorpk<>::MACSIZE);
+  BOOST_CHECK(ciphertext.size() >= box<BT>::MACSIZE);
 
   // falsify mac, which starts before the ciphertext proper
   ++ciphertext[0];
 
   try {
-    bytes decrypted = sc.decrypt(ciphertext,
+    BT decrypted = sc.decrypt(ciphertext,
 				  keypair_alice,
 				  nonce);
   }
@@ -121,6 +123,7 @@ falsify_mac(const std::string &plaintext)
   return false;
 }
 
+template <typename BT=bytes>
 bool
 falsify_ciphertext(const std::string &plaintext)
 {
@@ -129,24 +132,24 @@ falsify_ciphertext(const std::string &plaintext)
   BOOST_CHECK_MESSAGE(! plaintext.empty(),
 		      "Nothing to falsify, empty plaintext");
   
-  cryptorpk<>             sc            {};
-  keypair<>             keypair_alice {};
-  cryptorpk<>::nonce_type nonce         {};
+  box<BT> sc;
+  keypair<BT> keypair_alice;
+  typename box<BT>::nonce_type nonce;
 
-  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
+  BT plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // encrypt to self
-  bytes ciphertext = sc.encrypt(plainblob,
+  BT ciphertext = sc.encrypt(plainblob,
 				 keypair_alice,
 				 nonce);
 
-  BOOST_CHECK(ciphertext.size() > cryptorpk<>::MACSIZE);
+  BOOST_CHECK(ciphertext.size() > box<BT>::MACSIZE);
 
   // falsify ciphertext, which starts just after MAC
-  ++ciphertext[cryptorpk<>::MACSIZE];
+  ++ciphertext[box<BT>::MACSIZE];
 
   try {
-    bytes decrypted = sc.decrypt(ciphertext,
+    BT decrypted = sc.decrypt(ciphertext,
 				  keypair_alice,
 				  nonce);
   }
@@ -161,21 +164,22 @@ falsify_ciphertext(const std::string &plaintext)
   return false;
 }
 
+template <typename BT=bytes>
 bool
 falsify_sender(const std::string &plaintext)
 {
-  cryptorpk<>             sc            {};
-  keypair<>             keypair_alice {}; // recipient
-  keypair<>             keypair_bob   {}; // impersonated sender
-  keypair<>             keypair_oscar {}; // real sender
-  cryptorpk<>::nonce_type nonce         {};
+  box<BT>             sc             {};
+  keypair<BT>         keypair_alice  {}; // recipient
+  keypair<BT>         keypair_bob    {}; // impersonated sender
+  keypair<BT>         keypair_oscar  {}; // real sender
+  typename box<BT>::nonce_type nonce {};
 
-  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
+  BT plainblob {plaintext.cbegin(), plaintext.cend()};
 
   // 1. Oscar encrypts a plaintext that looks as if it was written by Bob
   // with Alice's public key, and signs it with his own private key.
   
-  bytes ciphertext = sc.encrypt(plainblob,
+  BT ciphertext = sc.encrypt(plainblob,
 				 keypair_alice.public_key(),
 				 keypair_oscar.private_key(), // !!!
 				 nonce);
@@ -193,7 +197,7 @@ falsify_sender(const std::string &plaintext)
   // the place where decryption MUST fail.
 
   try {
-    bytes decrypted = sc.decrypt(ciphertext,
+    BT decrypted = sc.decrypt(ciphertext,
 				  keypair_alice.private_key(),
 				  keypair_bob.public_key(),  // !!!
 				  nonce);
@@ -228,23 +232,23 @@ struct SodiumFixture {
 
 BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture )
 
-BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_full_plaintext )
+BOOST_AUTO_TEST_CASE( sodium_box_test_full_plaintext )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
-  BOOST_CHECK(test_of_correctness(plaintext));
+  BOOST_CHECK(test_of_correctness<>(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_empty_plaintext )
+BOOST_AUTO_TEST_CASE( sodium_box_test_empty_plaintext )
 {
   std::string plaintext {};
-  BOOST_CHECK(test_of_correctness(plaintext));
+  BOOST_CHECK(test_of_correctness<>(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_encrypt_to_self )
+BOOST_AUTO_TEST_CASE( sodium_box_test_encrypt_to_self )
 {
-  cryptorpk<>             sc            {};
-  keypair<>             keypair_alice {};
-  cryptorpk<>::nonce_type nonce         {};
+  box<>             sc             {};
+  keypair<>         keypair_alice  {};
+  typename box<>::nonce_type nonce {};
 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   bytes plainblob {plaintext.cbegin(), plaintext.cend()};
@@ -254,7 +258,7 @@ BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_encrypt_to_self )
 				 keypair_alice,
 				 nonce);
 
-  BOOST_CHECK_EQUAL(ciphertext.size(), plainblob.size() + cryptorpk<>::MACSIZE);
+  BOOST_CHECK_EQUAL(ciphertext.size(), plainblob.size() + box<>::MACSIZE);
 
   bytes decrypted = sc.decrypt(ciphertext,
 				keypair_alice,
@@ -266,35 +270,35 @@ BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_encrypt_to_self )
   BOOST_CHECK(plainblob == decrypted);
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_detect_wrong_sender_fulltext )
+BOOST_AUTO_TEST_CASE( sodium_box_test_detect_wrong_sender_fulltext )
 {
   std::string plaintext {"Hi Alice, this is Bob!"};
 
   BOOST_CHECK(falsify_sender(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_detect_wrong_sender_empty_text)
+BOOST_AUTO_TEST_CASE( sodium_box_test_detect_wrong_sender_empty_text)
 {
   std::string plaintext {};
 
   BOOST_CHECK(falsify_sender(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_falsify_ciphertext )
+BOOST_AUTO_TEST_CASE( sodium_box_test_falsify_ciphertext )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
 
   BOOST_CHECK(falsify_ciphertext(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_falsify_mac_fulltext )
+BOOST_AUTO_TEST_CASE( sodium_box_test_falsify_mac_fulltext )
 {
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
 
   BOOST_CHECK(falsify_mac(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptorpk_test_falsify_mac_empty )
+BOOST_AUTO_TEST_CASE( sodium_box_test_falsify_mac_empty )
 {
   std::string plaintext {};
 
