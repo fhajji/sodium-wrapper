@@ -209,6 +209,36 @@ class box_precomputed {
 
 	  return ciphertext; // move semantics
   }
+
+  /**
+  * Detached version.
+  *
+  * XXX Document me
+  **/
+
+  BT encrypt(const BT  &plaintext,
+	  const nonce_type &nonce,
+	  BT               &mac)
+  {
+	  // some sanity checks before we start
+	  if (!shared_key_ready_)
+		  throw std::runtime_error{ "sodium::box_precomputed::encrypt() shared key not ready" };
+	  if (mac.size() != MACSIZE)
+		  throw std::runtime_error{ "sodium::box_precomputed::encrypt() wrong mac size" };
+
+	  // make space for ciphertext, without MAC
+	  BT ciphertext(plaintext.size());
+
+	  // and now, encrypt!
+	  if (crypto_box_detached_afternm(reinterpret_cast<unsigned char *>(ciphertext.data()),
+		  reinterpret_cast<unsigned char *>(mac.data()),
+		  reinterpret_cast<const unsigned char *>(plaintext.data()), plaintext.size(),
+		  nonce.data(),
+		  reinterpret_cast<const unsigned char *>(shared_key_.data())) == -1)
+		  throw std::runtime_error{ "sodium::box_precomputed::encrypt() crypto_box_easy_afternm() -1" };
+
+	  return ciphertext; // move semantics, mac returned via reference
+  }
   
   /**
    * Decrypt and verify the signature of the ciphertext using the
@@ -248,6 +278,37 @@ class box_precomputed {
 	  if (crypto_box_open_easy_afternm(reinterpret_cast<unsigned char *>(decrypted.data()),
 		  reinterpret_cast<const unsigned char *>(ciphertext_with_mac.data()),
 		  ciphertext_with_mac.size(),
+		  nonce.data(),
+		  reinterpret_cast<const unsigned char *>(shared_key_.data())) == -1)
+		  throw std::runtime_error{ "sodium::box_precomputed::decrypt() decryption failed" };
+
+	  return decrypted; // move semantics
+  }
+
+  /**
+  * Detached version
+  * 
+  * XXX Document me (yada, yada, yada...)
+  **/
+
+  BT decrypt(const BT &ciphertext,
+	 const nonce_type &nonce,
+	 const BT         &mac)
+  {
+	  // some sanity checks before we start
+	  if (mac.size() != MACSIZE)
+		  throw std::runtime_error{ "sodium::box_precomputed::decrypt() wrong mac size" };
+	  if (!shared_key_ready_)
+		  throw std::runtime_error{ "sodium::box_precomputed::decrypt() shared key not ready" };
+
+	  // make space for decrypted text
+	  BT decrypted(ciphertext.size());
+
+	  // and now, decrypt!
+	  if (crypto_box_open_detached_afternm(reinterpret_cast<unsigned char *>(decrypted.data()),
+		  reinterpret_cast<const unsigned char *>(ciphertext.data()),
+		  reinterpret_cast<const unsigned char *>(mac.data()),
+		  ciphertext.size(),
 		  nonce.data(),
 		  reinterpret_cast<const unsigned char *>(shared_key_.data())) == -1)
 		  throw std::runtime_error{ "sodium::box_precomputed::decrypt() decryption failed" };
