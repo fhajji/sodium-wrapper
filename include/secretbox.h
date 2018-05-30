@@ -86,6 +86,16 @@ class secretbox {
 		 const nonce_type &nonce);
 
   /**
+  * In-place variant.
+  *
+  * XXX Document me (yada, yada, yada...)
+  **/
+
+  void encrypt(BT &ciphertext_with_mac,
+	  const BT &plaintext,
+	  const nonce_type &nonce);
+
+  /**
    * Encrypt plaintext using secretbox's key and supplied nonce,
    * returning ciphertext and MAC.
    *
@@ -114,6 +124,17 @@ class secretbox {
   BT encrypt(const BT &plaintext,
 		 const nonce_type &nonce,
 		 BT               &mac);
+
+  /**
+  * In-place variant.
+  *
+  * XXX Document me (yada, yada, yada...)
+  **/
+
+  void encrypt(BT &ciphertext,
+	  const BT &plaintext,
+	  const nonce_type &nonce,
+	  BT               &mac);
   
   /**
    * Decrypt ciphertext using secretbox's key and supplied nonce,
@@ -128,8 +149,18 @@ class secretbox {
    * the ciphertext is too small to even contain the MAC (MACSIZE bytes).
    **/
 
-  BT decrypt(const BT &ciphertext,
+  BT decrypt(const BT &ciphertext_with_mac,
 		 const nonce_type &nonce);
+
+  /**
+  * In-place variant.
+  *
+  * XXX Document me (yada, yada, yada...)
+  **/
+
+  void decrypt(BT &decrypted,
+	  const BT &ciphertext_with_mac,
+	  const nonce_type &nonce);
 
   /**
    * Decrypt ciphertext using secretbox's key and supplied nonce,
@@ -150,6 +181,17 @@ class secretbox {
 	  const nonce_type &nonce,
 	  const BT         &mac);
 
+  /**
+  * In-place variant.
+  *
+  * XXX Document me (yada, yada, yada...)
+  **/
+
+  void decrypt(BT &decrypted,
+	  const BT  &ciphertext,
+	  const nonce_type &nonce,
+	  const BT         &mac);
+
 private:
 	key_type key_;
 };
@@ -161,17 +203,37 @@ secretbox<BT>::encrypt(const BT &plaintext,
 {
 	// make space for MAC and encrypted message,
 	// combined form, i.e. (MAC || encrypted)
-	BT ciphertext(MACSIZE + plaintext.size());
+	BT ciphertext_with_mac(MACSIZE + plaintext.size());
 
 	// let's encrypt now!
-	crypto_secretbox_easy(reinterpret_cast<unsigned char *>(ciphertext.data()),
+	crypto_secretbox_easy(reinterpret_cast<unsigned char *>(ciphertext_with_mac.data()),
 		reinterpret_cast<const unsigned char *>(plaintext.data()),
 		plaintext.size(),
 		nonce.data(),
 		key_.data());
 
 	// return the encrypted bytes
-	return ciphertext;
+	return ciphertext_with_mac;
+}
+
+template <class BT>
+void
+secretbox<BT>::encrypt(BT &ciphertext_with_mac,
+	const BT &plaintext,
+	const nonce_type &nonce)
+{
+	// sanity check before we get started:
+	if (ciphertext_with_mac.size() != plaintext.size() + MACSIZE)
+		throw std::runtime_error{ "sodium::secretbox::encrypt() wrong ciphertext_with_mac size" };
+
+	// let's encrypt now!
+	crypto_secretbox_easy(reinterpret_cast<unsigned char *>(ciphertext_with_mac.data()),
+		reinterpret_cast<const unsigned char *>(plaintext.data()),
+		plaintext.size(),
+		nonce.data(),
+		key_.data());
+
+	// ciphertext_with_mac is the implicit return value
 }
 
 template <class BT>
@@ -201,26 +263,73 @@ secretbox<BT>::encrypt(const BT &plaintext,
 }
 
 template <class BT>
+void
+secretbox<BT>::encrypt(BT &ciphertext,
+	const BT &plaintext,
+	const nonce_type &nonce,
+	BT               &mac)
+{
+	// some sanity checks before we get started
+	if (ciphertext.size() != plaintext.size())
+		throw std::runtime_error{ "sodium::secretbox::encrypt(detached) wrong ciphertext size" };
+	if (mac.size() != MACSIZE)
+		throw std::runtime_error{ "sodium::secretbox::encrypt(detached) wrong mac size" };
+
+	// let's encrypt now!
+	crypto_secretbox_detached(reinterpret_cast<unsigned char *>(ciphertext.data()),
+		reinterpret_cast<unsigned char *>(mac.data()),
+		reinterpret_cast<const unsigned char *>(plaintext.data()),
+		plaintext.size(),
+		nonce.data(),
+		key_.data());
+
+	// ciphertext and mac are returned by reference
+}
+
+template <class BT>
 BT
-secretbox<BT>::decrypt(const BT &ciphertext,
+secretbox<BT>::decrypt(const BT &ciphertext_with_mac,
 	const nonce_type &nonce)
 {
 	// some sanity checks before we get started
-	if (ciphertext.size() < MACSIZE)
-		throw std::runtime_error{ "sodium::secretbox::decrypt(combined) ciphertext too small for mac" };
+	if (ciphertext_with_mac.size() < MACSIZE)
+		throw std::runtime_error{ "sodium::secretbox::decrypt(combined) ciphertext_with_mac too small for mac" };
 
 	// make space for decrypted buffer
-	BT decryptedtext(ciphertext.size() - MACSIZE);
+	BT decrypted(ciphertext_with_mac.size() - MACSIZE);
 
 	// and now decrypt!
-	if (crypto_secretbox_open_easy(reinterpret_cast<unsigned char *>(decryptedtext.data()),
-		reinterpret_cast<const unsigned char *>(ciphertext.data()),
-		ciphertext.size(),
+	if (crypto_secretbox_open_easy(reinterpret_cast<unsigned char *>(decrypted.data()),
+		reinterpret_cast<const unsigned char *>(ciphertext_with_mac.data()),
+		ciphertext_with_mac.size(),
 		nonce.data(),
 		key_.data()) != 0)
 		throw std::runtime_error{ "sodium::secretbox::decrypt(combined) can't decrypt" };
 
-	return decryptedtext;
+	return decrypted;
+}
+
+template <class BT>
+void
+secretbox<BT>::decrypt(BT &decrypted,
+	const BT         &ciphertext_with_mac,
+	const nonce_type &nonce)
+{
+	// some sanity checks before we get started
+	if (ciphertext_with_mac.size() < MACSIZE)
+		throw std::runtime_error{ "sodium::secretbox::decrypt(combined) ciphertext_with_mac too small for mac" };
+	if (decrypted.size() != ciphertext_with_mac.size() - MACSIZE)
+		throw std::runtime_error{ "sodium::secretbox::decrypt(combined) decrypted wrong size" };
+
+	// and now decrypt!
+	if (crypto_secretbox_open_easy(reinterpret_cast<unsigned char *>(decrypted.data()),
+		reinterpret_cast<const unsigned char *>(ciphertext_with_mac.data()),
+		ciphertext_with_mac.size(),
+		nonce.data(),
+		key_.data()) != 0)
+		throw std::runtime_error{ "sodium::secretbox::decrypt(combined) can't decrypt" };
+
+	// decrypted is returned by reference
 }
 
 template <class BT>
@@ -235,10 +344,10 @@ secretbox<BT>::decrypt(const BT &ciphertext,
 
 	// make space for decrypted buffer;
 	// detached mode. stream cipher => decryptedtext size == ciphertext size
-	BT decryptedtext(ciphertext.size());
+	BT decrypted(ciphertext.size());
 
 	// and now decrypt!
-	if (crypto_secretbox_open_detached(reinterpret_cast<unsigned char *>(decryptedtext.data()),
+	if (crypto_secretbox_open_detached(reinterpret_cast<unsigned char *>(decrypted.data()),
 		reinterpret_cast<const unsigned char *>(ciphertext.data()),
 		reinterpret_cast<const unsigned char *>(mac.data()),
 		ciphertext.size(),
@@ -246,7 +355,32 @@ secretbox<BT>::decrypt(const BT &ciphertext,
 		key_.data()) != 0)
 		throw std::runtime_error{ "sodium::secretbox::decrypt(detached) can't decrypt" };
 
-	return decryptedtext; // by move semantics
+	return decrypted; // by move semantics
+}
+
+template <class BT>
+void
+secretbox<BT>::decrypt(BT &decrypted,
+	const BT         &ciphertext,
+	const nonce_type &nonce,
+	const BT         &mac)
+{
+	// some sanity checks before we get started
+	if (decrypted.size() != ciphertext.size())
+		throw std::runtime_error{ "sodium::secretbox::decrypt(detached) wrong decrypted size" };
+	if (mac.size() != MACSIZE)
+		throw std::runtime_error{ "sodium::secretbox::decrypt(detached) wrong mac size" };
+
+	// and now decrypt!
+	if (crypto_secretbox_open_detached(reinterpret_cast<unsigned char *>(decrypted.data()),
+		reinterpret_cast<const unsigned char *>(ciphertext.data()),
+		reinterpret_cast<const unsigned char *>(mac.data()),
+		ciphertext.size(),
+		nonce.data(),
+		key_.data()) != 0)
+		throw std::runtime_error{ "sodium::secretbox::decrypt(detached) can't decrypt" };
+
+	// decrypted is returned by reference
 }
 
 } // namespace sodium
