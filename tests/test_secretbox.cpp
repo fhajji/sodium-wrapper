@@ -22,13 +22,17 @@
 
 #include "secretbox.h"
 #include <string>
+#include <sstream>
+#include <chrono>
+#include <typeinfo>
 #include <sodium.h>
+
+using namespace std::chrono;
 
 using sodium::secretbox;
 using bytes = sodium::bytes;
 
 // XXX TODO templatize test functions on bytes type...
-// XXX TODO add timing tests comparing regular and inplace
 
 bool
 test_of_correctness(const std::string &plaintext,
@@ -271,6 +275,220 @@ test_of_correctness_detached_inplace(const std::string &plaintext,
 	return false;
 }
 
+template <typename BT = bytes>
+void
+time_encrypt(const unsigned long nr_of_messages)
+{
+	secretbox<BT> sc;
+	typename secretbox<BT>::nonce_type nonce;
+
+	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
+	BT plainblob{ plaintext.cbegin(), plaintext.cend() };
+
+	BT ciphertext_with_mac_inplace(plainblob.size() + secretbox<BT>::MACSIZE);
+	BT ciphertext_with_mac;
+
+	std::ostringstream os;
+
+	using bytes_type = BT;
+	os << "Timing encrypt " << typeid(bytes_type).name() << "...\n";
+
+	// 1. time encrypting nr_of_messages without inplace
+	auto t00 = system_clock::now();
+	for (unsigned long i = 0; i != nr_of_messages; ++i) {
+		ciphertext_with_mac = sc.encrypt(plainblob, nonce);
+	}
+	auto t01 = system_clock::now();
+	auto t_no_inplace = duration_cast<milliseconds>(t01 - t00).count();
+
+	os << "Encrypting " << nr_of_messages << " messages (no in-place): "
+		<< t_no_inplace << " milliseconds." << std::endl;
+
+	// 2. time encrypting nr_of_messages with inplace
+	auto t10 = system_clock::now();
+	for (unsigned long i = 0; i != nr_of_messages; ++i) {
+		sc.encrypt(ciphertext_with_mac_inplace,
+			plainblob,
+			nonce);
+	}
+	auto t11 = system_clock::now();
+	auto t_inplace = duration_cast<milliseconds>(t11 - t10).count();
+
+	os << "Encrypting " << nr_of_messages << " messages (in-place): "
+		<< t_inplace << " milliseconds." << std::endl;
+
+	BOOST_TEST_MESSAGE(os.str());
+
+	BOOST_CHECK_MESSAGE(t_inplace < t_no_inplace,
+		"sodium::secretbox::encrypt(inplace) slower than sodium::box::encrypt() ???");
+}
+
+template <typename BT = bytes>
+void
+time_decrypt(const unsigned long nr_of_messages)
+{
+	secretbox<BT> sc;
+	typename secretbox<BT>::nonce_type nonce;
+
+	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
+	BT plainblob{ plaintext.cbegin(), plaintext.cend() };
+
+	BT ciphertext_with_mac(plainblob.size() + secretbox<BT>::MACSIZE);
+
+	BT decrypted_inplace(plainblob.size());
+	BT decrypted;
+
+	// we need to encrypt once (outside of timing)
+	// so we have a valid ciphertext to repeatedly decrypt.
+	// here, we use in-place encryption, but it doesn't
+	// matter at this point.
+	sc.encrypt(ciphertext_with_mac, plainblob, nonce);
+
+	std::ostringstream os;
+
+	using bytes_type = BT;
+	os << "Timing decrypt " << typeid(bytes_type).name() << "...\n";
+
+	// 1. time encrypting nr_of_messages without inplace
+	auto t00 = system_clock::now();
+	for (unsigned long i = 0; i != nr_of_messages; ++i) {
+		decrypted = sc.decrypt(ciphertext_with_mac, nonce);
+	}
+	auto t01 = system_clock::now();
+	auto t_no_inplace = duration_cast<milliseconds>(t01 - t00).count();
+
+	os << "Decrypting " << nr_of_messages << " messages (no in-place): "
+		<< t_no_inplace << " milliseconds." << std::endl;
+
+	// 2. time encrypting nr_of_messages with inplace
+	auto t10 = system_clock::now();
+	for (unsigned long i = 0; i != nr_of_messages; ++i) {
+		sc.decrypt(decrypted_inplace,
+			ciphertext_with_mac,
+			nonce);
+	}
+	auto t11 = system_clock::now();
+	auto t_inplace = duration_cast<milliseconds>(t11 - t10).count();
+
+	os << "Decrypting " << nr_of_messages << " messages (in-place): "
+		<< t_inplace << " milliseconds." << std::endl;
+
+	BOOST_TEST_MESSAGE(os.str());
+
+	BOOST_CHECK_MESSAGE(t_inplace < t_no_inplace,
+		"sodium::secretbox::decrypt(inplace) slower than sodium::box::decrypt() ???");
+}
+
+template <typename BT = bytes>
+void
+time_encrypt_detached(const unsigned long nr_of_messages)
+{
+	secretbox<BT> sc;
+	typename secretbox<BT>::nonce_type nonce;
+
+	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
+	BT plainblob{ plaintext.cbegin(), plaintext.cend() };
+
+	BT ciphertext_inplace(plainblob.size());
+	BT ciphertext;
+
+	BT mac(secretbox<BT>::MACSIZE);
+
+	std::ostringstream os;
+
+	using bytes_type = BT;
+	os << "Timing encrypt detached " << typeid(bytes_type).name() << "...\n";
+
+	// 1. time encrypting nr_of_messages without inplace
+	auto t00 = system_clock::now();
+	for (unsigned long i = 0; i != nr_of_messages; ++i) {
+		ciphertext = sc.encrypt(plainblob, nonce, mac);
+	}
+	auto t01 = system_clock::now();
+	auto t_no_inplace = duration_cast<milliseconds>(t01 - t00).count();
+
+	os << "Encrypting detached " << nr_of_messages << " messages (no in-place): "
+		<< t_no_inplace << " milliseconds." << std::endl;
+
+	// 2. time encrypting nr_of_messages with inplace
+	auto t10 = system_clock::now();
+	for (unsigned long i = 0; i != nr_of_messages; ++i) {
+		sc.encrypt(ciphertext_inplace,
+			plainblob,
+			nonce,
+			mac);
+	}
+	auto t11 = system_clock::now();
+	auto t_inplace = duration_cast<milliseconds>(t11 - t10).count();
+
+	os << "Encrypting detached " << nr_of_messages << " messages (in-place): "
+		<< t_inplace << " milliseconds." << std::endl;
+
+	BOOST_TEST_MESSAGE(os.str());
+
+	BOOST_CHECK_MESSAGE(t_inplace < t_no_inplace,
+		"sodium::secretbox::encrypt(inplace) detached slower than sodium::box::encrypt() ???");
+}
+
+template <typename BT = bytes>
+void
+time_decrypt_detached(const unsigned long nr_of_messages)
+{
+	secretbox<BT> sc;
+	typename secretbox<BT>::nonce_type nonce;
+
+	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
+	BT plainblob{ plaintext.cbegin(), plaintext.cend() };
+
+	BT ciphertext(plainblob.size());
+
+	BT mac(secretbox<BT>::MACSIZE);
+
+	BT decrypted_inplace(plainblob.size());
+	BT decrypted;
+
+	// we need to encrypt once (outside of timing)
+	// so we have a valid ciphertext to repeatedly decrypt.
+	// here, we use in-place encryption, but it doesn't
+	// matter at this point.
+	sc.encrypt(ciphertext, plainblob, nonce, mac);
+
+	std::ostringstream os;
+
+	using bytes_type = BT;
+	os << "Timing decrypt detached " << typeid(bytes_type).name() << "...\n";
+
+	// 1. time encrypting nr_of_messages without inplace
+	auto t00 = system_clock::now();
+	for (unsigned long i = 0; i != nr_of_messages; ++i) {
+		decrypted = sc.decrypt(ciphertext, nonce, mac);
+	}
+	auto t01 = system_clock::now();
+	auto t_no_inplace = duration_cast<milliseconds>(t01 - t00).count();
+
+	os << "Decrypting detached " << nr_of_messages << " messages (no in-place): "
+		<< t_no_inplace << " milliseconds." << std::endl;
+
+	// 2. time encrypting nr_of_messages with inplace
+	auto t10 = system_clock::now();
+	for (unsigned long i = 0; i != nr_of_messages; ++i) {
+		sc.decrypt(decrypted_inplace,
+			ciphertext,
+			nonce,
+			mac);
+	}
+	auto t11 = system_clock::now();
+	auto t_inplace = duration_cast<milliseconds>(t11 - t10).count();
+
+	os << "Decrypting detached " << nr_of_messages << " messages (in-place): "
+		<< t_inplace << " milliseconds." << std::endl;
+
+	BOOST_TEST_MESSAGE(os.str());
+
+	BOOST_CHECK_MESSAGE(t_inplace < t_no_inplace,
+		"sodium::secretbox::decrypt(inplace) detached slower than sodium::box::decrypt() ???");
+}
+
 struct SodiumFixture {
   SodiumFixture()  {
     BOOST_REQUIRE(sodium_init() != -1);
@@ -407,6 +625,20 @@ BOOST_AUTO_TEST_CASE( sodium_secretbox_test_falsify_ciphertext_and_mac_detached 
   std::string plaintext {"the quick brown fox jumps over the lazy dog"};
   BOOST_CHECK(test_of_correctness_detached(plaintext, true, true, false, false));
   BOOST_CHECK(test_of_correctness_detached_inplace(plaintext, true, true, false, false));
+}
+
+BOOST_AUTO_TEST_CASE(sodium_secretbox_test_time_encrypt)
+{
+	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
+	time_encrypt<>(5000000);
+	time_encrypt_detached<>(5000000);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_secretbox_test_time_decrypt)
+{
+	std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
+	time_decrypt<>(5000000);
+	time_decrypt_detached<>(5000000);
 }
 
 BOOST_AUTO_TEST_SUITE_END ()
