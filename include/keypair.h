@@ -21,10 +21,16 @@
 #include "key.h"
 #include "helpers.h"
 #include <sodium.h>
+#include <type_traits>
 
 namespace sodium {
 
-template <typename PK=bytes>
+template <typename PK=bytes, typename SEED_TYPE=bytes_protected,
+	typename T = typename std::enable_if<
+	std::is_same<SEED_TYPE, sodium::bytes_protected>::value
+	, int
+	>::type
+>
 class keypair
 {
   /**
@@ -57,7 +63,8 @@ class keypair
 
   using private_key_type = key<KEYSIZE_PRIVATE_KEY>;
   using public_key_type  = PK;
-  
+  using seed_type = SEED_TYPE;
+
   /**
    * Generate a new (random) key pair of public/private keys.
    *
@@ -93,13 +100,13 @@ class keypair
    * Otherwise, see keypair().
    **/
   
-  keypair(const bytes &seed)
+  keypair(const seed_type &seed)
     : public_key_(KEYSIZE_PUBLIC_KEY, '\0'), private_key_(false) {
     if (seed.size() != KEYSIZE_SEEDBYTES)
       throw std::runtime_error {"sodium::keypair::keypair(seed) wrong seed size"};
     crypto_box_seed_keypair(reinterpret_cast<unsigned char *>(public_key_.data()),
 		private_key_.setdata(),
-		seed.data());
+		reinterpret_cast<const unsigned char *>(seed.data()));
     private_key_.readonly();
   }
 

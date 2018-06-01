@@ -19,10 +19,17 @@
 #pragma once
 
 #include "key.h"
+#include <sodium.h>
+#include <type_traits>
 
 namespace sodium {
 
-template <typename PK=bytes>
+template <typename PK=bytes, typename SEED_TYPE=bytes_protected,
+	typename T = typename std::enable_if<
+	std::is_same<SEED_TYPE, sodium::bytes_protected>::value
+	, int
+	>::type
+>
 class keypairsign
 {
   /**
@@ -53,6 +60,7 @@ class keypairsign
 
   using private_key_type = key<KEYSIZE_PRIVATE_KEY>;
   using public_key_type = PK;
+  using seed_type = SEED_TYPE;
   
   /**
    * Generate a new (random) key pair of public/private signing keys.
@@ -92,14 +100,14 @@ class keypairsign
    * Otherwise, see keypairsign().
    **/
   
-  keypairsign(const bytes &seed)
+  keypairsign(const seed_type &seed)
     : public_key_(KEYSIZE_PUBLIC_KEY, '\0'), private_key_(false) {
     if (seed.size() != KEYSIZE_SEEDBYTES)
       throw std::runtime_error {"sodium::keypairsign::keypairsign(seed) wrong seed size"};
 
     if (crypto_sign_seed_keypair(reinterpret_cast<unsigned char *>(public_key_.data()),
 		         private_key_.setdata(),
-				 seed.data()) == -1)
+				 reinterpret_cast<const unsigned char *>(seed.data())) == -1)
       throw std::runtime_error {"sodium::keypairsign::keypairsign(seed...) crypto_sign_seed_keypair() -1"};
     
     private_key_.readonly();
@@ -158,13 +166,13 @@ class keypairsign
 
   /**
    * Return the seed corresponding to the private key stored in
-   * this KeyPairSign.
+   * this keypairsign.
    *
    * Underlying libsodium function: crypto_sign_ed25519_sk_to_seed()
    **/
 
-  bytes seed() {
-    bytes the_seed(KEYSIZE_SEEDBYTES);
+  seed_type seed() {
+    seed_type the_seed(KEYSIZE_SEEDBYTES);
     if (crypto_sign_ed25519_sk_to_seed(reinterpret_cast<unsigned char *>(the_seed.data()),
 				       private_key_.data()) == -1)
       throw std::runtime_error {"sodium::keypairsign::seed() crypto_sign_ed25519_sk_to_seed() -1"};
