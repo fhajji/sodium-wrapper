@@ -46,7 +46,9 @@ struct SodiumFixture {
 
 BOOST_FIXTURE_TEST_SUITE ( sodium_test_suite, SodiumFixture )
 
-BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_size_ctor_default )
+// 1. sodium::bytes -------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_size_ctor_default_bytes )
 {
   keypairsign<> keypair;
 
@@ -54,7 +56,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_size_ctor_default )
   BOOST_TEST(keypair.private_key().size() == ks_priv);
 }
 
-BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_size_ctor_seed )
+BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_size_ctor_seed_bytes )
 {
   bytes seed(ks_seed);
   sodium::randombytes_buf_inplace(seed);
@@ -65,7 +67,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_size_ctor_seed )
   BOOST_TEST(keypair.private_key().size() == ks_priv);
 }
 
-BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_size_ctor_privkey )
+BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_size_ctor_privkey_bytes )
 {
   keypairsign<> keypair1;
   keypairsign<> keypair2(keypair1.private_key().data(), keypair1.private_key().size());
@@ -74,7 +76,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_size_ctor_privkey )
   BOOST_TEST(keypair2.private_key().size() == ks_priv);
 }
 
-BOOST_AUTO_TEST_CASE ( sodium_test_keypairsign_copy_ctor )
+BOOST_AUTO_TEST_CASE ( sodium_test_keypairsign_copy_ctor_bytes )
 {
   keypairsign<> keypair;
   keypairsign<> keypair_copy {keypair};
@@ -84,7 +86,7 @@ BOOST_AUTO_TEST_CASE ( sodium_test_keypairsign_copy_ctor )
   BOOST_TEST(keypair.public_key()  == keypair_copy.public_key());  // std::vector::operator==()
 }
 
-BOOST_AUTO_TEST_CASE ( sodium_test_keypairsign_copy_assignement )
+BOOST_AUTO_TEST_CASE ( sodium_test_keypairsign_copy_assignement_bytes )
 {
   keypairsign<> keypair;
   keypairsign<> keypair_copy = keypair;
@@ -94,7 +96,7 @@ BOOST_AUTO_TEST_CASE ( sodium_test_keypairsign_copy_assignement )
   BOOST_TEST(keypair.public_key()  == keypair_copy.public_key());
 }
 
-BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_nonzero_ctor_default )
+BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_nonzero_ctor_default_bytes )
 {
   keypairsign<> keypair;
 
@@ -102,7 +104,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_nonzero_ctor_default )
   BOOST_TEST(!sodium::is_zero(keypair.private_key()));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_nonzero_ctor_seed )
+BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_nonzero_ctor_seed_bytes )
 {
   bytes seed(ks_seed);
   sodium::randombytes_buf_inplace(seed);
@@ -113,7 +115,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_nonzero_ctor_seed )
   BOOST_TEST(!sodium::is_zero(keypair.private_key()));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_nonzero_ctor_privkey )
+BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_nonzero_ctor_privkey_bytes )
 {
   keypairsign<> keypair1;
   keypairsign<> keypair2(keypair1.private_key().data(), keypair1.private_key().size());
@@ -122,7 +124,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_nonzero_ctor_privkey )
   BOOST_TEST(!sodium::is_zero(keypair2.private_key()));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_seedcompare_ctor_same_seed )
+BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_seedcompare_ctor_same_seed_bytes )
 {
   bytes seed(ks_seed);
   sodium::randombytes_buf_inplace(seed);
@@ -140,7 +142,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_seedcompare_ctor_same_seed )
   BOOST_TEST(keypair1.public_key() == keypair2.public_key());
 }
 
-BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_seedcompare_ctor_different_seed )
+BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_seedcompare_ctor_different_seed_bytes )
 {
   bytes seed1(ks_seed);
   sodium::randombytes_buf_inplace(seed1);
@@ -160,7 +162,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_seedcompare_ctor_different_seed )
   BOOST_TEST((keypair1 != keypair2)); // check also operator!=()
 }
 
-BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_seedcompare_extract_seed )
+BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_seedcompare_extract_seed_bytes )
 {
   bytes seed1(ks_seed);
   sodium::randombytes_buf_inplace(seed1);
@@ -171,6 +173,264 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_seedcompare_extract_seed )
   bytes seed2 = keypair.seed();
 
   BOOST_TEST(seed1 == seed2);
+}
+
+// 2. sodium::bytes_protected ----------------------------------------
+
+BOOST_AUTO_TEST_CASE(sodium_test_keypairsign_size_ctor_default_bytes_protected)
+{
+	keypairsign<sodium::bytes_protected> keypair;
+
+	BOOST_TEST(keypair.public_key().size() == ks_pub);
+	BOOST_TEST(keypair.private_key().size() == ks_priv);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_keypairsign_size_ctor_seed_bytes_protected)
+{
+	bytes seed(ks_seed);
+	sodium::randombytes_buf_inplace(seed);
+
+	keypairsign<sodium::bytes_protected> keypair(seed);
+
+	BOOST_TEST(keypair.public_key().size() == ks_pub);
+	BOOST_TEST(keypair.private_key().size() == ks_priv);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_keypairsign_size_ctor_privkey_bytes_protected)
+{
+	keypairsign<sodium::bytes_protected> keypair1;
+	keypairsign<sodium::bytes_protected> keypair2(keypair1.private_key().data(), keypair1.private_key().size());
+
+	BOOST_TEST(keypair2.public_key().size() == ks_pub);
+	BOOST_TEST(keypair2.private_key().size() == ks_priv);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_keypairsign_copy_ctor_bytes_protected)
+{
+	keypairsign<sodium::bytes_protected> keypair;
+	keypairsign<sodium::bytes_protected> keypair_copy{ keypair };
+
+	BOOST_TEST((keypair == keypair_copy)); // check also operator==()
+	BOOST_TEST((keypair.private_key() == keypair_copy.private_key())); // key::operator==()
+	BOOST_TEST(keypair.public_key() == keypair_copy.public_key());  // std::vector::operator==()
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_keypairsign_copy_assignement_bytes_protected)
+{
+	keypairsign<sodium::bytes_protected> keypair;
+	keypairsign<sodium::bytes_protected> keypair_copy = keypair;
+
+	BOOST_TEST((keypair == keypair_copy));
+	BOOST_TEST((keypair.private_key() == keypair_copy.private_key()));
+	BOOST_TEST(keypair.public_key() == keypair_copy.public_key());
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_keypairsign_nonzero_ctor_default_bytes_protected)
+{
+	keypairsign<sodium::bytes_protected> keypair;
+
+	BOOST_TEST(!sodium::is_zero(keypair.public_key()));
+	BOOST_TEST(!sodium::is_zero(keypair.private_key()));
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_keypairsign_nonzero_ctor_seed_bytes_protected)
+{
+	bytes seed(ks_seed);
+	sodium::randombytes_buf_inplace(seed);
+
+	keypairsign<sodium::bytes_protected> keypair(seed);
+
+	BOOST_TEST(!sodium::is_zero(keypair.public_key()));
+	BOOST_TEST(!sodium::is_zero(keypair.private_key()));
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_keypairsign_nonzero_ctor_privkey_bytes_protected)
+{
+	keypairsign<sodium::bytes_protected> keypair1;
+	keypairsign<sodium::bytes_protected> keypair2(keypair1.private_key().data(), keypair1.private_key().size());
+
+	BOOST_TEST(!sodium::is_zero(keypair2.public_key()));
+	BOOST_TEST(!sodium::is_zero(keypair2.private_key()));
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_keypairsign_seedcompare_ctor_same_seed_bytes_protected)
+{
+	bytes seed(ks_seed);
+	sodium::randombytes_buf_inplace(seed);
+
+	keypairsign<sodium::bytes_protected> keypair1(seed);
+	keypairsign<sodium::bytes_protected> keypair2(seed); // same seed
+
+	BOOST_TEST(sodium::compare(keypair1.public_key(),
+		keypair2.public_key()));
+	BOOST_TEST(sodium::compare(keypair1.private_key(),
+		keypair2.private_key()));
+
+	BOOST_TEST((keypair1 == keypair2)); // check also operator==()
+	BOOST_TEST((keypair1.private_key() == keypair2.private_key()));
+	BOOST_TEST(keypair1.public_key() == keypair2.public_key());
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_keypairsign_seedcompare_ctor_different_seed_bytes_protected)
+{
+	bytes seed1(ks_seed);
+	sodium::randombytes_buf_inplace(seed1);
+	bytes seed2(ks_seed);
+	sodium::randombytes_buf_inplace(seed2);
+
+	BOOST_TEST(seed1 != seed2); // very unlikely that they are the same
+
+	keypairsign<sodium::bytes_protected> keypair1(seed1);
+	keypairsign<sodium::bytes_protected> keypair2(seed2); // different seed
+
+	BOOST_TEST(!sodium::compare(keypair1.public_key(),
+		keypair2.public_key()));
+	BOOST_TEST(!sodium::compare(keypair1.private_key(),
+		keypair2.private_key()));
+
+	BOOST_TEST((keypair1 != keypair2)); // check also operator!=()
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_keypairsign_seedcompare_extract_seed_bytes_protected)
+{
+	bytes seed1(ks_seed);
+	sodium::randombytes_buf_inplace(seed1);
+
+	keypairsign<sodium::bytes_protected> keypair(seed1);
+
+	// reconstruct seed from private key stored in keypair
+	bytes seed2 = keypair.seed();
+
+	BOOST_TEST(seed1 == seed2);
+}
+
+// 3. sodium::chars -------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(sodium_test_keypairsign_size_ctor_default_chars)
+{
+	keypairsign<sodium::chars> keypair;
+
+	BOOST_TEST(keypair.public_key().size() == ks_pub);
+	BOOST_TEST(keypair.private_key().size() == ks_priv);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_keypairsign_size_ctor_seed_chars)
+{
+	bytes seed(ks_seed);
+	sodium::randombytes_buf_inplace(seed);
+
+	keypairsign<sodium::chars> keypair(seed);
+
+	BOOST_TEST(keypair.public_key().size() == ks_pub);
+	BOOST_TEST(keypair.private_key().size() == ks_priv);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_keypairsign_size_ctor_privkey_chars)
+{
+	keypairsign<sodium::chars> keypair1;
+	keypairsign<sodium::chars> keypair2(keypair1.private_key().data(), keypair1.private_key().size());
+
+	BOOST_TEST(keypair2.public_key().size() == ks_pub);
+	BOOST_TEST(keypair2.private_key().size() == ks_priv);
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_keypairsign_copy_ctor_chars)
+{
+	keypairsign<sodium::chars> keypair;
+	keypairsign<sodium::chars> keypair_copy{ keypair };
+
+	BOOST_TEST((keypair == keypair_copy)); // check also operator==()
+	BOOST_TEST((keypair.private_key() == keypair_copy.private_key())); // key::operator==()
+	BOOST_TEST(keypair.public_key() == keypair_copy.public_key());  // std::vector::operator==()
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_keypairsign_copy_assignement_chars)
+{
+	keypairsign<sodium::chars> keypair;
+	keypairsign<sodium::chars> keypair_copy = keypair;
+
+	BOOST_TEST((keypair == keypair_copy));
+	BOOST_TEST((keypair.private_key() == keypair_copy.private_key()));
+	BOOST_TEST(keypair.public_key() == keypair_copy.public_key());
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_keypairsign_nonzero_ctor_default_chars)
+{
+	keypairsign<sodium::chars> keypair;
+
+	BOOST_TEST(!sodium::is_zero(keypair.public_key()));
+	BOOST_TEST(!sodium::is_zero(keypair.private_key()));
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_keypairsign_nonzero_ctor_seed_chars)
+{
+	bytes seed(ks_seed);
+	sodium::randombytes_buf_inplace(seed);
+
+	keypairsign<sodium::chars> keypair(seed);
+
+	BOOST_TEST(!sodium::is_zero(keypair.public_key()));
+	BOOST_TEST(!sodium::is_zero(keypair.private_key()));
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_keypairsign_nonzero_ctor_privkey_chars)
+{
+	keypairsign<sodium::chars> keypair1;
+	keypairsign<sodium::chars> keypair2(keypair1.private_key().data(), keypair1.private_key().size());
+
+	BOOST_TEST(!sodium::is_zero(keypair2.public_key()));
+	BOOST_TEST(!sodium::is_zero(keypair2.private_key()));
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_keypairsign_seedcompare_ctor_same_seed_chars)
+{
+	bytes seed(ks_seed);
+	sodium::randombytes_buf_inplace(seed);
+
+	keypairsign<sodium::chars> keypair1(seed);
+	keypairsign<sodium::chars> keypair2(seed); // same seed
+
+	BOOST_TEST(sodium::compare(keypair1.public_key(),
+		keypair2.public_key()));
+	BOOST_TEST(sodium::compare(keypair1.private_key(),
+		keypair2.private_key()));
+
+	BOOST_TEST((keypair1 == keypair2)); // check also operator==()
+	BOOST_TEST((keypair1.private_key() == keypair2.private_key()));
+	BOOST_TEST(keypair1.public_key() == keypair2.public_key());
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_keypairsign_seedcompare_ctor_different_seed_chars)
+{
+	bytes seed1(ks_seed);
+	sodium::randombytes_buf_inplace(seed1);
+	bytes seed2(ks_seed);
+	sodium::randombytes_buf_inplace(seed2);
+
+	BOOST_TEST(seed1 != seed2); // very unlikely that they are the same
+
+	keypairsign<sodium::chars> keypair1(seed1);
+	keypairsign<sodium::chars> keypair2(seed2); // different seed
+
+	BOOST_TEST(!sodium::compare(keypair1.public_key(),
+		keypair2.public_key()));
+	BOOST_TEST(!sodium::compare(keypair1.private_key(),
+		keypair2.private_key()));
+
+	BOOST_TEST((keypair1 != keypair2)); // check also operator!=()
+}
+
+BOOST_AUTO_TEST_CASE(sodium_test_keypairsign_seedcompare_extract_seed_chars)
+{
+	bytes seed1(ks_seed);
+	sodium::randombytes_buf_inplace(seed1);
+
+	keypairsign<sodium::chars> keypair(seed1);
+
+	// reconstruct seed from private key stored in keypair
+	bytes seed2 = keypair.seed();
+
+	BOOST_TEST(seed1 == seed2);
 }
 
 BOOST_AUTO_TEST_SUITE_END ()
