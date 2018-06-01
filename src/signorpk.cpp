@@ -26,7 +26,7 @@
 
 using bytes = sodium::bytes;
 using sodium::SignorPK;
-using sodium::KeyPairSign;
+using sodium::keypairsign;
 
 bytes
 SignorPK::sign (const bytes       &plaintext,

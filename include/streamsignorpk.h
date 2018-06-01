@@ -33,7 +33,7 @@ namespace sodium {
 class StreamSignorPK {
  public:
 
-  static constexpr std::size_t KEYSIZE_PRIVKEY  = sodium::KEYSIZE_PRIVKEY_SIGN;
+  static constexpr std::size_t KEYSIZE_PRIVKEY = sodium::keypairsign<>::KEYSIZE_PRIVATE_KEY;
   static constexpr std::size_t SIGNATURE_SIZE   = crypto_sign_BYTES;
 
   using privkey_type = key<KEYSIZE_PRIVKEY>;
@@ -68,9 +68,9 @@ class StreamSignorPK {
    * The constructor takes a KeyPairSign and uses the privkey part of
    * it to sign the messages.
    **/
-  StreamSignorPK(const KeyPairSign &keypair,
+  StreamSignorPK(const keypairsign<> &keypair,
 		 const std::size_t blocksize) :
-    privkey_ {keypair.privkey()}, blocksize_ {blocksize} {
+    privkey_ {keypair.private_key()}, blocksize_ {blocksize} {
       if (blocksize < 1)
 	throw std::runtime_error {"sodium::StreamSignorPK() wrong blocksize"};
       

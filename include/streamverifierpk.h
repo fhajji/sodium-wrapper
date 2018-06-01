@@ -33,7 +33,7 @@ namespace sodium {
 class StreamVerifierPK {
  public:
 
-  static constexpr std::size_t KEYSIZE_PUBKEY = sodium::KEYSIZE_PUBKEY_SIGN;
+  static constexpr std::size_t KEYSIZE_PUBKEY = sodium::keypairsign<>::KEYSIZE_PUBLIC_KEY;
   static constexpr std::size_t SIGNATURE_SIZE = crypto_sign_BYTES;
 
   /**
@@ -71,9 +71,9 @@ class StreamVerifierPK {
    * The constructor takes a KeyPairSign and uses the pubkey part of
    * it to verify the messages.
    **/
-  StreamVerifierPK(const KeyPairSign &keypair,
+  StreamVerifierPK(const keypairsign<> &keypair,
 		   const std::size_t blocksize) :
-    pubkey_ {keypair.pubkey()}, blocksize_ {blocksize} {
+    pubkey_ {keypair.public_key()}, blocksize_ {blocksize} {
       if (blocksize < 1)
 	throw std::runtime_error {"sodium::StreamVerifierPK() wrong blocksize"};
       

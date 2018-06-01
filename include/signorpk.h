@@ -62,8 +62,8 @@ class SignorPK {
   
  public:
 
-  static constexpr std::size_t  KEYSIZE_PUBKEY  = sodium::KEYSIZE_PUBKEY_SIGN;
-  static constexpr std::size_t  KEYSIZE_PRIVKEY = sodium::KEYSIZE_PRIVKEY_SIGN;
+  static constexpr std::size_t  KEYSIZE_PUBKEY  = sodium::keypairsign<>::KEYSIZE_PUBLIC_KEY;
+  static constexpr std::size_t  KEYSIZE_PRIVKEY = sodium::keypairsign<>::KEYSIZE_PRIVATE_KEY;
   static constexpr std::size_t  SIGNATURE_SIZE  = crypto_sign_BYTES;
 
   using privkey_type = key<KEYSIZE_PRIVKEY>;
@@ -83,8 +83,8 @@ class SignorPK {
    * SIGNATURE_SIZE bytes long.
    **/
   bytes sign(const bytes      &plaintext,
-	      const KeyPairSign &keypair) {
-    return sign(plaintext, keypair.privkey());
+	      const keypairsign<> &keypair) {
+    return sign(plaintext, keypair.private_key());
   }
 
   /**
@@ -99,8 +99,8 @@ class SignorPK {
    * Return the signature, which is SIGNATURE_SIZE bytes long.
    **/
   bytes sign_detached(const bytes       &plaintext,
-		       const KeyPairSign  &keypair) {
-    return sign_detached(plaintext, keypair.privkey());
+		       const keypairsign<>  &keypair) {
+    return sign_detached(plaintext, keypair.private_key());
   }
 
   /**
@@ -126,8 +126,8 @@ class SignorPK {
    **/
   
   bytes verify(const bytes      &plaintext_with_signature,
-		const KeyPairSign &keypair) {
-    return verify(plaintext_with_signature, keypair.pubkey());
+		const keypairsign<> &keypair) {
+    return verify(plaintext_with_signature, keypair.public_key());
   }
 
   
@@ -149,8 +149,8 @@ class SignorPK {
    **/
   bool verify_detached(const bytes      &plaintext,
 		       const bytes       &signature,
-		       const KeyPairSign &keypair) {
-    return verify_detached(plaintext, signature, keypair.pubkey());
+		       const keypairsign<> &keypair) {
+    return verify_detached(plaintext, signature, keypair.public_key());
   }
   
 };
