@@ -82,10 +82,9 @@ BOOST_AUTO_TEST_CASE ( sodium_test_keypair_copy_ctor_bytes )
   keypair<> keypair1 {};
   keypair<> keypair_copy {keypair1};
 
-  // XXX Currenty broken
-  // BOOST_TEST(keypair1 == keypair_copy); // check also operator==() on keypair(s)
+  BOOST_TEST((keypair1 == keypair_copy)); // check also operator==() on keypair(s)
 
-  // BOOST_TEST(keypair1.private_key() == keypair_copy.private_key()); // key::operator==()
+  BOOST_TEST((keypair1.private_key() == keypair_copy.private_key())); // key::operator==()
   BOOST_TEST(keypair1.public_key()  == keypair_copy.public_key());  // std::vector::operator==()
 }
 
@@ -94,10 +93,9 @@ BOOST_AUTO_TEST_CASE ( sodium_test_keypair_copy_assignement_bytes )
   keypair<> keypair1 {};
   keypair<> keypair_copy = keypair1;
 
-  // XXX Currently broken
-  // BOOST_TEST(keypair1 == keypair_copy);
+  BOOST_TEST((keypair1 == keypair_copy));
 
-  // BOOST_TEST(keypair1.private_key() == keypair_copy.private_key());
+  BOOST_TEST((keypair1.private_key() == keypair_copy.private_key()));
   BOOST_TEST(keypair1.public_key()  == keypair_copy.public_key());
 }
 
@@ -105,8 +103,8 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypair_nonzero_ctor_default_bytes )
 {
   keypair<> keypair1 {};
 
-  BOOST_TEST(! sodium::is_zero(keypair1.public_key()));
-  BOOST_TEST(! sodium::is_zero(keypair1.private_key()));
+  BOOST_TEST(!sodium::is_zero(keypair1.public_key()));
+  BOOST_TEST(!sodium::is_zero(keypair1.private_key()));
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_keypair_nonzero_ctor_seed_bytes )
@@ -165,8 +163,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypair_seedcompare_ctor_same_seed_bytes )
   BOOST_TEST(sodium::compare(keypair1.public_key(), keypair2.public_key()));
   BOOST_TEST(sodium::compare(keypair1.private_key(), keypair2.private_key()));
   
-  // XXX Currently broken
-  // BOOST_TEST(keypair1 == keypair2); // uses operator==() on keypairs
+  BOOST_TEST((keypair1 == keypair2)); // uses operator==() on keypairs
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_keypair_seedcompare_ctor_different_seed_bytes )
@@ -182,8 +179,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypair_seedcompare_ctor_different_seed_bytes 
   BOOST_TEST(!sodium::compare(keypair1.public_key(), keypair2.public_key()));
   BOOST_TEST(!sodium::compare(keypair1.private_key(), keypair2.private_key()));
 
-  // XXX Currently broken
-  // BOOST_TEST(keypair1 != keypair2); // check also operator!=()
+  BOOST_TEST((keypair1 != keypair2)); // check also operator!=()
 }
 
 // 2. sodium::bytes_protected ----------------------------------------------------
@@ -221,10 +217,9 @@ BOOST_AUTO_TEST_CASE(sodium_test_keypair_copy_ctor_bytes_protected)
 	keypair<sodium::bytes_protected> keypair1{};
 	keypair<sodium::bytes_protected> keypair_copy{ keypair1 };
 
-	// XXX Currenty broken
-	// BOOST_TEST(keypair1 == keypair_copy); // check also operator==() on keypair(s)
+	BOOST_TEST((keypair1 == keypair_copy)); // check also operator==() on keypair(s)
 
-	// BOOST_TEST(keypair1.private_key() == keypair_copy.private_key()); // key::operator==()
+	BOOST_TEST((keypair1.private_key() == keypair_copy.private_key())); // key::operator==()
 	BOOST_TEST(keypair1.public_key() == keypair_copy.public_key());  // std::vector::operator==()
 }
 
@@ -233,10 +228,9 @@ BOOST_AUTO_TEST_CASE(sodium_test_keypair_copy_assignement_bytes_protected)
 	keypair<sodium::bytes_protected> keypair1{};
 	keypair<sodium::bytes_protected> keypair_copy = keypair1;
 
-	// XXX Currently broken
-	// BOOST_TEST(keypair1 == keypair_copy);
+	BOOST_TEST((keypair1 == keypair_copy));
 
-	// BOOST_TEST(keypair1.private_key() == keypair_copy.private_key());
+	BOOST_TEST((keypair1.private_key() == keypair_copy.private_key()));
 	BOOST_TEST(keypair1.public_key() == keypair_copy.public_key());
 }
 
@@ -304,8 +298,7 @@ BOOST_AUTO_TEST_CASE(sodium_test_keypair_seedcompare_ctor_same_seed_bytes_protec
 	BOOST_TEST(sodium::compare(keypair1.public_key(), keypair2.public_key()));
 	BOOST_TEST(sodium::compare(keypair1.private_key(), keypair2.private_key()));
 
-	// XXX Currently broken
-	// BOOST_TEST(keypair1 == keypair2); // uses operator==() on keypairs
+	BOOST_TEST((keypair1 == keypair2)); // uses operator==() on keypairs
 }
 
 BOOST_AUTO_TEST_CASE(sodium_test_keypair_seedcompare_ctor_different_seed_bytes_protected)
@@ -321,8 +314,7 @@ BOOST_AUTO_TEST_CASE(sodium_test_keypair_seedcompare_ctor_different_seed_bytes_p
 	BOOST_TEST(!sodium::compare(keypair1.public_key(), keypair2.public_key()));
 	BOOST_TEST(!sodium::compare(keypair1.private_key(), keypair2.private_key()));
 
-	// XXX Currently broken
-	// BOOST_TEST(keypair1 != keypair2); // check also operator!=()
+	BOOST_TEST((keypair1 != keypair2)); // check also operator!=()
 }
 
 // 3. sodium::chars --------------------------------------------------------------
@@ -360,10 +352,9 @@ BOOST_AUTO_TEST_CASE(sodium_test_keypair_copy_ctor_chars)
 	keypair<sodium::chars> keypair1{};
 	keypair<sodium::chars> keypair_copy{ keypair1 };
 
-	// XXX Currenty broken
-	// BOOST_TEST(keypair1 == keypair_copy); // check also operator==() on keypair(s)
+	BOOST_TEST((keypair1 == keypair_copy)); // check also operator==() on keypair(s)
 
-	// BOOST_TEST(keypair1.private_key() == keypair_copy.private_key()); // key::operator==()
+	BOOST_TEST((keypair1.private_key() == keypair_copy.private_key())); // key::operator==()
 	BOOST_TEST(keypair1.public_key() == keypair_copy.public_key());  // std::vector::operator==()
 }
 
@@ -372,10 +363,9 @@ BOOST_AUTO_TEST_CASE(sodium_test_keypair_copy_assignement_chars)
 	keypair<sodium::chars> keypair1{};
 	keypair<sodium::chars> keypair_copy = keypair1;
 
-	// XXX Currently broken
-	// BOOST_TEST(keypair1 == keypair_copy);
+	BOOST_TEST((keypair1 == keypair_copy));
 
-	// BOOST_TEST(keypair1.private_key() == keypair_copy.private_key());
+	BOOST_TEST((keypair1.private_key() == keypair_copy.private_key()));
 	BOOST_TEST(keypair1.public_key() == keypair_copy.public_key());
 }
 
@@ -443,8 +433,7 @@ BOOST_AUTO_TEST_CASE(sodium_test_keypair_seedcompare_ctor_same_seed_chars)
 	BOOST_TEST(sodium::compare(keypair1.public_key(), keypair2.public_key()));
 	BOOST_TEST(sodium::compare(keypair1.private_key(), keypair2.private_key()));
 
-	// XXX Currently broken
-	// BOOST_TEST(keypair1 == keypair2); // uses operator==() on keypairs
+	BOOST_TEST((keypair1 == keypair2)); // uses operator==() on keypairs
 }
 
 BOOST_AUTO_TEST_CASE(sodium_test_keypair_seedcompare_ctor_different_seed_chars)
@@ -460,8 +449,7 @@ BOOST_AUTO_TEST_CASE(sodium_test_keypair_seedcompare_ctor_different_seed_chars)
 	BOOST_TEST(!sodium::compare(keypair1.public_key(), keypair2.public_key()));
 	BOOST_TEST(!sodium::compare(keypair1.private_key(), keypair2.private_key()));
 
-	// XXX Currently broken
-	// BOOST_TEST(keypair1 != keypair2); // check also operator!=()
+	BOOST_TEST((keypair1 != keypair2)); // check also operator!=()
 }
 
 BOOST_AUTO_TEST_SUITE_END ()

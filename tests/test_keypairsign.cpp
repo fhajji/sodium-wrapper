@@ -79,8 +79,8 @@ BOOST_AUTO_TEST_CASE ( sodium_test_keypairsign_copy_ctor )
   keypairsign<> keypair;
   keypairsign<> keypair_copy {keypair};
 
-  // BOOST_TEST(keypair == keypair_copy); // check also operator==()
-  // BOOST_TEST(keypair.private_key() == keypair_copy.private_key()); // key::operator==()
+  BOOST_TEST((keypair == keypair_copy)); // check also operator==()
+  BOOST_TEST((keypair.private_key() == keypair_copy.private_key())); // key::operator==()
   BOOST_TEST(keypair.public_key()  == keypair_copy.public_key());  // std::vector::operator==()
 }
 
@@ -89,8 +89,8 @@ BOOST_AUTO_TEST_CASE ( sodium_test_keypairsign_copy_assignement )
   keypairsign<> keypair;
   keypairsign<> keypair_copy = keypair;
 
-  // BOOST_TEST(keypair == keypair_copy);
-  // BOOST_TEST(keypair.private_key() == keypair_copy.private_key());
+  BOOST_TEST((keypair == keypair_copy));
+  BOOST_TEST((keypair.private_key() == keypair_copy.private_key()));
   BOOST_TEST(keypair.public_key()  == keypair_copy.public_key());
 }
 
@@ -135,7 +135,9 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_seedcompare_ctor_same_seed )
   BOOST_TEST(sodium::compare(keypair1.private_key(),
 	  keypair2.private_key()));
   
-  // BOOST_TEST(keypair1 == keypair2); // check also operator==()
+  BOOST_TEST((keypair1 == keypair2)); // check also operator==()
+  BOOST_TEST((keypair1.private_key() == keypair2.private_key()));
+  BOOST_TEST(keypair1.public_key() == keypair2.public_key());
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_seedcompare_ctor_different_seed )
@@ -155,7 +157,7 @@ BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_seedcompare_ctor_different_seed )
   BOOST_TEST(!sodium::compare(keypair1.private_key(),
 	  keypair2.private_key()));
 
-  // BOOST_TEST(keypair1 != keypair2); // check also operator!=()
+  BOOST_TEST((keypair1 != keypair2)); // check also operator!=()
 }
 
 BOOST_AUTO_TEST_CASE( sodium_test_keypairsign_seedcompare_extract_seed )
