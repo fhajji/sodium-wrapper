@@ -24,6 +24,7 @@
 #include "aead.h"
 
 #include <sodium.h>
+#include <fstream>
 
 /**
 * Deprecated. Use sodium::filecryptor instead.

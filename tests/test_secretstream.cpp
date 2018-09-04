@@ -67,14 +67,14 @@ test_of_correctness(bool falsify_ciphertext=false,
 	auto tag_final{ sodium::secretstream<BT>::tag_final() };
 	auto tag_rekey{ sodium::secretstream<BT>::tag_rekey() };
 
-	sodium::secretstream<BT>::key_type key; // random secret key
+	typename sodium::secretstream<BT>::key_type key; // random secret key
 
 	// 1. encrypt stream
 
 	sodium::secretstream<BT> se{ key }; // an encrypting stream
 	BT header = se.init_push();
 
-	for (int i = 0; i != m.size(); ++i) {
+	for (std::size_t i = 0; i != m.size(); ++i) {
 		if (test_rekey_out_of_band && i == 2) {
 			se.rekey();
 			BOOST_TEST_MESSAGE("sender: rekey(out-of-band) done");
@@ -116,7 +116,7 @@ test_of_correctness(bool falsify_ciphertext=false,
 
 	sodium::secretstream<BT> sd{ key }; // a decryption stream w/ same key
 
-	int i = 0;
+	std::size_t i = 0;
 	try {
 		sd.init_pull(header);
 

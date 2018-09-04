@@ -1,6 +1,6 @@
 # sodium-wrapper
 
-This is a set of C++11 wrappers to the [libsodium](https://download.libsodium.org/doc/) library.
+This is a set of C++17 wrappers to the [libsodium](https://download.libsodium.org/doc/) library.
 
 ## Current status
 
@@ -23,7 +23,7 @@ Criticism and pull requests welcome, of course.
 * Update to newest libsodium (in progress).
 * Add wrappers to missing libsodium calls (in progress).
 * Try to turn it into a header-only wrapper (in progress).
-* Change API to lower case to make it more C++11, STL- and Boost-ish (in progress).
+* Change API to lower case to make it more C++17, STL- and Boost-ish (in progress).
 * Change API to reflect more faithfully libsodium's C-API naming scheme.
 * Add wrappers to new 1.0.14+ streaming API (done).
 * Replace ad-hoc streaming classes by new 1.0.14+ streaming API.
@@ -46,9 +46,9 @@ Criticism and pull requests welcome, of course.
 
 * Build System:
   * [CMake](https://cmake.org/) 3.5.1+
-  * A C++11 capable/compatible compiler:
-    * (Unix) [Clang](https://clang.llvm.org/) 3.8.0+
-	* (Unix) [GCC](https://gcc.gnu.org/) 5.4.0+
+  * A C++17 capable/compatible compiler:
+    * (Unix) [Clang](https://clang.llvm.org/) 6.0.1+
+	* (Unix) [GCC](https://gcc.gnu.org/) 8.2.0+
 	* (Windows) [Microsoft Visual Studio 2017](https://www.visualstudio.com/vs/) 15.6.6+ and [vcpkg](https://github.com/Microsoft/vcpkg).
 
 ## Building

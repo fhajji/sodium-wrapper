@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include "helpers.h"
 #include "key.h"
 #include <sodium.h>
 #include <type_traits>
@@ -160,8 +161,8 @@ class keypairsign
 
   template <typename U>
   keypairsign(keypairsign<U> &&other) :
-	  public_key_(std::move other.public_key_),
-	  private_key_(std::move other.private_key_)
+	  public_key_(std::move(other.public_key_)),
+	  private_key_(std::move(other.private_key_))
   {}
 
   /**

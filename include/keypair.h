@@ -58,7 +58,7 @@ class keypair
  public:
   // common constants for typical key and seed sizes
   static constexpr std::size_t KEYSIZE_PUBLIC_KEY  = crypto_box_PUBLICKEYBYTES;
-  static constexpr std::size_t KEYSIZE_PRIVATE_KEY = crypto_box_SECRETKEYBYTES;;
+  static constexpr std::size_t KEYSIZE_PRIVATE_KEY = crypto_box_SECRETKEYBYTES;
   static constexpr std::size_t KEYSIZE_SEEDBYTES   = crypto_box_SEEDBYTES;
 
   using private_key_type = key<KEYSIZE_PRIVATE_KEY>;
@@ -156,8 +156,8 @@ class keypair
 
   template <typename U>
   keypair(keypair<U> &&other) :
-	  public_key_(std::move other.public_key_),
-	  private_key_(std::move other.private_key_)
+	  public_key_(std::move(other.public_key_)),
+	  private_key_(std::move(other.private_key_))
   {}
 
   /**

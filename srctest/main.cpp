@@ -88,7 +88,7 @@ int main()
     std::cout << "file cryptor test: " << res6 << std::endl;
     
   }
-  catch (std::runtime_error e) {
+  catch (std::runtime_error &e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   }

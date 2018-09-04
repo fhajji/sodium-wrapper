@@ -91,7 +91,7 @@ class box_precomputed {
   
   template <typename U>
   box_precomputed(const box_precomputed<U> &other)
-	  : shared_key(other.shared_key_),
+	  : shared_key_(other.shared_key_),
 	  shared_key_ready_(other.shared_key_ready_)
   {}
 

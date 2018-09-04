@@ -784,7 +784,7 @@ BOOST_AUTO_TEST_CASE( sodium_box_precomputed_test_empty_plaintext_bytes )
   BOOST_TEST(test_of_correctness_detached<>(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE( sodium_cryptomultipk_test_encrypt_to_self_bytes )
+BOOST_AUTO_TEST_CASE( sodium_precomputed_test_encrypt_to_self_bytes )
 {
   keypair<> keypair_alice;
   typename box_precomputed<>::nonce_type nonce;
@@ -805,7 +805,7 @@ BOOST_AUTO_TEST_CASE( sodium_cryptomultipk_test_encrypt_to_self_bytes )
   BOOST_TEST(plainblob == decrypted);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_cryptomultipk_test_encrypt_to_self_bytes_detached)
+BOOST_AUTO_TEST_CASE(sodium_box_precomputed_test_encrypt_to_self_bytes_detached)
 {
 	keypair<> keypair_alice;
 	typename box_precomputed<>::nonce_type nonce;
@@ -943,7 +943,7 @@ BOOST_AUTO_TEST_CASE(sodium_box_precomputed_test_empty_plaintext_bytes_protected
 	BOOST_TEST(test_of_correctness_detached<sodium::bytes_protected>(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE(sodium_cryptomultipk_test_encrypt_to_self_bytes_protected)
+BOOST_AUTO_TEST_CASE(sodium_box_precomputed_test_encrypt_to_self_bytes_protected)
 {
 	keypair<sodium::bytes_protected> keypair_alice;
 	typename box_precomputed<sodium::bytes_protected>::nonce_type nonce;
@@ -964,7 +964,7 @@ BOOST_AUTO_TEST_CASE(sodium_cryptomultipk_test_encrypt_to_self_bytes_protected)
 	BOOST_TEST(plainblob == decrypted);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_cryptomultipk_test_encrypt_to_self_bytes_protected_detached)
+BOOST_AUTO_TEST_CASE(sodium_box_precomputed_test_encrypt_to_self_bytes_protected_detached)
 {
 	keypair<sodium::bytes_protected> keypair_alice;
 	typename box_precomputed<sodium::bytes_protected>::nonce_type nonce;
@@ -1102,7 +1102,7 @@ BOOST_AUTO_TEST_CASE(sodium_box_precomputed_test_empty_plaintext_chars)
 	BOOST_TEST(test_of_correctness_detached<sodium::chars>(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE(sodium_cryptomultipk_test_encrypt_to_self_chars)
+BOOST_AUTO_TEST_CASE(sodium_box_precomputed_test_encrypt_to_self_chars)
 {
 	keypair<sodium::chars> keypair_alice;
 	typename box_precomputed<sodium::chars>::nonce_type nonce;
@@ -1123,7 +1123,7 @@ BOOST_AUTO_TEST_CASE(sodium_cryptomultipk_test_encrypt_to_self_chars)
 	BOOST_TEST(plainblob == decrypted);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_cryptomultipk_test_encrypt_to_self_chars_detached)
+BOOST_AUTO_TEST_CASE(sodium_box_precomputed_test_encrypt_to_self_chars_detached)
 {
 	keypair<sodium::chars> keypair_alice;
 	typename box_precomputed<sodium::chars>::nonce_type nonce;

@@ -28,7 +28,7 @@
 #include <sodium.h>
 
 using namespace std::chrono;
-constexpr unsigned long TIMING_RUNS_DEFAULT = 5000000UL;
+constexpr unsigned long TIMING_RUNS_DEFAULT = 500000UL;
 
 using sodium::secretbox;
 using bytes = sodium::bytes;
