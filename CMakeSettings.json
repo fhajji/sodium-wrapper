@@ -11,7 +11,7 @@
       "variables": [
         {
           "name": "CMAKE_TOOLCHAIN_FILE",
-          "value": "C:\\Users\\fhajji\\C++\\vcpkg\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
+          "value": "C:\\Users\\fhajji\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
         },
         {
           "name": "CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS",
@@ -30,7 +30,7 @@
       "variables": [
         {
           "name": "CMAKE_TOOLCHAIN_FILE",
-          "value": "C:\\Users\\fhajji\\C++\\vcpkg\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
+          "value": "C:\\Users\\fhajji\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
         },
         {
           "name": "CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS",
@@ -49,7 +49,7 @@
       "variables": [
         {
           "name": "CMAKE_TOOLCHAIN_FILE",
-          "value": "C:\\Users\\fhajji\\C++\\vcpkg\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
+          "value": "C:\\Users\\fhajji\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
         },
         {
           "name": "CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS",
@@ -68,7 +68,7 @@
       "variables": [
         {
           "name": "CMAKE_TOOLCHAIN_FILE",
-          "value": "C:\\Users\\fhajji\\C++\\vcpkg\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
+          "value": "C:\\Users\\fhajji\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
         },
         {
           "name": "CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS",

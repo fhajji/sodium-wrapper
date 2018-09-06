@@ -155,10 +155,14 @@ pipeline_output_device (const std::string &plaintext,
 				  poly1305_sink, // Sink
 				  key);
   
-  io::filtering_ostream os(poly1305_vector_output_device);
+  // XXX as long as os isn't closed, mac will
+  // remain empty. flushing isn't enough.
+  {
+	  io::filtering_ostream os(poly1305_vector_output_device);
 
-  os.write(plainblob.data(), plainblob.size());
-  os.flush();
+	  os.write(plainblob.data(), plainblob.size());
+	  os.flush();
+  }
   
   return mac; // by move semantics
 }
@@ -220,11 +224,15 @@ pipeline_output_device (const std::string &plaintext,
     poly1305_vector_null_output_device(dev_null_sink, // Device
 				       poly1305_sink, // Sink
 				       key);
-  
-  io::filtering_ostream os(poly1305_vector_null_output_device);
 
-  os.write(plainblob.data(), plainblob.size());
-  os.flush();
+  // XXX as long as os isn't closed, mac will
+  // remain empty. flushing isn't enough.
+  {
+	io::filtering_ostream os(poly1305_vector_null_output_device);
+
+	os.write(plainblob.data(), plainblob.size());
+	os.flush();
+  }
   
   return mac; // by move semantics
 }
@@ -299,8 +307,6 @@ BOOST_AUTO_TEST_CASE( sodium_test_poly1305_filter_poly1305_to_vector )
 					     key,
 					     outfile_name)};
 
-  // XXX: FAIL on MSVC -- this call results in an exception,
-  // because mac is an EMPTY vector.
   auto result = verify_mac(plaintext,
 			   key,
 			   mac,

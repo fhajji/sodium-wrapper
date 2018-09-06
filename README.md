@@ -19,7 +19,6 @@ Criticism and pull requests welcome, of course.
 
 ## Roadmap (tentative)
 
-* Fix: one unit test still fails (only on Debug builds) on Windows.
 * Update to newest libsodium (in progress).
 * Add wrappers to missing libsodium calls (in progress).
 * Try to turn it into a header-only wrapper (in progress).
@@ -40,7 +39,7 @@ Criticism and pull requests welcome, of course.
 
 * Libraries:
   * [libsodium](https://github.com/jedisct1/libsodium) 1.0.16+
-  * [Boost](https://www.boost.org/) 1.66.0+
+  * [Boost](https://www.boost.org/) 1.67.0+
     * Boost.Test for unit testing
 	* Boost.Iostreams for streaming APIs.
 
@@ -49,7 +48,7 @@ Criticism and pull requests welcome, of course.
   * A C++17 capable/compatible compiler:
     * (Unix) [Clang](https://clang.llvm.org/) 6.0.1+
 	* (Unix) [GCC](https://gcc.gnu.org/) 8.2.0+
-	* (Windows) [Microsoft Visual Studio 2017](https://www.visualstudio.com/vs/) 15.6.6+ and [vcpkg](https://github.com/Microsoft/vcpkg).
+	* (Windows) [Microsoft Visual Studio 2017](https://www.visualstudio.com/vs/) 15.8.2+ and [vcpkg](https://github.com/Microsoft/vcpkg).
 
 ## Building
 
@@ -100,8 +99,8 @@ env CXX=g++6 CC=gcc6 cmake ..
 3. Fetch and compile libsodium, Boost, and dependencies:
      * `vcpkg install boost:x86-windows`
 	 * `vcpkg install boost:x64-windows`
-	 * `vcpkg install sodium:x86-windows`
-	 * `vcpkg install sodium:x64-windows`
+	 * `vcpkg install libsodium:x86-windows`
+	 * `vcpkg install libsodium:x64-windows`
 
 vcpkg will fetch, compile, and install boost, libsodium, and
 all of their dependencies in both 32-bit (*x86-windows*) and
