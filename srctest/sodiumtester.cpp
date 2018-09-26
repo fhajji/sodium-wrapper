@@ -1,13 +1,13 @@
 // sodiumtester.cpp -- Test functions for the test harness SodiumTester
 //
 // ISC License
-// 
+//
 // Copyright (C) 2018 Farid Hajji <farid@hajji.name>
-// 
+//
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 // WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
@@ -18,32 +18,32 @@
 
 #include "sodiumtester.h"
 
+#include "aead.h"
+#include "authenticator.h"
 #include "common.h"
+#include "filecryptor_aead.h"
 #include "helpers.h"
-#include "random.h"
-#include "nonce.h"
 #include "key.h"
 #include "keyvar.h"
+#include "nonce.h"
+#include "random.h"
 #include "secretbox.h"
-#include "authenticator.h"
-#include "aead.h"
 #include "streamcryptor_aead.h"
-#include "filecryptor_aead.h"
 
+#include <fstream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
-#include <sstream>
-#include <fstream>
 #include <utility>
 
+using sodium::aead;
+using sodium::authenticator;
+using sodium::filecryptor_aead;
 using sodium::key;
 using sodium::keyvar;
 using sodium::nonce;
 using sodium::secretbox;
-using sodium::aead;
-using sodium::authenticator;
 using sodium::streamcryptor_aead;
-using sodium::filecryptor_aead;
 
 #ifndef NDEBUG
 #include <iostream>
@@ -56,13 +56,13 @@ using sodium::filecryptor_aead;
 
 SodiumTester::SodiumTester()
 {
-  // We need to initialize libsodium by calling sodium_init() at least
-  // once before calling other functions of this library.
-  // Calling sodium_init() multiple times doesn't hurt (it may happen
-  // e.g. in custom allocators etc.).
-  
-  if (sodium_init() == -1)
-    throw std::runtime_error {"sodium_init() failed"};
+    // We need to initialize libsodium by calling sodium_init() at least
+    // once before calling other functions of this library.
+    // Calling sodium_init() multiple times doesn't hurt (it may happen
+    // e.g. in custom allocators etc.).
+
+    if (sodium_init() == -1)
+        throw std::runtime_error{ "sodium_init() failed" };
 }
 
 /**
@@ -79,41 +79,41 @@ SodiumTester::SodiumTester()
  **/
 
 std::string
-SodiumTester::test0(const std::string &plaintext)
-{  
-  secretbox<> sc;                // secretbox with random key
-  secretbox<>::nonce_type nonce; // create random nonce;
-  
-  // transfer plaintext into a binary blob
-  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
-  
-  // encrypt the plaintext (binary blob) using key/nonce:
-  bytes ciphertext = sc.encrypt(plainblob, nonce);
+SodiumTester::test0(const std::string& plaintext)
+{
+    secretbox<> sc;                // secretbox with random key
+    secretbox<>::nonce_type nonce; // create random nonce;
 
-  // (test-) decrypt the ciphertext using same key/nonce:
-  bytes decrypted  = sc.decrypt(ciphertext, nonce);
-  
-  // test of correctness (sanity check): the ciphertext must be
-  // equal to the plaintext.
-  // 
-  // Note that secretbox<>::decrypt() will also have performed
-  // a check and thrown a std::runtime_error, should the decryption
-  // fail. It can detect corruption of the ciphertext, because
-  // secretbox<>::encrypt() encrypts both the plaintext and a MAC
-  // that was generated out of the plaintext and of the key/nonce before.
-  //
-  // We're just double-checking here.
+    // transfer plaintext into a binary blob
+    bytes plainblob{ plaintext.cbegin(), plaintext.cend() };
 
-  if (plainblob != decrypted)
-    throw std::runtime_error {"test0() message forged (own test)"};
+    // encrypt the plaintext (binary blob) using key/nonce:
+    bytes ciphertext = sc.encrypt(plainblob, nonce);
 
-  // finally, convert the bytes of the ciphertext into a hexadecimal
-  // string that can be printed, and return that string.
+    // (test-) decrypt the ciphertext using same key/nonce:
+    bytes decrypted = sc.decrypt(ciphertext, nonce);
 
-  std::string encrypted_as_hex = sodium::bin2hex(ciphertext);
-  return encrypted_as_hex;
+    // test of correctness (sanity check): the ciphertext must be
+    // equal to the plaintext.
+    //
+    // Note that secretbox<>::decrypt() will also have performed
+    // a check and thrown a std::runtime_error, should the decryption
+    // fail. It can detect corruption of the ciphertext, because
+    // secretbox<>::encrypt() encrypts both the plaintext and a MAC
+    // that was generated out of the plaintext and of the key/nonce before.
+    //
+    // We're just double-checking here.
 
-  // the key will self-destruct here when it goes out of scope.
+    if (plainblob != decrypted)
+        throw std::runtime_error{ "test0() message forged (own test)" };
+
+    // finally, convert the bytes of the ciphertext into a hexadecimal
+    // string that can be printed, and return that string.
+
+    std::string encrypted_as_hex = sodium::bin2hex(ciphertext);
+    return encrypted_as_hex;
+
+    // the key will self-destruct here when it goes out of scope.
 }
 
 /**
@@ -125,52 +125,60 @@ SodiumTester::test0(const std::string &plaintext)
  **/
 
 bool
-SodiumTester::test1(const std::string &plaintext)
+SodiumTester::test1(const std::string& plaintext)
 {
-  // THIS IS CURRENTLY WRONG:
-  // we can even use std::string, since it has a
-  // data() and size() interface!
-  // authenticator<std::string> sa1;
-  
-  authenticator<bytes> sa1;
+    // THIS IS CURRENTLY WRONG:
+    // we can even use std::string, since it has a
+    // data() and size() interface!
+    // authenticator<std::string> sa1;
 
-  bytes plainblob{ plaintext.cbegin(), plaintext.cend() };
+    authenticator<bytes> sa1;
 
-  // compute the MAC:
-  auto mac { sa1.mac(plainblob) };
+    bytes plainblob{ plaintext.cbegin(), plaintext.cend() };
 
-  // verify the MAC with unchanged data
-  if (! sa1.verify(plainblob, mac))
-    throw std::runtime_error {"SodiumTester::test1() identical MAC failed"};
+    // compute the MAC:
+    auto mac{ sa1.mac(plainblob) };
 
-  // 2. change plaintext, and re-verify MAC:
-  
-  // bytes plaintext2{ plaintext };
-  // if (plaintext2.size() != 0 &&
-  //     (plaintext2[0] = '!') &&
-  //     sa1.verify(plaintext2, mac))
-  //   throw std::runtime_error {"SodiumTester::test1() different MAC verify"};
+    // verify the MAC with unchanged data
+    if (!sa1.verify(plainblob, mac))
+        throw std::runtime_error{
+            "SodiumTester::test1() identical MAC failed"
+        };
 
-  bytes plainblob2{ plaintext.cbegin(), plaintext.cend() };
-  if (plainblob2.size() != 0 &&
-	  (plainblob2[0] = static_cast<sodium::byte>('!')) &&
-	  sa1.verify(plainblob2, mac))
-	throw std::runtime_error{ "SodiumTester::test1() different MAC verify" };
+    // 2. change plaintext, and re-verify MAC:
 
-  // 3. reverify plaintext with a different key/authenticator
+    // bytes plaintext2{ plaintext };
+    // if (plaintext2.size() != 0 &&
+    //     (plaintext2[0] = '!') &&
+    //     sa1.verify(plaintext2, mac))
+    //   throw std::runtime_error {"SodiumTester::test1() different MAC
+    //   verify"};
 
-  // create a new authenticator with a (hopefully) different key.
-  // the probability that we randomly pick the same key is negligible.
-  
-  // authenticator<std::string> sa2; // with new random key.
-  // if (sa2.verify(plaintext, mac))
-  //   throw std::runtime_error {"SodiumTester::test1() different KEYS verify"};
+    bytes plainblob2{ plaintext.cbegin(), plaintext.cend() };
+    if (plainblob2.size() != 0 &&
+        (plainblob2[0] = static_cast<sodium::byte>('!')) &&
+        sa1.verify(plainblob2, mac))
+        throw std::runtime_error{
+            "SodiumTester::test1() different MAC verify"
+        };
 
-  authenticator<bytes> sa2; // with new random key.
-  if (sa2.verify(plainblob, mac))
-    throw std::runtime_error {"SodiumTester::test1() different KEYS verify"};
+    // 3. reverify plaintext with a different key/authenticator
 
-  return true;
+    // create a new authenticator with a (hopefully) different key.
+    // the probability that we randomly pick the same key is negligible.
+
+    // authenticator<std::string> sa2; // with new random key.
+    // if (sa2.verify(plaintext, mac))
+    //   throw std::runtime_error {"SodiumTester::test1() different KEYS
+    //   verify"};
+
+    authenticator<bytes> sa2; // with new random key.
+    if (sa2.verify(plainblob, mac))
+        throw std::runtime_error{
+            "SodiumTester::test1() different KEYS verify"
+        };
+
+    return true;
 }
 
 /**
@@ -187,40 +195,40 @@ SodiumTester::test1(const std::string &plaintext)
  **/
 
 bool
-SodiumTester::test2(const std::string &plaintext,
-		    const std::string &pw1,
-		    const std::string &pw2)
+SodiumTester::test2(const std::string& plaintext,
+                    const std::string& pw1,
+                    const std::string& pw2)
 {
-  secretbox<>::key_type   key(false); // uninitialized, r/w for now
-  secretbox<>::nonce_type nonce {};   // a random nonce
+    secretbox<>::key_type key(false); // uninitialized, r/w for now
+    secretbox<>::nonce_type nonce{};  // a random nonce
 
-  // random salt, needed by the key derivation function.
-  // NOTE: can't move this into Key::setpass(),
-  // because we need the salt AND the password to be able
-  // to deterministically recreate a key. If we generated
-  // the salt in setpass() randomly, users would have no
-  // way to recreate the key -- that would be throw-away
-  // use-once keys.
-  bytes salt(sodium::KEYSIZE_SALT);
-  sodium::randombytes_buf_inplace(salt);
+    // random salt, needed by the key derivation function.
+    // NOTE: can't move this into Key::setpass(),
+    // because we need the salt AND the password to be able
+    // to deterministically recreate a key. If we generated
+    // the salt in setpass() randomly, users would have no
+    // way to recreate the key -- that would be throw-away
+    // use-once keys.
+    bytes salt(sodium::KEYSIZE_SALT);
+    sodium::randombytes_buf_inplace(salt);
 
-  // transfer plaintext into a binary blob
-  bytes plainblob {plaintext.cbegin(), plaintext.cend()};
+    // transfer plaintext into a binary blob
+    bytes plainblob{ plaintext.cbegin(), plaintext.cend() };
 
-  // try the first key
-  key.setpass(pw1, salt, secretbox<>::key_type::strength_type::medium);
-  
-  // now encrypt with that key
-  bytes ciphertext = secretbox<>(key).encrypt(plainblob, nonce);
+    // try the first key
+    key.setpass(pw1, salt, secretbox<>::key_type::strength_type::medium);
 
-  // try the second key
-  key.setpass(pw2, salt, secretbox<>::key_type::strength_type::medium);
-  
-  // now decrypt with that new key.
-  // if the key/password was different, we will throw right here and now
-  bytes decrypted = secretbox<>(std::move(key)).decrypt(ciphertext, nonce);
+    // now encrypt with that key
+    bytes ciphertext = secretbox<>(key).encrypt(plainblob, nonce);
 
-  return (decrypted == plainblob);
+    // try the second key
+    key.setpass(pw2, salt, secretbox<>::key_type::strength_type::medium);
+
+    // now decrypt with that new key.
+    // if the key/password was different, we will throw right here and now
+    bytes decrypted = secretbox<>(std::move(key)).decrypt(ciphertext, nonce);
+
+    return (decrypted == plainblob);
 }
 
 /**
@@ -264,50 +272,52 @@ SodiumTester::test2(const std::string &plaintext,
 std::string
 SodiumTester::test3()
 {
-  std::ostringstream os; // to collect output
-  os << "starting nonce test... -------" << std::endl;
+    std::ostringstream os; // to collect output
+    os << "starting nonce test... -------" << std::endl;
 
-  nonce<> a {}; // a random nonce
-  
-  // Check at compile time that we got the default size of the nonce:
-  static_assert(a.size() == sodium::NONCESIZE_SECRETBOX,
-		"SodiumTester::test3() wrong nonce size");
-  // when static_assert() isn't possible in some conditions, dynamic assert:
-  // if (a.size() != sodium::NONCESIZE_SECRETBOX)
-  //   throw std::runtime_error {"SodiumTester::test3() wrong nonce size"};
+    nonce<> a{}; // a random nonce
 
-  os << "a+0: " << sodium::bin2hex(a.as_bytes()) << std::endl;
-  
-  nonce<> a_copy {a};
-  if (a != a_copy)
-    throw std::runtime_error {"SodiumTester::test3() a != a_copy"};
-  
-  for (int i: {1,2,3,4,5}) {
-    a.increment();
-    os << "a+" << i << ": " << sodium::bin2hex(a.as_bytes()) << std::endl;
-  }
+    // Check at compile time that we got the default size of the nonce:
+    static_assert(a.size() == sodium::NONCESIZE_SECRETBOX,
+                  "SodiumTester::test3() wrong nonce size");
+    // when static_assert() isn't possible in some conditions, dynamic assert:
+    // if (a.size() != sodium::NONCESIZE_SECRETBOX)
+    //   throw std::runtime_error {"SodiumTester::test3() wrong nonce size"};
 
-  if (a_copy > a)
-    throw std::runtime_error {"SodiumTester::test3() a+5 > a"};
-  
-  nonce<> b(false); // uninitialized, zeroed?
-  os << "b+0: " << sodium::bin2hex(b.as_bytes()) << std::endl;
-  if (! b.is_zero())
-    throw std::runtime_error {"SodiumTester::test3() not initialized to zero"};
+    os << "a+0: " << sodium::bin2hex(a.as_bytes()) << std::endl;
 
-  for (int i: {1,2,3,4,5}) {
-    static_cast<void>(i); // "use" unused variable i
-    b.increment();
-  }
-  // b is now 5, display it!
-  os << "b+5: " << sodium::bin2hex(b.as_bytes()) << std::endl;
+    nonce<> a_copy{ a };
+    if (a != a_copy)
+        throw std::runtime_error{ "SodiumTester::test3() a != a_copy" };
 
-  a_copy += b; // increment original a by 5 (should be new a)
-  if (a_copy != a)
-    throw std::runtime_error {"SodiumTester::test3() a_copy + 5 != a+5"};
+    for (int i : { 1, 2, 3, 4, 5 }) {
+        a.increment();
+        os << "a+" << i << ": " << sodium::bin2hex(a.as_bytes()) << std::endl;
+    }
 
-  os << "---------------- ending nonce test..." << std::endl;
-  return os.str();
+    if (a_copy > a)
+        throw std::runtime_error{ "SodiumTester::test3() a+5 > a" };
+
+    nonce<> b(false); // uninitialized, zeroed?
+    os << "b+0: " << sodium::bin2hex(b.as_bytes()) << std::endl;
+    if (!b.is_zero())
+        throw std::runtime_error{
+            "SodiumTester::test3() not initialized to zero"
+        };
+
+    for (int i : { 1, 2, 3, 4, 5 }) {
+        static_cast<void>(i); // "use" unused variable i
+        b.increment();
+    }
+    // b is now 5, display it!
+    os << "b+5: " << sodium::bin2hex(b.as_bytes()) << std::endl;
+
+    a_copy += b; // increment original a by 5 (should be new a)
+    if (a_copy != a)
+        throw std::runtime_error{ "SodiumTester::test3() a_copy + 5 != a+5" };
+
+    os << "---------------- ending nonce test..." << std::endl;
+    return os.str();
 }
 
 /**
@@ -331,135 +341,118 @@ SodiumTester::test3()
  **/
 
 std::string
-SodiumTester::test4(const std::string &plaintext,
-		    const std::string &header)
+SodiumTester::test4(const std::string& plaintext, const std::string& header)
 {
-  aead<>::key_type   key;   // random key
-  aead<>::nonce_type nonce; // random nonce
-  aead<> sc_aead{ std::move(key) };
+    aead<>::key_type key;     // random key
+    aead<>::nonce_type nonce; // random nonce
+    aead<> sc_aead{ std::move(key) };
 
-  std::ostringstream os; // to collect output
-  os << "starting AEAD test... ---------" << std::endl;
+    std::ostringstream os; // to collect output
+    os << "starting AEAD test... ---------" << std::endl;
 
-  // check at compile time that we got the right size of the nonce
-  static_assert(nonce.size() == aead<>::NONCESIZE,
-		"SodiumTester::test4() wrong nonce size");
-  
-  // transfer plaintext and header into binary blobs
-  bytes plainblob  {plaintext.cbegin(), plaintext.cend()};
-  bytes headerblob {header.cbegin(), header.cend()};
+    // check at compile time that we got the right size of the nonce
+    static_assert(nonce.size() == aead<>::NONCESIZE,
+                  "SodiumTester::test4() wrong nonce size");
 
-  // now encrypt
-  bytes ciphertext_with_mac = sc_aead.encrypt(headerblob,
-					       plainblob,
-					       nonce);
+    // transfer plaintext and header into binary blobs
+    bytes plainblob{ plaintext.cbegin(), plaintext.cend() };
+    bytes headerblob{ header.cbegin(), header.cend() };
 
-  os << "encrypted: "
-     << sodium::bin2hex(ciphertext_with_mac)
-     << std::endl;
+    // now encrypt
+    bytes ciphertext_with_mac = sc_aead.encrypt(headerblob, plainblob, nonce);
 
-  // and then decrypt (would throw if there was an error)
-  bytes decryptedblob = sc_aead.decrypt(headerblob,
-					 ciphertext_with_mac,
-					 nonce);
+    os << "encrypted: " << sodium::bin2hex(ciphertext_with_mac) << std::endl;
 
-  os << "decrypted okay." << std::endl;
+    // and then decrypt (would throw if there was an error)
+    bytes decryptedblob =
+      sc_aead.decrypt(headerblob, ciphertext_with_mac, nonce);
 
-  // now intentionnally corrupt the header and decrypt again:
-  bytes header_corrupted(headerblob);
-  if (! header_corrupted.empty()) {
-    header_corrupted[0] = '!';
-    try {
-      bytes out = sc_aead.decrypt(header_corrupted,
-				   ciphertext_with_mac,
-				   nonce);
-      os << "ERROR: didn't catch intentional header corruption!" << std::endl;
-    }
-    catch (std::exception &e) {
-      os << "caught header corruption as expected: " << e.what() << std::endl;
-    }
-  }
-  else
-    os << "can't test intentional header corruption: empty header."
-       << std::endl;
-  
-  // now, intentionally corrupt the ciphertext and decrypt again:
-  if (ciphertext_with_mac.size() > sodium::aead<>::MACSIZE)
-    ++ciphertext_with_mac[sodium::aead<>::MACSIZE];
-  try {
-    bytes out = sc_aead.decrypt(header_corrupted,
-				 ciphertext_with_mac,
-				 nonce);
-    os << "ERROR: didn't catch intentional ciphertext corruption!"
-       << std::endl;
-  }
-  catch (std::exception &e) {
-    os << "caught ciphertext corruption as expected: "
-       << e.what() << std::endl;
-  }
-
-  // encrypt more text. must increment nonce, because we are reusing key.
-  //   we first encrypt without incrementing nonce (DONT'T DO THAT!)
-  //   and then encrypt with incrementing nonce (OKAY)
-  ciphertext_with_mac = sc_aead.encrypt(headerblob,
-					plainblob,
-					nonce);
-  os << "encrypted (same nonce): "
-     << sodium::bin2hex(ciphertext_with_mac)
-     << std::endl;
-
-  nonce.increment(); // don't forget that!
-
-  ciphertext_with_mac = sc_aead.encrypt(headerblob,
-					plainblob,
-					nonce);
-  os << "encrypted (different nonce): "
-     << sodium::bin2hex(ciphertext_with_mac)
-     << std::endl;
-
-  try {
-    bytes decryptedblob = sc_aead.decrypt(headerblob,
-					   ciphertext_with_mac,
-					   nonce);
     os << "decrypted okay." << std::endl;
-    if (decryptedblob == plainblob)
-      os << "decrypted == plaintext" << std::endl;
-    else
-      throw std::runtime_error {"SodiumTester::test4() decrypted != plaintext with new nonce"};
-  }
-  catch (std::exception & /* e */) {
-	  os << "ERROR: unexpectedly can't decrypt with updated nonce."
-         << std::endl;
-  }
 
-  // Finally, encrypt an empty message
-  std::string empty_plaintext {};
-  std::string empty_header {};
-  nonce.increment();
-  bytes empty_plainblob   {empty_plaintext.cbegin(), empty_plaintext.cend()};
-  bytes empty_headerblob  {empty_header.cbegin(), empty_header.cend()};
-  bytes empty_ciphertext_with_mac = sc_aead.encrypt(empty_headerblob,
-						     empty_plainblob,
-						     nonce);
-  os << "empty encrypted: "
-     << sodium::bin2hex(empty_ciphertext_with_mac)
-     << std::endl;
-  try {
-    bytes empty_decrypted = sc_aead.decrypt(empty_headerblob,
-					     empty_ciphertext_with_mac,
-					     nonce);
-    if (empty_decrypted == empty_plainblob)
-      os << "empty (decrypted) == empty (plainblob)" << std::endl;
-    else
-      throw std::runtime_error {"SodiumTester::test4() empty decrypted != empty plaintext"};
-  }
-  catch (std::exception & /* e */) {
-    os << "ERROR: caught failed decryption of encryption of empty plaintext"
+    // now intentionnally corrupt the header and decrypt again:
+    bytes header_corrupted(headerblob);
+    if (!header_corrupted.empty()) {
+        header_corrupted[0] = '!';
+        try {
+            bytes out =
+              sc_aead.decrypt(header_corrupted, ciphertext_with_mac, nonce);
+            os << "ERROR: didn't catch intentional header corruption!"
+               << std::endl;
+        } catch (std::exception& e) {
+            os << "caught header corruption as expected: " << e.what()
+               << std::endl;
+        }
+    } else
+        os << "can't test intentional header corruption: empty header."
+           << std::endl;
+
+    // now, intentionally corrupt the ciphertext and decrypt again:
+    if (ciphertext_with_mac.size() > sodium::aead<>::MACSIZE)
+        ++ciphertext_with_mac[sodium::aead<>::MACSIZE];
+    try {
+        bytes out =
+          sc_aead.decrypt(header_corrupted, ciphertext_with_mac, nonce);
+        os << "ERROR: didn't catch intentional ciphertext corruption!"
+           << std::endl;
+    } catch (std::exception& e) {
+        os << "caught ciphertext corruption as expected: " << e.what()
+           << std::endl;
+    }
+
+    // encrypt more text. must increment nonce, because we are reusing key.
+    //   we first encrypt without incrementing nonce (DONT'T DO THAT!)
+    //   and then encrypt with incrementing nonce (OKAY)
+    ciphertext_with_mac = sc_aead.encrypt(headerblob, plainblob, nonce);
+    os << "encrypted (same nonce): " << sodium::bin2hex(ciphertext_with_mac)
        << std::endl;
-  }
-						     
-  os << "------------------- ending AEAD test..." << std::endl;
-  return os.str();
+
+    nonce.increment(); // don't forget that!
+
+    ciphertext_with_mac = sc_aead.encrypt(headerblob, plainblob, nonce);
+    os << "encrypted (different nonce): "
+       << sodium::bin2hex(ciphertext_with_mac) << std::endl;
+
+    try {
+        bytes decryptedblob =
+          sc_aead.decrypt(headerblob, ciphertext_with_mac, nonce);
+        os << "decrypted okay." << std::endl;
+        if (decryptedblob == plainblob)
+            os << "decrypted == plaintext" << std::endl;
+        else
+            throw std::runtime_error{
+                "SodiumTester::test4() decrypted != plaintext with new nonce"
+            };
+    } catch (std::exception& /* e */) {
+        os << "ERROR: unexpectedly can't decrypt with updated nonce."
+           << std::endl;
+    }
+
+    // Finally, encrypt an empty message
+    std::string empty_plaintext{};
+    std::string empty_header{};
+    nonce.increment();
+    bytes empty_plainblob{ empty_plaintext.cbegin(), empty_plaintext.cend() };
+    bytes empty_headerblob{ empty_header.cbegin(), empty_header.cend() };
+    bytes empty_ciphertext_with_mac =
+      sc_aead.encrypt(empty_headerblob, empty_plainblob, nonce);
+    os << "empty encrypted: " << sodium::bin2hex(empty_ciphertext_with_mac)
+       << std::endl;
+    try {
+        bytes empty_decrypted =
+          sc_aead.decrypt(empty_headerblob, empty_ciphertext_with_mac, nonce);
+        if (empty_decrypted == empty_plainblob)
+            os << "empty (decrypted) == empty (plainblob)" << std::endl;
+        else
+            throw std::runtime_error{
+                "SodiumTester::test4() empty decrypted != empty plaintext"
+            };
+    } catch (std::exception& /* e */) {
+        os << "ERROR: caught failed decryption of encryption of empty plaintext"
+           << std::endl;
+    }
+
+    os << "------------------- ending AEAD test..." << std::endl;
+    return os.str();
 }
 
 /**
@@ -480,7 +473,7 @@ SodiumTester::test4(const std::string &plaintext,
  *   access to our local key (not needed anymore here).
  *
  * We now want to chunkwise encrypt a binary file.
- * 
+ *
  * - we open a file for reading in binary mode, getting a std::ifstream ifs
  * - we open a file for writing in binary mode, getting a std::ofstream ofs
  *   (same name, with .enc appended).
@@ -511,93 +504,102 @@ SodiumTester::test4(const std::string &plaintext,
  **/
 
 bool
-SodiumTester::test5(const std::string &filename)
+SodiumTester::test5(const std::string& filename)
 {
-  std::size_t                   MYBLKSIZE = 1024;
-  
-  aead<>::key_type   key;
-  aead<>::nonce_type nonce;
-  streamcryptor_aead<> strm_crypt (key, nonce, MYBLKSIZE);
+    std::size_t MYBLKSIZE = 1024;
 
-  key.noaccess();
-  
-  std::ifstream ifs(filename,          std::ios_base::binary);
-  std::ofstream ofs(filename + ".enc", std::ios_base::binary);
+    aead<>::key_type key;
+    aead<>::nonce_type nonce;
+    streamcryptor_aead<> strm_crypt(key, nonce, MYBLKSIZE);
 
-  if (!ifs || !ofs)
-    throw std::runtime_error {"SodiumTester::test5(): Can't open input or output file"};
+    key.noaccess();
 
-  // now do the encryption
-  strm_crypt.encrypt(ifs, ofs);
+    std::ifstream ifs(filename, std::ios_base::binary);
+    std::ofstream ofs(filename + ".enc", std::ios_base::binary);
 
-  // we're done encrypting, close the (file) streams.
-  ofs.close();
-  ifs.close();
+    if (!ifs || !ofs)
+        throw std::runtime_error{
+            "SodiumTester::test5(): Can't open input or output file"
+        };
 
-  // -------------------- now test in reverse ----------------------------
+    // now do the encryption
+    strm_crypt.encrypt(ifs, ofs);
 
-  std::ifstream ifs2(filename + ".enc", std::ios_base::binary);
-  std::ofstream ofs2(filename + ".dec", std::ios_base::binary);
+    // we're done encrypting, close the (file) streams.
+    ofs.close();
+    ifs.close();
 
-  if (!ifs2 || !ofs2)
-    throw std::runtime_error {"SodiumTester::test5() can't open second input or output files"};
+    // -------------------- now test in reverse ----------------------------
 
-  // we reuse str_crypt from above: it has saved inside it
-  // key, (initial) nonce and the blocksize, so we're safe.
-  
-  // now do the decryption
-  strm_crypt.decrypt(ifs2, ofs2);
-  
-  // we're done decrypting, close the (file) streams.
-  ofs2.close();
-  ifs2.close();
-  
-  return true;
+    std::ifstream ifs2(filename + ".enc", std::ios_base::binary);
+    std::ofstream ofs2(filename + ".dec", std::ios_base::binary);
+
+    if (!ifs2 || !ofs2)
+        throw std::runtime_error{
+            "SodiumTester::test5() can't open second input or output files"
+        };
+
+    // we reuse str_crypt from above: it has saved inside it
+    // key, (initial) nonce and the blocksize, so we're safe.
+
+    // now do the decryption
+    strm_crypt.decrypt(ifs2, ofs2);
+
+    // we're done decrypting, close the (file) streams.
+    ofs2.close();
+    ifs2.close();
+
+    return true;
 }
 
 bool
-SodiumTester::test6(const std::string &filename)
+SodiumTester::test6(const std::string& filename)
 {
-  std::size_t             MYBLKSIZE  = 1024;
-  
-  aead<>::key_type   key;
-  keyvar<>           hashkey    (filecryptor_aead<>::HASHKEYSIZE);
-  aead<>::nonce_type nonce;
-  filecryptor_aead<> file_crypt (key, nonce, MYBLKSIZE, hashkey, filecryptor_aead<>::HASHSIZE);
+    std::size_t MYBLKSIZE = 1024;
 
-  key.noaccess();
-  hashkey.noaccess();
-  
-  std::ifstream ifs(filename,           std::ios_base::binary);
-  std::ofstream ofs(filename + ".enc2", std::ios_base::binary);
+    aead<>::key_type key;
+    keyvar<> hashkey(filecryptor_aead<>::HASHKEYSIZE);
+    aead<>::nonce_type nonce;
+    filecryptor_aead<> file_crypt(
+      key, nonce, MYBLKSIZE, hashkey, filecryptor_aead<>::HASHSIZE);
 
-  if (!ifs || !ofs)
-    throw std::runtime_error {"SodiumTester::test6(): Can't open input or output file"};
+    key.noaccess();
+    hashkey.noaccess();
 
-  // now do the encryption
-  file_crypt.encrypt(ifs, ofs);
+    std::ifstream ifs(filename, std::ios_base::binary);
+    std::ofstream ofs(filename + ".enc2", std::ios_base::binary);
 
-  // we're done encrypting, close the (file) streams.
-  ofs.close();
-  ifs.close();
+    if (!ifs || !ofs)
+        throw std::runtime_error{
+            "SodiumTester::test6(): Can't open input or output file"
+        };
 
-  // -------------------- now test in reverse ----------------------------
+    // now do the encryption
+    file_crypt.encrypt(ifs, ofs);
 
-  std::ifstream ifs2(filename + ".enc2", std::ios_base::binary);
-  std::ofstream ofs2(filename + ".dec2", std::ios_base::binary);
+    // we're done encrypting, close the (file) streams.
+    ofs.close();
+    ifs.close();
 
-  if (!ifs2 || !ofs2)
-    throw std::runtime_error {"SodiumTester::test6() can't open second input or output files"};
+    // -------------------- now test in reverse ----------------------------
 
-  // we reuse file_crypt from above: it has saved inside it
-  // key, (initial) nonce and the blocksize, so we're safe.
-  
-  // now do the decryption
-  file_crypt.decrypt(ifs2, ofs2);
-  
-  // we're done decrypting, close the (file) streams.
-  ofs2.close();
-  ifs2.close();
-  
-  return true;
+    std::ifstream ifs2(filename + ".enc2", std::ios_base::binary);
+    std::ofstream ofs2(filename + ".dec2", std::ios_base::binary);
+
+    if (!ifs2 || !ofs2)
+        throw std::runtime_error{
+            "SodiumTester::test6() can't open second input or output files"
+        };
+
+    // we reuse file_crypt from above: it has saved inside it
+    // key, (initial) nonce and the blocksize, so we're safe.
+
+    // now do the decryption
+    file_crypt.decrypt(ifs2, ofs2);
+
+    // we're done decrypting, close the (file) streams.
+    ofs2.close();
+    ifs2.close();
+
+    return true;
 }

@@ -1,13 +1,13 @@
 // streamverifierpk.cpp -- Public-key signature verifying streaming interface
 //
 // ISC License
-// 
+//
 // Copyright (C) 2018 Farid Hajji <farid@hajji.name>
-// 
+//
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 // WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
@@ -25,40 +25,38 @@ using bytes = sodium::bytes;
 using sodium::StreamVerifierPK;
 
 bool
-StreamVerifierPK::verify(std::istream &istr,
-			 const bytes &signature)
+StreamVerifierPK::verify(std::istream& istr, const bytes& signature)
 {
-  bytes plaintext(blocksize_, '\0');
+    bytes plaintext(blocksize_, '\0');
 
-  while (istr.read(reinterpret_cast<char *>(plaintext.data()), blocksize_)) {
-    // read a whole block of blocksize_ chars (bytes)
-    crypto_sign_update(&state_, plaintext.data(), plaintext.size());
-  }
+    while (istr.read(reinterpret_cast<char*>(plaintext.data()), blocksize_)) {
+        // read a whole block of blocksize_ chars (bytes)
+        crypto_sign_update(&state_, plaintext.data(), plaintext.size());
+    }
 
-  // check to see if we've read a final partial chunk
-  std::size_t s = static_cast<std::size_t>(istr.gcount());
-  if (s != 0) {
-    if (s != plaintext.size())
-      plaintext.resize(s);
+    // check to see if we've read a final partial chunk
+    std::size_t s = static_cast<std::size_t>(istr.gcount());
+    if (s != 0) {
+        if (s != plaintext.size())
+            plaintext.resize(s);
 
-    crypto_sign_update(&state_, plaintext.data(), plaintext.size());
-  }
+        crypto_sign_update(&state_, plaintext.data(), plaintext.size());
+    }
 
-  // XXX: since crypto_sign_final_verify() doesn't accept a const
-  // signature, we need to copy signature beforehand
-  bytes signature_copy {signature};
-  
-  // finalize and compare signatures
-  if (crypto_sign_final_verify(&state_,
-			       signature_copy.data(),
-			       pubkey_.data()) != 0) {
-    // message forged
+    // XXX: since crypto_sign_final_verify() doesn't accept a const
+    // signature, we need to copy signature beforehand
+    bytes signature_copy{ signature };
+
+    // finalize and compare signatures
+    if (crypto_sign_final_verify(
+          &state_, signature_copy.data(), pubkey_.data()) != 0) {
+        // message forged
+        crypto_sign_init(&state_);
+        return false;
+    }
+
+    // reset the state for next invocation of sign()
     crypto_sign_init(&state_);
-    return false;
-  }
 
-  // reset the state for next invocation of sign()
-  crypto_sign_init(&state_);
-  
-  return true;
+    return true;
 }

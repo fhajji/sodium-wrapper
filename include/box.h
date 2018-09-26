@@ -1,13 +1,13 @@
 // box.h -- Public-key encryption / decryption with MAC
 //
 // ISC License
-// 
+//
 // Copyright (C) 2018 Farid Hajji <farid@hajji.name>
-// 
+//
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
 // copyright notice and this permission notice appear in all copies.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
 // WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
@@ -19,320 +19,365 @@
 #pragma once
 
 #include "common.h"
-#include "nonce.h"
 #include "key.h"
 #include "keypair.h"
+#include "nonce.h"
 
 namespace sodium {
 
-template <typename BT=bytes>
-class box {
+template<typename BT = bytes>
+class box
+{
 
- public:
+  public:
+    static constexpr unsigned int NONCESIZE = crypto_box_NONCEBYTES;
+    static constexpr std::size_t KEYSIZE_PUBLIC_KEY =
+      sodium::keypair<BT>::KEYSIZE_PUBLIC_KEY;
+    static constexpr std::size_t KEYSIZE_PRIVATE_KEY =
+      sodium::keypair<BT>::KEYSIZE_PRIVATE_KEY;
+    static constexpr std::size_t MACSIZE = crypto_box_MACBYTES;
 
-  static constexpr unsigned int NONCESIZE           = crypto_box_NONCEBYTES;
-  static constexpr std::size_t  KEYSIZE_PUBLIC_KEY  = sodium::keypair<BT>::KEYSIZE_PUBLIC_KEY;
-  static constexpr std::size_t  KEYSIZE_PRIVATE_KEY = sodium::keypair<BT>::KEYSIZE_PRIVATE_KEY;
-  static constexpr std::size_t  MACSIZE             = crypto_box_MACBYTES;
+    using keypair_type = typename sodium::keypair<BT>;
+    using public_key_type = typename sodium::keypair<BT>::public_key_type;
+    using private_key_type = typename sodium::keypair<BT>::private_key_type;
+    using nonce_type = nonce<NONCESIZE>;
 
-  using keypair_type = typename sodium::keypair<BT>;
-  using public_key_type = typename sodium::keypair<BT>::public_key_type;
-  using private_key_type = typename sodium::keypair<BT>::private_key_type;
-  using nonce_type   = nonce<NONCESIZE>;
-  
-  /**
-   * Encrypt plaintext using recipient's public key, sign it using
-   * sender's private key, and a nonce. Compute an authentication tag
-   * MAC as well. Return (MAC || ciphertext); i.e. ciphertext prepended
-   * by MAC.
-   *
-   * Any modification of the returned (MAC || ciphertext) will render
-   * decryption impossible.
-   * 
-   * The nonce is public and can be sent along the (MAC ||
-   * ciphertext). The private key is private and MUST NOT be sent over
-   * the channel. The public key is intended to be widely known, even
-   * by attackers.
-   *
-   * To thwart Man-in-the-Middle attacks, it is the responsibility of
-   * the recipient to verify (by other means, like certificates, web
-   * of trust, etc.) that the public key of the sender does indeed
-   * belong to the _real_ sender of the message. This is NOT ensured by
-   * this function here.
-   *
-   * This function can be used repeately with the same key, but you MUST
-   * then make sure never to reuse the same nonce. The easiest way to achieve
-   * this is to increment nonce after or prior to each encrypt() invocation.
-   * 
-   * The public  key must be KEYSIZE_PUBLIC_KEY  bytes long
-   * 
-   * The (MAC || ciphertext) size is 
-   *    MACSIZE + plaintext.size()
-   * bytes long.
-   **/
+    /**
+     * Encrypt plaintext using recipient's public key, sign it using
+     * sender's private key, and a nonce. Compute an authentication tag
+     * MAC as well. Return (MAC || ciphertext); i.e. ciphertext prepended
+     * by MAC.
+     *
+     * Any modification of the returned (MAC || ciphertext) will render
+     * decryption impossible.
+     *
+     * The nonce is public and can be sent along the (MAC ||
+     * ciphertext). The private key is private and MUST NOT be sent over
+     * the channel. The public key is intended to be widely known, even
+     * by attackers.
+     *
+     * To thwart Man-in-the-Middle attacks, it is the responsibility of
+     * the recipient to verify (by other means, like certificates, web
+     * of trust, etc.) that the public key of the sender does indeed
+     * belong to the _real_ sender of the message. This is NOT ensured by
+     * this function here.
+     *
+     * This function can be used repeately with the same key, but you MUST
+     * then make sure never to reuse the same nonce. The easiest way to achieve
+     * this is to increment nonce after or prior to each encrypt() invocation.
+     *
+     * The public  key must be KEYSIZE_PUBLIC_KEY  bytes long
+     *
+     * The (MAC || ciphertext) size is
+     *    MACSIZE + plaintext.size()
+     * bytes long.
+     **/
 
-  BT encrypt(const BT        &plaintext,
-	  const public_key_type  &public_key,
-	  const private_key_type &private_key,
-	  const nonce_type       &nonce)
-  {
-	  // some sanity checks before we get started
-	  if (public_key.size() != KEYSIZE_PUBLIC_KEY)
-		  throw std::runtime_error{ "sodium::box::encrypt() wrong pubkey size" };
+    BT encrypt(const BT& plaintext,
+               const public_key_type& public_key,
+               const private_key_type& private_key,
+               const nonce_type& nonce)
+    {
+        // some sanity checks before we get started
+        if (public_key.size() != KEYSIZE_PUBLIC_KEY)
+            throw std::runtime_error{
+                "sodium::box::encrypt() wrong pubkey size"
+            };
 
-	  // make space for MAC and encrypted message, i.e. for (MAC || encrypted)
-	  BT ciphertext_with_mac(MACSIZE + plaintext.size());
+        // make space for MAC and encrypted message, i.e. for (MAC || encrypted)
+        BT ciphertext_with_mac(MACSIZE + plaintext.size());
 
-	  // let's encrypt now! (combined mode, no precalculation of shared key)
-	  if (crypto_box_easy(reinterpret_cast<unsigned char *>(ciphertext_with_mac.data()),
-		  reinterpret_cast<const unsigned char *>(plaintext.data()), plaintext.size(),
-		  nonce.data(),
-		  reinterpret_cast<const unsigned char *>(public_key.data()), private_key.data()) == -1)
-		  throw std::runtime_error{ "sodium::box::encrypt() crypto_box_easy() failed (-1)" };
+        // let's encrypt now! (combined mode, no precalculation of shared key)
+        if (crypto_box_easy(
+              reinterpret_cast<unsigned char*>(ciphertext_with_mac.data()),
+              reinterpret_cast<const unsigned char*>(plaintext.data()),
+              plaintext.size(),
+              nonce.data(),
+              reinterpret_cast<const unsigned char*>(public_key.data()),
+              private_key.data()) == -1)
+            throw std::runtime_error{
+                "sodium::box::encrypt() crypto_box_easy() failed (-1)"
+            };
 
-	  // return with move semantics
-	  return ciphertext_with_mac;
-  }
+        // return with move semantics
+        return ciphertext_with_mac;
+    }
 
-  /**
-   * Encrypt plaintext using recipient's public key, sign it using
-   * sender's private key, and a nonce. Compute an authentication tag
-   * MAC as well. Return (MAC || ciphertext); i.e. ciphertext prepended
-   * by MAC.
-   *
-   * The public key of the recipient and private key of the sender
-   * can be provided as a keypair (e.g. for self-signed, self-addressed
-   * messages).
-   *
-   * Otherwise, see encrypt() above.
-   **/
-  BT encrypt(const BT &plaintext,
-	  const keypair_type &keypair,
-	  const nonce_type   &nonce)
-  {
-	  // no sanity checks necessary before we get started
+    /**
+     * Encrypt plaintext using recipient's public key, sign it using
+     * sender's private key, and a nonce. Compute an authentication tag
+     * MAC as well. Return (MAC || ciphertext); i.e. ciphertext prepended
+     * by MAC.
+     *
+     * The public key of the recipient and private key of the sender
+     * can be provided as a keypair (e.g. for self-signed, self-addressed
+     * messages).
+     *
+     * Otherwise, see encrypt() above.
+     **/
+    BT encrypt(const BT& plaintext,
+               const keypair_type& keypair,
+               const nonce_type& nonce)
+    {
+        // no sanity checks necessary before we get started
 
-	  // make space for MAC and encrypted message, i.e. for (MAC || encrypted)
-	  BT ciphertext_with_mac(MACSIZE + plaintext.size());
+        // make space for MAC and encrypted message, i.e. for (MAC || encrypted)
+        BT ciphertext_with_mac(MACSIZE + plaintext.size());
 
-	  // let's encrypt now! (combined mode, no precalculation of shared key)
-	  if (crypto_box_easy(reinterpret_cast<unsigned char *>(ciphertext_with_mac.data()),
-		  reinterpret_cast<const unsigned char *>(plaintext.data()), plaintext.size(),
-		  nonce.data(),
-		  reinterpret_cast<const unsigned char *>(keypair.public_key().data()),
-		  keypair.private_key().data()) == -1)
-		  throw std::runtime_error{ "sodium::box::encrypt(keypair...) crypto_box_easy() failed (-1)" };
+        // let's encrypt now! (combined mode, no precalculation of shared key)
+        if (crypto_box_easy(
+              reinterpret_cast<unsigned char*>(ciphertext_with_mac.data()),
+              reinterpret_cast<const unsigned char*>(plaintext.data()),
+              plaintext.size(),
+              nonce.data(),
+              reinterpret_cast<const unsigned char*>(
+                keypair.public_key().data()),
+              keypair.private_key().data()) == -1)
+            throw std::runtime_error{ "sodium::box::encrypt(keypair...) "
+                                      "crypto_box_easy() failed (-1)" };
 
-	  // return with move semantics
-	  return ciphertext_with_mac;
-  }
-  
-  /**
-  * Detached version.
-  * 
-  * XXX document me
-  **/
+        // return with move semantics
+        return ciphertext_with_mac;
+    }
 
-  BT encrypt(const BT        &plaintext,
-	  const public_key_type  &public_key,
-	  const private_key_type &private_key,
-	  const nonce_type       &nonce,
-	  BT                     &mac)
-  {
-	  // some sanity checks before we get started
-	  if (public_key.size() != KEYSIZE_PUBLIC_KEY)
-		  throw std::runtime_error{ "sodium::box::encrypt() wrong pubkey size" };
+    /**
+     * Detached version.
+     *
+     * XXX document me
+     **/
 
-	  if (mac.size() != MACSIZE)
-		  throw std::runtime_error{ "sodium::box::encrypt() wrong mac size" };
+    BT encrypt(const BT& plaintext,
+               const public_key_type& public_key,
+               const private_key_type& private_key,
+               const nonce_type& nonce,
+               BT& mac)
+    {
+        // some sanity checks before we get started
+        if (public_key.size() != KEYSIZE_PUBLIC_KEY)
+            throw std::runtime_error{
+                "sodium::box::encrypt() wrong pubkey size"
+            };
 
-	  // make space for encrypted message, without MAC
-	  BT ciphertext(plaintext.size());
+        if (mac.size() != MACSIZE)
+            throw std::runtime_error{ "sodium::box::encrypt() wrong mac size" };
 
-	  // let's encrypt now! (detached mode, no precalculation of shared key)
-	  if (crypto_box_detached(reinterpret_cast<unsigned char *>(ciphertext.data()),
-		  reinterpret_cast<unsigned char *>(mac.data()),
-		  reinterpret_cast<const unsigned char *>(plaintext.data()), plaintext.size(),
-		  nonce.data(),
-		  reinterpret_cast<const unsigned char *>(public_key.data()), private_key.data()) == -1)
-		  throw std::runtime_error{ "sodium::box::encrypt() crypto_box_detached() failed (-1)" };
+        // make space for encrypted message, without MAC
+        BT ciphertext(plaintext.size());
 
-	  // return with move semantics (mac returned via reference)
-	  return ciphertext;
-  }
+        // let's encrypt now! (detached mode, no precalculation of shared key)
+        if (crypto_box_detached(
+              reinterpret_cast<unsigned char*>(ciphertext.data()),
+              reinterpret_cast<unsigned char*>(mac.data()),
+              reinterpret_cast<const unsigned char*>(plaintext.data()),
+              plaintext.size(),
+              nonce.data(),
+              reinterpret_cast<const unsigned char*>(public_key.data()),
+              private_key.data()) == -1)
+            throw std::runtime_error{
+                "sodium::box::encrypt() crypto_box_detached() failed (-1)"
+            };
 
-  /**
-  * Detached version.
-  * 
-  * XXX Document me
-  **/
+        // return with move semantics (mac returned via reference)
+        return ciphertext;
+    }
 
-  BT encrypt(const BT    &plaintext,
-	  const keypair_type &keypair,
-	  const nonce_type   &nonce,
-	  BT                 &mac)
-  {
-	  // sanity check before we get started
-	  if (mac.size() != MACSIZE)
-		  throw std::runtime_error{ "sodium::box::encrypt() wrong mac size" };
+    /**
+     * Detached version.
+     *
+     * XXX Document me
+     **/
 
-	  // make space for encrypted message, without MAC
-	  BT ciphertext(plaintext.size());
+    BT encrypt(const BT& plaintext,
+               const keypair_type& keypair,
+               const nonce_type& nonce,
+               BT& mac)
+    {
+        // sanity check before we get started
+        if (mac.size() != MACSIZE)
+            throw std::runtime_error{ "sodium::box::encrypt() wrong mac size" };
 
-	  // let's encrypt now! (detached mode, no precalculation of shared key)
-	  if (crypto_box_detached(reinterpret_cast<unsigned char *>(ciphertext.data()),
-		  reinterpret_cast<unsigned char *>(mac.data()),
-		  reinterpret_cast<const unsigned char *>(plaintext.data()), plaintext.size(),
-		  nonce.data(),
-		  reinterpret_cast<const unsigned char *>(keypair.public_key().data()),
-		  keypair.private_key().data()) == -1)
-		  throw std::runtime_error{ "sodium::box::encrypt(keypair...) crypto_box_detached() failed (-1)" };
+        // make space for encrypted message, without MAC
+        BT ciphertext(plaintext.size());
 
-	  // return with move semantics (mac returned via reference)
-	  return ciphertext;
-  }
+        // let's encrypt now! (detached mode, no precalculation of shared key)
+        if (crypto_box_detached(
+              reinterpret_cast<unsigned char*>(ciphertext.data()),
+              reinterpret_cast<unsigned char*>(mac.data()),
+              reinterpret_cast<const unsigned char*>(plaintext.data()),
+              plaintext.size(),
+              nonce.data(),
+              reinterpret_cast<const unsigned char*>(
+                keypair.public_key().data()),
+              keypair.private_key().data()) == -1)
+            throw std::runtime_error{ "sodium::box::encrypt(keypair...) "
+                                      "crypto_box_detached() failed (-1)" };
 
-  /**
-   * Decrypt ciphertext using recipient's private key and nonce, and
-   * verify the signature using the sender's public key, returing
-   * decrypted plaintext.
-   * 
-   * If the ciphertext or the MAC have been tampered with, or if
-   * the signature doesn't verify (e.g. because the sender isn't
-   * the one who she claims to be), decryption will fail and
-   * this function with throw a std::runtime_error.
-   *
-   * This function will also throw a std::runtime_error if the size
-   * of the public key isn't KEYSIZE_PUBLIC_KEY, or if the ciphertext
-   * is even too small to hold the MAC (i.e. less than MACSIZE).
-   **/
+        // return with move semantics (mac returned via reference)
+        return ciphertext;
+    }
 
-  BT decrypt(const BT        &ciphertext_with_mac,
-	  const private_key_type &private_key,
-	  const public_key_type  &public_key,
-	  const nonce_type       &nonce)
-  {
-	  // some sanity checks before we get started
-	  if (ciphertext_with_mac.size() < MACSIZE)
-		  throw std::runtime_error{ "sodium::box::decrypt() ciphertext too small for MAC" };
-	  if (public_key.size() != KEYSIZE_PUBLIC_KEY)
-		  throw std::runtime_error{ "sodium::box::decrypt() pubkey wrong size" };
+    /**
+     * Decrypt ciphertext using recipient's private key and nonce, and
+     * verify the signature using the sender's public key, returing
+     * decrypted plaintext.
+     *
+     * If the ciphertext or the MAC have been tampered with, or if
+     * the signature doesn't verify (e.g. because the sender isn't
+     * the one who she claims to be), decryption will fail and
+     * this function with throw a std::runtime_error.
+     *
+     * This function will also throw a std::runtime_error if the size
+     * of the public key isn't KEYSIZE_PUBLIC_KEY, or if the ciphertext
+     * is even too small to hold the MAC (i.e. less than MACSIZE).
+     **/
 
-	  // make room for decrypted text
-	  BT decrypted(ciphertext_with_mac.size() - MACSIZE);
+    BT decrypt(const BT& ciphertext_with_mac,
+               const private_key_type& private_key,
+               const public_key_type& public_key,
+               const nonce_type& nonce)
+    {
+        // some sanity checks before we get started
+        if (ciphertext_with_mac.size() < MACSIZE)
+            throw std::runtime_error{
+                "sodium::box::decrypt() ciphertext too small for MAC"
+            };
+        if (public_key.size() != KEYSIZE_PUBLIC_KEY)
+            throw std::runtime_error{
+                "sodium::box::decrypt() pubkey wrong size"
+            };
 
-	  // let's try to decrypt
-	  if (crypto_box_open_easy(reinterpret_cast<unsigned char *>(decrypted.data()),
-		  reinterpret_cast<const unsigned char *>(ciphertext_with_mac.data()),
-		  ciphertext_with_mac.size(),
-		  nonce.data(),
-		  reinterpret_cast<const unsigned char *>(public_key.data()),
-		  private_key.data()) == -1)
-		  throw std::runtime_error{ "sodium::box::decrypt() decryption or verification failed" };
+        // make room for decrypted text
+        BT decrypted(ciphertext_with_mac.size() - MACSIZE);
 
-	  return decrypted;
-  }
+        // let's try to decrypt
+        if (crypto_box_open_easy(
+              reinterpret_cast<unsigned char*>(decrypted.data()),
+              reinterpret_cast<const unsigned char*>(
+                ciphertext_with_mac.data()),
+              ciphertext_with_mac.size(),
+              nonce.data(),
+              reinterpret_cast<const unsigned char*>(public_key.data()),
+              private_key.data()) == -1)
+            throw std::runtime_error{
+                "sodium::box::decrypt() decryption or verification failed"
+            };
 
-  /**
-  * Detached version
-  *
-  * XXX Document me
-  **/
+        return decrypted;
+    }
 
-  BT decrypt(const BT        &ciphertext,
-	  const private_key_type &private_key,
-	  const public_key_type  &public_key,
-	  const nonce_type       &nonce,
-	  const BT               &mac)
-  {
-	  // some sanity checks before we get started
-	  if (mac.size() != MACSIZE)
-		  throw std::runtime_error{ "sodium::box::decrypt() MAC wrong size" };
-	  if (public_key.size() != KEYSIZE_PUBLIC_KEY)
-		  throw std::runtime_error{ "sodium::box::decrypt() public_key wrong size" };
+    /**
+     * Detached version
+     *
+     * XXX Document me
+     **/
 
-	  // make room for decrypted text
-	  BT decrypted(ciphertext.size());
+    BT decrypt(const BT& ciphertext,
+               const private_key_type& private_key,
+               const public_key_type& public_key,
+               const nonce_type& nonce,
+               const BT& mac)
+    {
+        // some sanity checks before we get started
+        if (mac.size() != MACSIZE)
+            throw std::runtime_error{ "sodium::box::decrypt() MAC wrong size" };
+        if (public_key.size() != KEYSIZE_PUBLIC_KEY)
+            throw std::runtime_error{
+                "sodium::box::decrypt() public_key wrong size"
+            };
 
-	  // let's try to decrypt
-	  if (crypto_box_open_detached(reinterpret_cast<unsigned char *>(decrypted.data()),
-		  reinterpret_cast<const unsigned char *>(ciphertext.data()),
-		  reinterpret_cast<const unsigned char *>(mac.data()),
-		  ciphertext.size(),
-		  nonce.data(),
-		  reinterpret_cast<const unsigned char *>(public_key.data()),
-		  private_key.data()) == -1)
-		  throw std::runtime_error{ "sodium::box::decrypt() decryption or verification failed" };
+        // make room for decrypted text
+        BT decrypted(ciphertext.size());
 
-	  return decrypted;
-  }
+        // let's try to decrypt
+        if (crypto_box_open_detached(
+              reinterpret_cast<unsigned char*>(decrypted.data()),
+              reinterpret_cast<const unsigned char*>(ciphertext.data()),
+              reinterpret_cast<const unsigned char*>(mac.data()),
+              ciphertext.size(),
+              nonce.data(),
+              reinterpret_cast<const unsigned char*>(public_key.data()),
+              private_key.data()) == -1)
+            throw std::runtime_error{
+                "sodium::box::decrypt() decryption or verification failed"
+            };
 
-  /**
-   * Decrypt ciphertext using recipient's private key and nonce,
-   * and verify the signature the signature using the sender's public
-   * key, returning decrypted plaintext.
-   *
-   * The private key of the recipient and the public key of the sender
-   * can be provided as a keypair (e.g. for self-signed, self-addressed
-   * messages).
-   *
-   * Otherwise, see decrypt() above.
-   **/
-  
-  BT decrypt(const BT &ciphertext_with_mac,
-	  const keypair_type &keypair,
-	  const nonce_type   &nonce)
-  {
-	  // some sanity checks before we get started
-	  if (ciphertext_with_mac.size() < MACSIZE)
-		  throw std::runtime_error{ "sodium::box::decrypt() ciphertext too small for MAC" };
+        return decrypted;
+    }
 
-	  // make room for decrypted text
-	  BT decrypted(ciphertext_with_mac.size() - MACSIZE);
+    /**
+     * Decrypt ciphertext using recipient's private key and nonce,
+     * and verify the signature the signature using the sender's public
+     * key, returning decrypted plaintext.
+     *
+     * The private key of the recipient and the public key of the sender
+     * can be provided as a keypair (e.g. for self-signed, self-addressed
+     * messages).
+     *
+     * Otherwise, see decrypt() above.
+     **/
 
-	  // let's try to decrypt
-	  if (crypto_box_open_easy(reinterpret_cast<unsigned char *>(decrypted.data()),
-		  reinterpret_cast<const unsigned char *>(ciphertext_with_mac.data()),
-		  ciphertext_with_mac.size(),
-		  nonce.data(),
-		  reinterpret_cast<const unsigned char *>(keypair.public_key().data()),
-		  keypair.private_key().data()) == -1)
-		  throw std::runtime_error{ "sodium::box::decrypt(keypair...) decryption or verification failed" };
+    BT decrypt(const BT& ciphertext_with_mac,
+               const keypair_type& keypair,
+               const nonce_type& nonce)
+    {
+        // some sanity checks before we get started
+        if (ciphertext_with_mac.size() < MACSIZE)
+            throw std::runtime_error{
+                "sodium::box::decrypt() ciphertext too small for MAC"
+            };
 
-	  return decrypted;
-  }
+        // make room for decrypted text
+        BT decrypted(ciphertext_with_mac.size() - MACSIZE);
 
-  /**
-  * Detached version
-  * 
-  * XXX Document me
-  **/
+        // let's try to decrypt
+        if (crypto_box_open_easy(
+              reinterpret_cast<unsigned char*>(decrypted.data()),
+              reinterpret_cast<const unsigned char*>(
+                ciphertext_with_mac.data()),
+              ciphertext_with_mac.size(),
+              nonce.data(),
+              reinterpret_cast<const unsigned char*>(
+                keypair.public_key().data()),
+              keypair.private_key().data()) == -1)
+            throw std::runtime_error{ "sodium::box::decrypt(keypair...) "
+                                      "decryption or verification failed" };
 
-  BT decrypt(const BT    &ciphertext,
-	  const keypair_type &keypair,
-	  const nonce_type   &nonce,
-	  const BT           &mac)
-  {
-	  // some sanity checks before we get started
-	  if (mac.size() != MACSIZE)
-		  throw std::runtime_error{ "sodium::box::decrypt() MAC wrong size" };
+        return decrypted;
+    }
 
-	  // make room for decrypted text
-	  BT decrypted(ciphertext.size());
+    /**
+     * Detached version
+     *
+     * XXX Document me
+     **/
 
-	  // let's try to decrypt
-	  if (crypto_box_open_detached(reinterpret_cast<unsigned char *>(decrypted.data()),
-		  reinterpret_cast<const unsigned char *>(ciphertext.data()),
-		  reinterpret_cast<const unsigned char *>(mac.data()),
-		  ciphertext.size(),
-		  nonce.data(),
-		  reinterpret_cast<const unsigned char *>(keypair.public_key().data()),
-		  keypair.private_key().data()) == -1)
-		  throw std::runtime_error{ "sodium::box::decrypt(keypair...) decryption or verification failed" };
+    BT decrypt(const BT& ciphertext,
+               const keypair_type& keypair,
+               const nonce_type& nonce,
+               const BT& mac)
+    {
+        // some sanity checks before we get started
+        if (mac.size() != MACSIZE)
+            throw std::runtime_error{ "sodium::box::decrypt() MAC wrong size" };
 
-	  return decrypted;
-  }
+        // make room for decrypted text
+        BT decrypted(ciphertext.size());
 
+        // let's try to decrypt
+        if (crypto_box_open_detached(
+              reinterpret_cast<unsigned char*>(decrypted.data()),
+              reinterpret_cast<const unsigned char*>(ciphertext.data()),
+              reinterpret_cast<const unsigned char*>(mac.data()),
+              ciphertext.size(),
+              nonce.data(),
+              reinterpret_cast<const unsigned char*>(
+                keypair.public_key().data()),
+              keypair.private_key().data()) == -1)
+            throw std::runtime_error{ "sodium::box::decrypt(keypair...) "
+                                      "decryption or verification failed" };
+
+        return decrypted;
+    }
 };
 
 } // namespace sodium
