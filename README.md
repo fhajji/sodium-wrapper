@@ -39,12 +39,12 @@ Criticism and pull requests welcome, of course.
 
 * Libraries:
   * [libsodium](https://github.com/jedisct1/libsodium) 1.0.16+
-  * [Boost](https://www.boost.org/) 1.67.0+
+  * [Boost](https://www.boost.org/) 1.68.0+
     * Boost.Test for unit testing
 	* Boost.Iostreams for streaming APIs.
 
 * Build System:
-  * [CMake](https://cmake.org/) 3.5.1+
+  * [CMake](https://cmake.org/) 3.11+
   * A C++17 capable/compatible compiler:
     * (Unix) [Clang](https://clang.llvm.org/) 6.0.1+
 	* (Unix) [GCC](https://gcc.gnu.org/) 8.2.0+
@@ -60,13 +60,15 @@ cmake etc in */usr* prefix, get the newest ones as source, compile and
 install them into prefix */usr/local*. Make sure that */usr/local/bin*
 precedes */usr/bin* in `PATH`.
 
-To compile:
+To compile, create a build directory outside of the source tree,
+cd there, and invoke `cmake` like this:
 
 ```
 cd sodium-wrapper    # where CMakeLists.txt is located
+cd ..
 mkdir build
 cd build
-cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake -DCMAKE_BUILD_TYPE=Release ../sodium-wrapper
 make
 ```
 
@@ -76,13 +78,35 @@ If you wish CMake to choose a specific compiler, set `CXX` and
 `CC` environment variables accordingly:
 
 ```
-env CXX=clang++ CC=clang cmake ..
+env CXX=clang++ CC=clang cmake ../sodium-wrapper
 ```
 
 or
 
 ```
-env CXX=g++6 CC=gcc6 cmake ..
+env CXX=g++8 CC=gcc8 cmake ../sodium-wrapper
+```
+
+#### If using vcpkg on Unix
+
+Add `-DCMAKE_TOOLCHAIN_FILE=${HOME}/vcpkg/scripts/buildsystems/vcpkg.cmake`
+to the `cmake` command line:
+
+```
+cmake -DCMAKE_TOOLCHAIN_FILE=${HOME}/vcpkg/scripts/buildsystems/vcpkg.name ../sodium-wrapper
+```
+
+assuming your vcpkg directory is in your home directory.
+
+You may wish to apply the patch patches/patch-libsodium-portfile.cmake.txt
+to the file vcpkg/ports/libsodium/portfile.cmake if libsodium fails
+to build with vcpkg:
+
+```
+cd ${HOME}/vcpkg/ports/libsodium
+patch -p0 < ${HOME}/sodium-wrapper/patches/patch-libsodium-portfile.cmake.txt
+cd ${HOME}/vcpkg
+./vcpkg install libsodium
 ```
 
 ### Building on Windows

@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include "helpers.h"
 #include "keyvar.h"
 
 #include <boost/assert.hpp>

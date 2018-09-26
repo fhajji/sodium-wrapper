@@ -1,0 +1,70 @@
+--- portfile.cmake.orig	2018-09-24 03:56:17.296706754 +0200
++++ portfile.cmake	2018-09-24 21:42:13.560708693 +0200
+@@ -22,11 +22,29 @@
+     set(LIBSODIUM_DEBUG_CONFIGURATION Debug)
+ endif()
+ 
++if(WIN32)
+ vcpkg_build_msbuild(
+     PROJECT_PATH ${SOURCE_PATH}/libsodium.vcxproj
+     RELEASE_CONFIGURATION ${LIBSODIUM_RELEASE_CONFIGURATION}
+     DEBUG_CONFIGURATION ${LIBSODIUM_DEBUG_CONFIGURATION}
+ )
++else()
++message(STATUS "calling autogen.sh")
++vcpkg_execute_required_process(
++    COMMAND ./autogen.sh
++    WORKING_DIRECTORY ${SOURCE_PATH}
++)
++message(STATUS "calling configure")
++vcpkg_execute_required_process(
++    COMMAND ./configure
++    WORKING_DIRECTORY ${SOURCE_PATH}
++)
++message(STATUS "compiling library")
++vcpkg_execute_required_process(
++    COMMAND make
++    WORKING_DIRECTORY ${SOURCE_PATH}
++)
++endif()
+ 
+ IF(VCPKG_TARGET_ARCHITECTURE MATCHES "x86")
+     SET(BUILD_ARCH "Win32")
+@@ -56,6 +74,7 @@
+     )
+ endif()
+ 
++if(WIN32)
+ file(INSTALL
+     ${SOURCE_PATH}/Build/${LIBSODIUM_RELEASE_CONFIGURATION}/${BUILD_ARCH}/libsodium.lib
+     DESTINATION ${CURRENT_PACKAGES_DIR}/lib
+@@ -64,6 +83,29 @@
+     ${SOURCE_PATH}/Build/${LIBSODIUM_DEBUG_CONFIGURATION}/${BUILD_ARCH}/libsodium.lib
+     DESTINATION ${CURRENT_PACKAGES_DIR}/debug/lib
+ )
++else()
++message(STATUS "Installing library")
++file(INSTALL
++    ${SOURCE_PATH}/src/libsodium/.libs/libsodium.a
++    DESTINATION ${CURRENT_PACKAGES_DIR}/lib
++)
++file(INSTALL
++    ${SOURCE_PATH}/src/libsodium/libsodium.la
++    DESTINATION ${CURRENT_PACKAGES_DIR}/lib
++)
++file(INSTALL
++    ${SOURCE_PATH}/src/libsodium/.libs/libsodium.so.23.1.0
++    DESTINATION ${CURRENT_PACKAGES_DIR}/lib
++)
++vcpkg_execute_required_process(
++    COMMAND ln -s -f libsodium.so.23.1.0 libsodium.so.23
++    WORKING_DIRECTORY ${CURRENT_PACKAGES_DIR}/lib
++)
++vcpkg_execute_required_process(
++    COMMAND ln -s -f libsodium.so.23.1.0 libsodium.so
++    WORKING_DIRECTORY ${CURRENT_PACKAGES_DIR}/lib
++)
++endif()
+ 
+ vcpkg_copy_pdbs()
+ 

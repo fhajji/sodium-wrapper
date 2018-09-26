@@ -1,4 +1,4 @@
-# CMakeLists.txt -- Make CMake file for project SodiumTester.
+# CMakeLists.txt -- Make CMake file for project sodium-wrapper.
 #
 # ISC License
 #
@@ -31,9 +31,9 @@
 # 
 #    cmake -DCMAKE_BUILD_TYPE=Release ..
 
-cmake_minimum_required ( VERSION 3.1 )
+cmake_minimum_required ( VERSION 3.11 )
 
-project ( sodiumwrapper )
+project ( sodium-wrapper )
 
 set ( CMAKE_CXX_STANDARD 17 )
 set ( CMAKE_CXX_STANDARD_REQUIRED ON )
@@ -67,14 +67,14 @@ if (CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         add_compile_options (-stdlib=libc++)
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        # message("FreeBSD:g++ ${CMAKE_CXX_COMPILER_VERSION}")
-		add_compile_options (-nostdinc++ -I/usr/include/c++/v1)
-        set (CMAKE_EXE_LINKER_FLAGS "-nodefaultlibs -lc++ -lm -lc -lgcc_s -lgcc")
+        message("FreeBSD:g++ ${CMAKE_CXX_COMPILER_VERSION}")
         # if multiple g++ versions are installed, pick the right libraries
         # XXX this is brittle: update for g++7, g++8, ...
-        if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "6.0.0")
-            message("GCC6 detected")
-            set (CMAKE_EXE_LINKER_FLAGS "-Wl,-rpath=/usr/local/lib/gcc6 ${CMAKE_EXE_LINKER_FLAGS}")
+        if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "8.0.0")
+            message("Supported GCC detected")
+            add_compile_options (-nostdinc++ -I/usr/include/c++/v1)
+	    set (CMAKE_EXE_LINKER_FLAGS "-nodefaultlibs -lc++ -lm -lc -lgcc_s -lgcc")
+            set (CMAKE_EXE_LINKER_FLAGS "-Wl,-rpath=/usr/local/lib/gcc8 ${CMAKE_EXE_LINKER_FLAGS}")
         endif()
     else()
         message("FreeBSD:unknown")
