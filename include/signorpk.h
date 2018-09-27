@@ -76,7 +76,20 @@ class SignorPK
      * long.
      **/
 
-    bytes sign(const bytes& plaintext, const privkey_type& privkey);
+    bytes sign(const bytes& plaintext, const privkey_type& privkey)
+    {
+        bytes plaintext_signed(SIGNATURE_SIZE + plaintext.size());
+        if (crypto_sign(plaintext_signed.data(),
+                        NULL,
+                        plaintext.data(),
+                        plaintext.size(),
+                        privkey.data()) == -1)
+            throw std::runtime_error{
+                "sodium::SignorPK::sign(): crypto_sign() -1"
+            };
+
+        return plaintext_signed; // per move semantics
+    }
 
     /**
      * Sign the plaintext with the private key part of the keypair.
@@ -92,7 +105,27 @@ class SignorPK
      * Sign the plaintext with the private key privkey. Return the
      * signature, which is SIGNATURE_SIZE bytes long.
      **/
-    bytes sign_detached(const bytes& plaintext, const privkey_type& privkey);
+    bytes sign_detached(const bytes& plaintext, const privkey_type& privkey)
+    {
+        bytes signature(SIGNATURE_SIZE);
+        unsigned long long signature_size;
+
+        if (crypto_sign_detached(signature.data(),
+                                 &signature_size,
+                                 plaintext.data(),
+                                 plaintext.size(),
+                                 privkey.data()) == -1)
+            throw std::runtime_error{ "sodium::SignorPK::sign_detached(): "
+                                      "crypto_sign_detached() -1" };
+
+        // sanity check
+        if (signature_size != SIGNATURE_SIZE)
+            throw std::runtime_error{
+                "sodium::SignorPK::sign_detached(): wrong signature size"
+            };
+
+        return signature; // per move semantics
+    }
 
     /**
      * Sign the plaintext with the private key part of the keypair.
@@ -112,7 +145,41 @@ class SignorPK
      * with signature being SIGNATURE_SIZE bytes long.
      **/
 
-    bytes verify(const bytes& plaintext_with_signature, const bytes& pubkey);
+    bytes verify(const bytes& plaintext_with_signature, const bytes& pubkey)
+    {
+        // some sanity checks before we get started
+        if (pubkey.size() != KEYSIZE_PUBKEY)
+            throw std::runtime_error{
+                "sodium::SignorPK::verify(): wrong pubkey size"
+            };
+        if (plaintext_with_signature.size() < SIGNATURE_SIZE)
+            throw std::runtime_error{ "sodium::SignorPK::verify(): "
+                                      "plaintext_with_signature too small "
+                                      "for signature" };
+
+        // make space for plaintext without signature
+        bytes plaintext(plaintext_with_signature.size() - SIGNATURE_SIZE);
+        unsigned long long plaintext_size;
+
+        // let's verify signature now!
+        if (crypto_sign_open(plaintext.data(),
+                             &plaintext_size,
+                             plaintext_with_signature.data(),
+                             plaintext_with_signature.size(),
+                             pubkey.data()) == -1) {
+            throw std::runtime_error{
+                "sodium::SignorPK::verify(): signature didn't verify"
+            };
+        }
+
+        // yet another sanity check
+        if (plaintext_size != plaintext_with_signature.size() - SIGNATURE_SIZE)
+            throw std::runtime_error{
+                "sodium::SignorPK::verify(): wrong plaintext size"
+            };
+
+        return plaintext; // per move semantics
+    }
 
     /**
      * Verify the signature contained in plaintext_with_signature
@@ -138,7 +205,24 @@ class SignorPK
 
     bool verify_detached(const bytes& plaintext,
                          const bytes& signature,
-                         const bytes& pubkey);
+                         const bytes& pubkey)
+    {
+        // some sanity checks before we get started
+        if (pubkey.size() != KEYSIZE_PUBKEY)
+            throw std::runtime_error{
+                "sodium::SignorPK::verify_detached(): wrong pubkey size"
+            };
+        if (signature.size() != SIGNATURE_SIZE)
+            throw std::runtime_error{
+                "sodium::SignorPK::verify_detached(): wrong signature size"
+            };
+
+        // let's verify the detached signature now!
+        return crypto_sign_verify_detached(signature.data(),
+                                           plaintext.data(),
+                                           plaintext.size(),
+                                           pubkey.data()) != -1;
+    }
 
     /**
      * Verify the signature of the plaintext against the public key part
