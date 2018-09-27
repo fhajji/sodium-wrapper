@@ -75,7 +75,11 @@ make
 Use `Debug` instead of `Release` to generate a debug build.
 
 As usual, to speed up compiling, add `-j N` to the call of `make`, with
-N being your number of CPU cores.
+N being your number of CPU cores:
+
+```
+make -j 32   # build unit tests in parallel on 32 cpu cores
+```
 
 If you wish CMake to choose a specific compiler, set `CXX` and
 `CC` environment variables accordingly:
@@ -189,7 +193,7 @@ on the command line of the individual test:
 ./test_helpers --log_level=message
 ```
 
-To run the unit tests in parallel, call `ctlest -jN` with N
+To run the unit tests in parallel, call `ctest -jN` with N
 being the number of CPU cores. You can also `-jN`
 to `ctest` via `make test` using `ARGS` like so: 
 
