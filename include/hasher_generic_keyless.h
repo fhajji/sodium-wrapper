@@ -1,4 +1,4 @@
-// hashor_generic_keyless.h -- Generic hashing without key
+// hasher_generic_keyless.h -- Generic hashing without key
 //
 // ISC License
 //
@@ -25,7 +25,7 @@
 namespace sodium {
 
 template<class BT = bytes>
-class hashor_generic_keyless
+class hasher_generic_keyless
 {
 
   public:
@@ -41,7 +41,7 @@ class hashor_generic_keyless
      *
      * This is keyless generic hashing.
      *
-     * Otherwise, see sodium::hashor_generic template for keyed generic hashing.
+     * Otherwise, see sodium::hasher_generic template for keyed generic hashing.
      **/
 
     BT hash(const BT& plaintext, const std::size_t hashsize = HASHSIZE);
@@ -52,7 +52,7 @@ class hashor_generic_keyless
      *
      * This is keyless generic hashing.
      *
-     * Otherwise, see sodium::hashor_generic template for keyed generic hashing.
+     * Otherwise, see sodium::hasher_generic template for keyed generic hashing.
      **/
 
     void hash(const BT& plaintext, BT& outHash);
@@ -60,17 +60,17 @@ class hashor_generic_keyless
 
 template<class BT>
 BT
-hashor_generic_keyless<BT>::hash(const BT& plaintext,
+hasher_generic_keyless<BT>::hash(const BT& plaintext,
                                  const std::size_t hashsize)
 {
     // some sanity checks before we start
-    if (hashsize < hashor_generic_keyless<BT>::HASHSIZE_MIN)
+    if (hashsize < hasher_generic_keyless<BT>::HASHSIZE_MIN)
         throw std::runtime_error{
-            "sodium::hashor_generic_keyless::hash() hash size too small"
+            "sodium::hasher_generic_keyless::hash() hash size too small"
         };
-    if (hashsize > hashor_generic_keyless<BT>::HASHSIZE_MAX)
+    if (hashsize > hasher_generic_keyless<BT>::HASHSIZE_MAX)
         throw std::runtime_error{
-            "sodium::hashor_generic_keyless::hash() hash size too big"
+            "sodium::hasher_generic_keyless::hash() hash size too big"
         };
 
     // make space for hash
@@ -90,16 +90,16 @@ hashor_generic_keyless<BT>::hash(const BT& plaintext,
 
 template<class BT>
 void
-hashor_generic_keyless<BT>::hash(const BT& plaintext, BT& outHash)
+hasher_generic_keyless<BT>::hash(const BT& plaintext, BT& outHash)
 {
     // some sanity checks before we start
-    if (outHash.size() < hashor_generic_keyless<BT>::HASHSIZE_MIN)
+    if (outHash.size() < hasher_generic_keyless<BT>::HASHSIZE_MIN)
         throw std::runtime_error{
-            "sodium::hashor_generic_keyless::hash() hash size too small"
+            "sodium::hasher_generic_keyless::hash() hash size too small"
         };
-    if (outHash.size() > hashor_generic_keyless<BT>::HASHSIZE_MAX)
+    if (outHash.size() > hasher_generic_keyless<BT>::HASHSIZE_MAX)
         throw std::runtime_error{
-            "sodium::hashor_generic_keyless::hash() hash size too big"
+            "sodium::hasher_generic_keyless::hash() hash size too big"
         };
 
     // now compute the hash!

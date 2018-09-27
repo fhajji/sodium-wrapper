@@ -1,4 +1,4 @@
-// hashor_short.h -- Short-input hashing with key
+// hasher_short.h -- Short-input hashing with key
 //
 // ISC License
 //
@@ -26,7 +26,7 @@
 namespace sodium {
 
 template<class BT = bytes>
-class hashor_short
+class hasher_short
 {
 
   public:
@@ -36,49 +36,49 @@ class hashor_short
     using bytes_type = BT;
     using key_type = key<KEYSIZE>;
 
-    // A hashor_short with a new random key
-    hashor_short()
+    // A hasher_short with a new random key
+    hasher_short()
       : key_(key_type())
     {}
 
     /**
-     * Create a short hashor with the specified key.
+     * Create a short hasher with the specified key.
      *
-     * Short hashing is deterministic: with the same key (hashor_short),
+     * Short hashing is deterministic: with the same key (hasher_short),
      * hashing a plaintext will always result in the same hash.
      **/
 
-    // A hashor_short with a user-supplied key (copying version)
-    hashor_short(const key_type& key)
+    // A hasher_short with a user-supplied key (copying version)
+    hasher_short(const key_type& key)
       : key_(key)
     {}
 
-    // A hashor_short with a user-supplied key (moving version)
-    hashor_short(key_type&& key)
+    // A hasher_short with a user-supplied key (moving version)
+    hasher_short(key_type&& key)
       : key_(std::move(key))
     {}
 
     // A copying constructor
-    hashor_short(const hashor_short& other)
+    hasher_short(const hasher_short& other)
       : key_(other.key_)
     {}
 
     // A moving constructor
-    hashor_short(hashor_short&& other)
+    hasher_short(hasher_short&& other)
       : key_(std::move(other.key_))
     {}
 
     // XXX copying and moving assignment operators?
 
     /**
-     * Hash a (typically short) plaintext, using hashor_short's key_,
+     * Hash a (typically short) plaintext, using hasher_short's key_,
      * into a hash. Return the generated hash.
      *
      * This function is optimized for short plaintext(s).
      *
      * This function should _not_ be considered collision-resistant.
      *
-     * Hashing the same plaintext with the same key / hashor_short
+     * Hashing the same plaintext with the same key / hasher_short
      * always results in the same hash.
      *
      * The computed and returned hash will be HASHSIZE bytes long.
@@ -87,7 +87,7 @@ class hashor_short
     BT hash(const BT& plaintext);
 
     /**
-     * Hash a (typically short) plaintext, using hashor_short's key_,
+     * Hash a (typically short) plaintext, using hasher_short's key_,
      * into a hash. Save the computed hash into outHash.
      *
      * This function is optimized for short plaintext(s).
@@ -114,9 +114,9 @@ class hashor_short
 
 template<class BT>
 BT
-hashor_short<BT>::hash(const BT& plaintext)
+hasher_short<BT>::hash(const BT& plaintext)
 {
-    BT outHash(hashor_short<BT>::HASHSIZE);
+    BT outHash(hasher_short<BT>::HASHSIZE);
     crypto_shorthash(reinterpret_cast<unsigned char*>(outHash.data()),
                      reinterpret_cast<const unsigned char*>(plaintext.data()),
                      plaintext.size(),
@@ -126,11 +126,11 @@ hashor_short<BT>::hash(const BT& plaintext)
 
 template<class BT>
 void
-hashor_short<BT>::hash(const BT& plaintext, BT& outHash)
+hasher_short<BT>::hash(const BT& plaintext, BT& outHash)
 {
-    if (outHash.size() != hashor_short<BT>::HASHSIZE)
+    if (outHash.size() != hasher_short<BT>::HASHSIZE)
         throw std::runtime_error{
-            "sodium::hashor_short::hash() outHash wrong size"
+            "sodium::hasher_short::hash() outHash wrong size"
         };
 
     crypto_shorthash(reinterpret_cast<unsigned char*>(outHash.data()),

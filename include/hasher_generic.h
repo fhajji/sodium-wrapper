@@ -1,4 +1,4 @@
-// hashor_generic.h -- Generic hashing with key
+// hasher_generic.h -- Generic hashing with key
 //
 // ISC License
 //
@@ -27,7 +27,7 @@
 namespace sodium {
 
 template<class BT = bytes>
-class hashor_generic
+class hasher_generic
 {
 
   public:
@@ -41,13 +41,13 @@ class hashor_generic
     using bytes_type = BT;
     using key_type = keyvar<>;
 
-    // A hashor_generic with a new random key of default length
-    hashor_generic()
+    // A hasher_generic with a new random key of default length
+    hasher_generic()
       : key_(key_type(KEYSIZE))
     {}
 
     /**
-     * Create a generic hashor with the specified key.
+     * Create a generic hasher with the specified key.
      *
      * The key must satisfy the following requirement:
      *
@@ -55,52 +55,52 @@ class hashor_generic
      *
      * The constructor will throw a std::runtime_error if not.
      *
-     * Generic hashing is deterministic: with the same key (hashor_generic),
+     * Generic hashing is deterministic: with the same key (hasher_generic),
      * and the same desired hash size, hashing a plaintext will
      * always result in the same hash.
      **/
 
-    // A hashor_generic with a user-supplied key (copying version)
-    hashor_generic(const key_type& key)
+    // A hasher_generic with a user-supplied key (copying version)
+    hasher_generic(const key_type& key)
       : key_(key)
     {
         // some sanity checks before we start
 
-        if (key_.size() < hashor_generic<BT>::KEYSIZE_MIN)
+        if (key_.size() < hasher_generic<BT>::KEYSIZE_MIN)
             throw std::runtime_error{
-                "sodium::hashor_generic key size too small"
+                "sodium::hasher_generic key size too small"
             };
-        if (key_.size() > hashor_generic<BT>::KEYSIZE_MAX)
+        if (key_.size() > hasher_generic<BT>::KEYSIZE_MAX)
             throw std::runtime_error{
-                "sodium::hashor_generic key size too big"
+                "sodium::hasher_generic key size too big"
             };
     }
 
-    // A hashor_generic with a user-supplied key (moving version)
-    hashor_generic(key_type&& key)
+    // A hasher_generic with a user-supplied key (moving version)
+    hasher_generic(key_type&& key)
       : key_(std::move(key))
     {
         // some sanity checks before we start
 
-        if (key_.size() < hashor_generic<BT>::KEYSIZE_MIN)
+        if (key_.size() < hasher_generic<BT>::KEYSIZE_MIN)
             throw std::runtime_error{
-                "sodium::hashor_generic key size too small"
+                "sodium::hasher_generic key size too small"
             };
-        if (key_.size() > hashor_generic<BT>::KEYSIZE_MAX)
+        if (key_.size() > hasher_generic<BT>::KEYSIZE_MAX)
             throw std::runtime_error{
-                "sodium::hashor_generic key size too big"
+                "sodium::hasher_generic key size too big"
             };
     }
 
     // A copying constructor
-    hashor_generic(const hashor_generic& other)
+    hasher_generic(const hasher_generic& other)
       : key_(other.key_)
     {
         // other key has already been sanity-checked for length
     }
 
     // A moving constructor
-    hashor_generic(hashor_generic&& other)
+    hasher_generic(hasher_generic&& other)
       : key_(std::move(other.key_))
     {
         // other key has already been sanity-checked for length
@@ -152,16 +152,16 @@ class hashor_generic
 
 template<class BT>
 BT
-hashor_generic<BT>::hash(const BT& plaintext, const std::size_t hashsize)
+hasher_generic<BT>::hash(const BT& plaintext, const std::size_t hashsize)
 {
     // some sanity checks before we start
-    if (hashsize < hashor_generic<BT>::HASHSIZE_MIN)
+    if (hashsize < hasher_generic<BT>::HASHSIZE_MIN)
         throw std::runtime_error{
-            "sodium::hashor_generic::hash() hash size too small"
+            "sodium::hasher_generic::hash() hash size too small"
         };
-    if (hashsize > hashor_generic<BT>::HASHSIZE_MAX)
+    if (hashsize > hasher_generic<BT>::HASHSIZE_MAX)
         throw std::runtime_error{
-            "sodium::hashor_generic::hash() hash size too big"
+            "sodium::hasher_generic::hash() hash size too big"
         };
 
     // make space for hash
@@ -181,16 +181,16 @@ hashor_generic<BT>::hash(const BT& plaintext, const std::size_t hashsize)
 
 template<class BT>
 void
-hashor_generic<BT>::hash(const BT& plaintext, BT& outHash)
+hasher_generic<BT>::hash(const BT& plaintext, BT& outHash)
 {
     // some sanity checks before we start
-    if (outHash.size() < hashor_generic<BT>::HASHSIZE_MIN)
+    if (outHash.size() < hasher_generic<BT>::HASHSIZE_MIN)
         throw std::runtime_error{
-            "sodium::hashor_generic::hash() hash size too small"
+            "sodium::hasher_generic::hash() hash size too small"
         };
-    if (outHash.size() > hashor_generic<BT>::HASHSIZE_MAX)
+    if (outHash.size() > hasher_generic<BT>::HASHSIZE_MAX)
         throw std::runtime_error{
-            "sodium::hashor_generic::hash() hash size too big"
+            "sodium::hasher_generic::hash() hash size too big"
         };
 
     // now compute the hash!
