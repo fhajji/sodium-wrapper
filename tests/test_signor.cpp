@@ -1,4 +1,4 @@
-// test_SignorPK.cpp -- Test sodium::SignorPK
+// test_signor.cpp -- Test sodium::signor
 //
 // ISC License
 //
@@ -17,25 +17,25 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE sodium::SignorPK Test
+#define BOOST_TEST_MODULE sodium::signor Test
 #include <boost/test/included/unit_test.hpp>
 
 #include "keypairsign.h"
-#include "signorpk.h"
+#include "signor.h"
 #include <algorithm>
 #include <sodium.h>
 #include <string>
 
 using sodium::keypairsign;
-using sodium::SignorPK;
+using sodium::signor;
 using bytes = sodium::bytes;
 
-constexpr static std::size_t sigsize = SignorPK::SIGNATURE_SIZE;
+constexpr static std::size_t sigsize = signor::SIGNATURE_SIZE;
 
 bool
 test_of_correctness(const std::string& plaintext)
 {
-    SignorPK sc{};
+    signor sc{};
     keypairsign<> keypair_alice{};
     keypairsign<> keypair_bob{};
 
@@ -54,7 +54,7 @@ test_of_correctness(const std::string& plaintext)
     // 3. if signature fails to verify, verify() would throw,
     // but we manually check anyway.
 
-    BOOST_CHECK(plainblob == message_to_bob_from_alice);
+    BOOST_TEST(plainblob == message_to_bob_from_alice);
 
     // TURN AROUND
 
@@ -73,7 +73,7 @@ test_of_correctness(const std::string& plaintext)
     // but we manually check anyway. We assume that bob echoed the
     // plaintext without modifying it.
 
-    BOOST_CHECK(plainblob == plaintext_from_bob_to_alice);
+    BOOST_TEST(plainblob == plaintext_from_bob_to_alice);
 
     return plainblob == plaintext_from_bob_to_alice;
 }
@@ -81,7 +81,7 @@ test_of_correctness(const std::string& plaintext)
 bool
 test_of_correctness_with_detached_signatures(const std::string& plaintext)
 {
-    SignorPK sc{};
+    signor sc{};
     keypairsign<> keypair_alice{};
     keypairsign<> keypair_bob{};
 
@@ -97,9 +97,9 @@ test_of_correctness_with_detached_signatures(const std::string& plaintext)
     // and the signature match. Bob MUST ensure that the _pubkey_ from alice
     // is indeed from alice by other means (certificates, etc...).
 
-    BOOST_CHECK(sc.verify_detached(plainblob,
-                                   signature_from_alice, // hopefully from alice
-                                   keypair_alice.public_key()));
+    BOOST_TEST(sc.verify_detached(plainblob,
+                                  signature_from_alice, // hopefully from alice
+                                  keypair_alice.public_key()));
 
     // 3. if signature fails to verify, verify_detach() would've returned
     // false and the test failed. If we come this far, the test succeeded.
@@ -118,7 +118,7 @@ test_of_correctness_with_detached_signatures(const std::string& plaintext)
     // Alice _MUST_ ensure that the _pubkey_ she's using does indeed belong
     // to bob by other means (e.g. certificates etc.).
 
-    BOOST_CHECK(sc.verify_detached(
+    BOOST_TEST(sc.verify_detached(
       plainblob, signature_from_bob, keypair_bob.public_key()));
 
     // 6. if signature verification fails, verify() would've returned false,
@@ -132,14 +132,14 @@ test_of_correctness_with_detached_signatures(const std::string& plaintext)
 bool
 falsify_signature(const std::string& plaintext)
 {
-    SignorPK sc{};
+    signor sc{};
     keypairsign<> keypair_alice{};
 
     bytes plainblob{ plaintext.cbegin(), plaintext.cend() };
 
     bytes signedtext = sc.sign(plainblob, keypair_alice);
 
-    BOOST_CHECK(signedtext.size() >= SignorPK::SIGNATURE_SIZE);
+    BOOST_TEST(signedtext.size() >= signor::SIGNATURE_SIZE);
 
     // falsify signature, which starts before the message proper
     ++signedtext[0];
@@ -160,14 +160,14 @@ falsify_signature(const std::string& plaintext)
 bool
 falsify_detached_signature(const std::string& plaintext)
 {
-    SignorPK sc{};
+    signor sc{};
     keypairsign<> keypair_alice{};
 
     bytes plainblob{ plaintext.cbegin(), plaintext.cend() };
 
     bytes signature = sc.sign_detached(plainblob, keypair_alice);
 
-    BOOST_CHECK_EQUAL(signature.size(), sigsize);
+    BOOST_TEST(signature.size() == sigsize);
 
     // falsify signature
     if (signature.size() != 0)
@@ -187,7 +187,7 @@ falsify_signedtext(const std::string& plaintext)
     BOOST_CHECK_MESSAGE(!plaintext.empty(),
                         "Nothing to falsify, empty plaintext");
 
-    SignorPK sc{};
+    signor sc{};
     keypairsign<> keypair_alice{};
 
     bytes plainblob{ plaintext.cbegin(), plaintext.cend() };
@@ -195,10 +195,10 @@ falsify_signedtext(const std::string& plaintext)
     // sign to self
     bytes signedtext = sc.sign(plainblob, keypair_alice);
 
-    BOOST_CHECK(signedtext.size() > SignorPK::SIGNATURE_SIZE);
+    BOOST_TEST(signedtext.size() > signor::SIGNATURE_SIZE);
 
     // falsify plaintext, which starts just after signature
-    ++signedtext[SignorPK::SIGNATURE_SIZE];
+    ++signedtext[signor::SIGNATURE_SIZE];
 
     try {
         bytes plaintext_without_signature =
@@ -222,7 +222,7 @@ falsify_plaintext(const std::string& plaintext)
     BOOST_CHECK_MESSAGE(!plaintext.empty(),
                         "Nothing to falsify, empty plaintext");
 
-    SignorPK sc{};
+    signor sc{};
     keypairsign<> keypair_alice{};
 
     bytes plainblob{ plaintext.cbegin(), plaintext.cend() };
@@ -230,7 +230,7 @@ falsify_plaintext(const std::string& plaintext)
     // sign to self
     bytes signature = sc.sign_detached(plainblob, keypair_alice);
 
-    BOOST_CHECK_EQUAL(signature.size(), sigsize);
+    BOOST_TEST(signature.size() == sigsize);
 
     // falsify plaintext
     ++plainblob[0];
@@ -244,7 +244,7 @@ falsify_plaintext(const std::string& plaintext)
 bool
 falsify_sender(const std::string& plaintext)
 {
-    SignorPK sc{};
+    signor sc{};
     keypairsign<> keypair_alice{}; // recipient
     keypairsign<> keypair_bob{};   // impersonated sender
     keypairsign<> keypair_oscar{}; // real sender
@@ -290,7 +290,7 @@ falsify_sender(const std::string& plaintext)
 bool
 falsify_sender_detached(const std::string& plaintext)
 {
-    SignorPK sc{};
+    signor sc{};
     keypairsign<> keypair_alice{}; // recipient
     keypairsign<> keypair_bob{};   // impersonated sender
     keypairsign<> keypair_oscar{}; // real sender
@@ -332,33 +332,33 @@ struct SodiumFixture
 
 BOOST_FIXTURE_TEST_SUITE(sodium_test_suite, SodiumFixture)
 
-BOOST_AUTO_TEST_CASE(sodium_signorpk_test_full_plaintext)
+BOOST_AUTO_TEST_CASE(sodium_signor_test_full_plaintext)
 {
     std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
-    BOOST_CHECK(test_of_correctness(plaintext));
+    BOOST_TEST(test_of_correctness(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE(sodium_signorpk_test_empty_plaintext)
+BOOST_AUTO_TEST_CASE(sodium_signor_test_empty_plaintext)
 {
     std::string plaintext{};
-    BOOST_CHECK(test_of_correctness(plaintext));
+    BOOST_TEST(test_of_correctness(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE(sodium_signorpk_test_full_plaintext_detached)
+BOOST_AUTO_TEST_CASE(sodium_signor_test_full_plaintext_detached)
 {
     std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
-    BOOST_CHECK(test_of_correctness_with_detached_signatures(plaintext));
+    BOOST_TEST(test_of_correctness_with_detached_signatures(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE(sodium_signorpk_test_empty_plaintext_detached)
+BOOST_AUTO_TEST_CASE(sodium_signor_test_empty_plaintext_detached)
 {
     std::string plaintext{};
-    BOOST_CHECK(test_of_correctness_with_detached_signatures(plaintext));
+    BOOST_TEST(test_of_correctness_with_detached_signatures(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE(sodium_signorpk_test_sign_to_self)
+BOOST_AUTO_TEST_CASE(sodium_signor_test_sign_to_self)
 {
-    SignorPK sc{};
+    signor sc{};
     keypairsign<> keypair_alice{};
 
     std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
@@ -366,20 +366,19 @@ BOOST_AUTO_TEST_CASE(sodium_signorpk_test_sign_to_self)
 
     bytes signedtext = sc.sign(plainblob, keypair_alice);
 
-    BOOST_CHECK_EQUAL(signedtext.size(),
-                      plainblob.size() + SignorPK::SIGNATURE_SIZE);
+    BOOST_TEST(signedtext.size() == plainblob.size() + signor::SIGNATURE_SIZE);
 
     bytes message_without_signature = sc.verify(signedtext, keypair_alice);
 
     // if the signedtext was modified, or came from another
     // source, verification would have thrown. But we manually check anyway.
 
-    BOOST_CHECK(plainblob == message_without_signature);
+    BOOST_TEST(plainblob == message_without_signature);
 }
 
-BOOST_AUTO_TEST_CASE(sodium_signorpk_test_sign_to_self_detached)
+BOOST_AUTO_TEST_CASE(sodium_signor_test_sign_to_self_detached)
 {
-    SignorPK sc{};
+    signor sc{};
     keypairsign<> keypair_alice{};
 
     std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
@@ -387,91 +386,90 @@ BOOST_AUTO_TEST_CASE(sodium_signorpk_test_sign_to_self_detached)
 
     bytes signature = sc.sign_detached(plainblob, keypair_alice);
 
-    BOOST_CHECK_EQUAL(signature.size(), sigsize);
+    BOOST_TEST(signature.size() == sigsize);
 
-    BOOST_CHECK(sc.verify_detached(plainblob, signature, keypair_alice));
+    BOOST_TEST(sc.verify_detached(plainblob, signature, keypair_alice));
 
     // if the signedtext was modified, or came from another source,
     // verification would have returned false and test would have
     // failed.  but here, the test was successful.
 }
 
-BOOST_AUTO_TEST_CASE(sodium_signorpk_test_detect_wrong_sender_fulltext)
+BOOST_AUTO_TEST_CASE(sodium_signor_test_detect_wrong_sender_fulltext)
 {
     std::string plaintext{ "Hi Alice, this is Bob!" };
 
-    BOOST_CHECK(falsify_sender(plaintext));
+    BOOST_TEST(falsify_sender(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE(sodium_signorpk_test_detect_wrong_sender_empty_text)
+BOOST_AUTO_TEST_CASE(sodium_signor_test_detect_wrong_sender_empty_text)
 {
     std::string plaintext{};
 
-    BOOST_CHECK(falsify_sender(plaintext));
+    BOOST_TEST(falsify_sender(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE(sodium_signorpk_test_detect_wrong_sender_detached_fulltext)
+BOOST_AUTO_TEST_CASE(sodium_signor_test_detect_wrong_sender_detached_fulltext)
 {
     std::string plaintext{ "Hi Alice, this is Bob!" };
 
-    BOOST_CHECK(falsify_sender_detached(plaintext));
+    BOOST_TEST(falsify_sender_detached(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE(
-  sodium_signorpk_test_detect_wrong_sender_detached_empty_text)
+BOOST_AUTO_TEST_CASE(sodium_signor_test_detect_wrong_sender_detached_empty_text)
 {
     std::string plaintext{};
 
-    BOOST_CHECK(falsify_sender_detached(plaintext));
+    BOOST_TEST(falsify_sender_detached(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE(sodium_signorpk_test_falsify_signedtext)
+BOOST_AUTO_TEST_CASE(sodium_signor_test_falsify_signedtext)
 {
     std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
 
-    BOOST_CHECK(falsify_signedtext(plaintext));
+    BOOST_TEST(falsify_signedtext(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE(sodium_signorpk_test_falsify_plaintext)
+BOOST_AUTO_TEST_CASE(sodium_signor_test_falsify_plaintext)
 {
     std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
 
-    BOOST_CHECK(falsify_plaintext(plaintext));
+    BOOST_TEST(falsify_plaintext(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE(sodium_signorpk_test_falsify_signature_fulltext)
+BOOST_AUTO_TEST_CASE(sodium_signor_test_falsify_signature_fulltext)
 {
     std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
 
-    BOOST_CHECK(falsify_signature(plaintext));
+    BOOST_TEST(falsify_signature(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE(sodium_signorpk_test_falsify_signature_empty)
+BOOST_AUTO_TEST_CASE(sodium_signor_test_falsify_signature_empty)
 {
     std::string plaintext{};
 
-    BOOST_CHECK(falsify_signature(plaintext));
+    BOOST_TEST(falsify_signature(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE(sodium_signorpk_test_falsify_detached_signature_fulltext)
+BOOST_AUTO_TEST_CASE(sodium_signor_test_falsify_detached_signature_fulltext)
 {
     std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
 
-    BOOST_CHECK(falsify_detached_signature(plaintext));
+    BOOST_TEST(falsify_detached_signature(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE(sodium_signorpk_test_falsify_detached_signature_empty)
+BOOST_AUTO_TEST_CASE(sodium_signor_test_falsify_detached_signature_empty)
 {
     std::string plaintext{};
 
-    BOOST_CHECK(falsify_detached_signature(plaintext));
+    BOOST_TEST(falsify_detached_signature(plaintext));
 }
 
-BOOST_AUTO_TEST_CASE(sodium_signorpk_test_plaintext_remains_plaintext)
+BOOST_AUTO_TEST_CASE(sodium_signor_test_plaintext_remains_plaintext)
 {
     std::string plaintext{ "the quick brown fox jumps over the lazy dog" };
 
-    SignorPK sc{};
+    signor sc{};
     keypairsign<> keypair_alice{};
 
     bytes plainblob{ plaintext.cbegin(), plaintext.cend() };
@@ -479,21 +477,20 @@ BOOST_AUTO_TEST_CASE(sodium_signorpk_test_plaintext_remains_plaintext)
     // sign to self
     bytes signedtext = sc.sign(plainblob, keypair_alice);
 
-    BOOST_CHECK_EQUAL(signedtext.size(),
-                      plainblob.size() + SignorPK::SIGNATURE_SIZE);
+    BOOST_TEST(signedtext.size() == plainblob.size() + signor::SIGNATURE_SIZE);
 
-    // The signed text starts with SignorPK::SIGNATURE_SIZE bytes of
+    // The signed text starts with signor::SIGNATURE_SIZE bytes of
     // signature, followed by the (hopefully) unchanged bytes of the
     // plaintext.
-    BOOST_CHECK(std::equal(plainblob.data(),
-                           plainblob.data() + plainblob.size(),
-                           signedtext.data() + SignorPK::SIGNATURE_SIZE));
+    BOOST_TEST(std::equal(plainblob.data(),
+                          plainblob.data() + plainblob.size(),
+                          signedtext.data() + signor::SIGNATURE_SIZE));
 
     // We double-check in both directions, to make sure there are no
     // spurious bytes remaining.
-    BOOST_CHECK(std::equal(signedtext.data() + SignorPK::SIGNATURE_SIZE,
-                           signedtext.data() + signedtext.size(),
-                           plainblob.data()));
+    BOOST_TEST(std::equal(signedtext.data() + signor::SIGNATURE_SIZE,
+                          signedtext.data() + signedtext.size(),
+                          plainblob.data()));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
