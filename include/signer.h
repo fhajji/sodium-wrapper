@@ -27,6 +27,7 @@
 
 namespace sodium {
 
+template<typename BT = bytes>
 class signer
 {
 
@@ -55,6 +56,7 @@ class signer
      **/
 
   public:
+    using bytes_type = BT;
     using keypairsign_type = typename sodium::keypairsign<>;
     using private_key_type = typename keypairsign_type::private_key_type;
 
@@ -94,14 +96,15 @@ class signer
      * long.
      **/
 
-    bytes sign(const bytes& plaintext)
+    BT sign(const BT& plaintext)
     {
-        bytes plaintext_signed(SIGNATURE_SIZE + plaintext.size());
-        if (crypto_sign(plaintext_signed.data(),
-                        NULL,
-                        plaintext.data(),
-                        plaintext.size(),
-                        key_.data()) == -1)
+        BT plaintext_signed(SIGNATURE_SIZE + plaintext.size());
+        if (crypto_sign(
+              reinterpret_cast<unsigned char*>(plaintext_signed.data()),
+              NULL,
+              reinterpret_cast<const unsigned char*>(plaintext.data()),
+              plaintext.size(),
+              key_.data()) == -1)
             throw std::runtime_error{
                 "sodium::signer::sign(): crypto_sign() -1"
             };
@@ -113,16 +116,17 @@ class signer
      * Sign the plaintext with the saved private key. Return the
      * signature, which is SIGNATURE_SIZE bytes long.
      **/
-    bytes sign_detached(const bytes& plaintext)
+    bytes sign_detached(const BT& plaintext)
     {
         bytes signature(SIGNATURE_SIZE);
         unsigned long long signature_size;
 
-        if (crypto_sign_detached(signature.data(),
-                                 &signature_size,
-                                 plaintext.data(),
-                                 plaintext.size(),
-                                 key_.data()) == -1)
+        if (crypto_sign_detached(
+              signature.data(),
+              &signature_size,
+              reinterpret_cast<const unsigned char*>(plaintext.data()),
+              plaintext.size(),
+              key_.data()) == -1)
             throw std::runtime_error{ "sodium::signer::sign_detached(): "
                                       "crypto_sign_detached() -1" };
 

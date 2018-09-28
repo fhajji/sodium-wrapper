@@ -27,6 +27,7 @@
 
 namespace sodium {
 
+template<typename BT = bytes>
 class verifier
 {
 
@@ -48,6 +49,7 @@ class verifier
      **/
 
   public:
+    using bytes_type = BT;
     using keypairsign_type = typename sodium::keypairsign<>;
     using public_key_type = typename keypairsign_type::public_key_type;
 
@@ -109,7 +111,7 @@ class verifier
      * with signature being SIGNATURE_SIZE bytes long.
      **/
 
-    bytes verify(const bytes& plaintext_with_signature)
+    BT verify(const BT& plaintext_with_signature)
     {
         // some sanity checks before we get started
         if (plaintext_with_signature.size() < SIGNATURE_SIZE)
@@ -118,13 +120,14 @@ class verifier
                                       "for signature" };
 
         // make space for plaintext without signature
-        bytes plaintext(plaintext_with_signature.size() - SIGNATURE_SIZE);
+        BT plaintext(plaintext_with_signature.size() - SIGNATURE_SIZE);
         unsigned long long plaintext_size;
 
         // let's verify signature now!
-        if (crypto_sign_open(plaintext.data(),
+        if (crypto_sign_open(reinterpret_cast<unsigned char*>(plaintext.data()),
                              &plaintext_size,
-                             plaintext_with_signature.data(),
+                             reinterpret_cast<const unsigned char*>(
+                               plaintext_with_signature.data()),
                              plaintext_with_signature.size(),
                              key_.data()) == -1) {
             throw std::runtime_error{
@@ -147,7 +150,7 @@ class verifier
      *of signature isn't SIGNATURE_SIZE bytes, throw std::runtime_error.
      **/
 
-    bool verify_detached(const bytes& plaintext, const bytes& signature)
+    bool verify_detached(const BT& plaintext, const bytes& signature)
     {
         // some sanity checks before we get started
         if (signature.size() != SIGNATURE_SIZE)
@@ -157,10 +160,11 @@ class verifier
             };
 
         // let's verify the detached signature now!
-        return crypto_sign_verify_detached(signature.data(),
-                                           plaintext.data(),
-                                           plaintext.size(),
-                                           key_.data()) != -1;
+        return crypto_sign_verify_detached(
+                 signature.data(),
+                 reinterpret_cast<const unsigned char*>(plaintext.data()),
+                 plaintext.size(),
+                 key_.data()) != -1;
     }
 
   private:
