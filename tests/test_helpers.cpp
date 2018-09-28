@@ -343,11 +343,11 @@ BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2hex_return_string_protected)
     // since this is a sodium::string_protected,
     // let's make it read-only, just for kicks:
 
-    // C++17?
+    // C++17
     // hexb1.get_allocator().readonly(hexb1.data());
 
     // C++11: std::basic_string<...>.data() is <const T *>, we need <T *>:
-    hexb1.get_allocator().readonly(const_cast<char*>(hexb1.data()));
+    // hexb1.get_allocator().readonly(const_cast<char*>(hexb1.data()));
 
     BOOST_CHECK(hexb1 == "30313233343536373839");
 }
@@ -374,7 +374,7 @@ BOOST_AUTO_TEST_CASE(
     // hexb1.get_allocator().readonly(hexb1.data());
 
     // C++11: std::basic_string<...>.data() is <const T *>, we need <T *>:
-    hexb1.get_allocator().readonly(const_cast<char*>(hexb1.data()));
+    // hexb1.get_allocator().readonly(const_cast<char*>(hexb1.data()));
 
     BOOST_CHECK(hexb1 == "30313233343536373839");
 }
@@ -573,10 +573,10 @@ BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2base64_return_string_protected)
     // let's make it read-only, just for kicks:
 
     // C++17?
-    // hexb1.get_allocator().readonly(base64b1.data());
+    // base64b1.get_allocator().readonly(base64b1.data());
 
     // C++11: std::basic_string<...>.data() is <const T *>, we need <T *>:
-    base64b1.get_allocator().readonly(const_cast<char*>(base64b1.data()));
+    // base64b1.get_allocator().readonly(const_cast<char*>(base64b1.data()));
 
     BOOST_CHECK(base64b1 == "c3ViamVjdHM/X2Q=");
 }
@@ -600,10 +600,10 @@ BOOST_AUTO_TEST_CASE(
     // let's make it read-only, just for kicks:
 
     // C++17?
-    // hexb1.get_allocator().readonly(base64b1.data());
+    // base64b1.get_allocator().readonly(base64b1.data());
 
     // C++11: std::basic_string<...>.data() is <const T *>, we need <T *>:
-    base64b1.get_allocator().readonly(const_cast<char*>(base64b1.data()));
+    // base64b1.get_allocator().readonly(const_cast<char*>(base64b1.data()));
 
     BOOST_CHECK(base64b1 == "c3ViamVjdHM/X2Q=");
 }
