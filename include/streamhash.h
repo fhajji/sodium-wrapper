@@ -139,7 +139,48 @@ class StreamHash
      * hash() will throw a std::runtime_error if the istr fails.
      **/
 
-    bytes hash(std::istream& istr);
+    bytes hash(std::istream& istr)
+    {
+        bytes plaintext(blocksize_, '\0');
+        bytes outHash(hashsize_);
+
+        if (key_.size() != 0)
+            crypto_generichash_init(
+              &state_, key_.data(), key_.size(), hashsize_);
+        else
+            crypto_generichash_init(&state_, NULL, 0, hashsize_); // keyless
+
+        while (
+          istr.read(reinterpret_cast<char*>(plaintext.data()), blocksize_)) {
+            // read a whole block of size blocksize_
+
+            crypto_generichash_update(
+              &state_, plaintext.data(), plaintext.size());
+        }
+
+        // check to see if we've read a final partial chunk
+        std::size_t s = static_cast<std::size_t>(istr.gcount());
+        if (s != 0) {
+            if (s != plaintext.size())
+                plaintext.resize(s);
+
+            crypto_generichash_update(
+              &state_, plaintext.data(), plaintext.size());
+        }
+
+        // we're done reading all chunks.
+        crypto_generichash_final(&state_, outHash.data(), outHash.size());
+
+        // reset state_, so can call hash() again
+        if (key_.size() != 0)
+            crypto_generichash_init(
+              &state_, key_.data(), key_.size(), hashsize_);
+        else
+            crypto_generichash_init(&state_, NULL, 0, hashsize_); // keyless
+
+        // return computed hash
+        return outHash; // with move semantics
+    }
 
     /**
      * Return-by-reference version of the hash() function above.
@@ -154,7 +195,51 @@ class StreamHash
      * Otherwise, see also hash() above.
      **/
 
-    void hash(std::istream& istr, bytes& outHash);
+    void hash(std::istream& istr, bytes& outHash)
+    {
+        if (outHash.size() != hashsize_)
+            throw std::runtime_error{
+                "sodium::StreamHash::hash() wrong outHash size"
+            };
+
+        bytes plaintext(blocksize_, '\0');
+
+        if (key_.size() != 0)
+            crypto_generichash_init(
+              &state_, key_.data(), key_.size(), hashsize_);
+        else
+            crypto_generichash_init(&state_, NULL, 0, hashsize_); // keyless
+
+        while (
+          istr.read(reinterpret_cast<char*>(plaintext.data()), blocksize_)) {
+            // read a whole block of size blocksize_
+
+            crypto_generichash_update(
+              &state_, plaintext.data(), plaintext.size());
+        }
+
+        // check to see if we've read a final partial chunk
+        std::size_t s = static_cast<std::size_t>(istr.gcount());
+        if (s != 0) {
+            if (s != plaintext.size())
+                plaintext.resize(s);
+
+            crypto_generichash_update(
+              &state_, plaintext.data(), plaintext.size());
+        }
+
+        // we're done reading all chunks.
+        crypto_generichash_final(&state_, outHash.data(), outHash.size());
+
+        // reset state_, so can call hash() again
+        if (key_.size() != 0)
+            crypto_generichash_init(
+              &state_, key_.data(), key_.size(), hashsize_);
+        else
+            crypto_generichash_init(&state_, NULL, 0, hashsize_); // keyless
+
+        // returning outHash implicitely by reference.
+    }
 
   private:
     key_type key_;
