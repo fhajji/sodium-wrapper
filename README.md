@@ -2,6 +2,8 @@
 
 This is a set of C++17 wrappers to the [libsodium](https://download.libsodium.org/doc/) library.
 
+sodium-wrapper is a headers-only library.
+
 ## Current status
 
 * **Experimental and incomplete, very early alpha.**
@@ -21,7 +23,6 @@ Criticism and pull requests welcome, of course.
 
 * Update to newest libsodium (in progress).
 * Add wrappers to missing libsodium calls (in progress).
-* Try to turn it into a header-only wrapper (in progress).
 * Change API to lower case to make it more C++17, STL- and Boost-ish (in progress).
 * Change API to reflect more faithfully libsodium's C-API naming scheme.
 * Add wrappers to new 1.0.14+ streaming API (done).
@@ -53,6 +54,10 @@ Criticism and pull requests welcome, of course.
 ## Building
 
 ### Building on Unix (*BSD, Linux, ...)
+
+There's no need to build the library, as it is headers-only.
+
+The following instructions are for building the unit tests.
 
 First of all, get and install all the prerequisites above.
 If your package manager has installed older versions of libsodium, boost,
@@ -118,6 +123,10 @@ cd ${HOME}/vcpkg
 
 ### Building on Windows
 
+There is no need to build the library, since it is headers-only.
+
+The following instructions are for compiling the unit tests.
+
 1. First of all, install [Visual Studio 2017](https://www.visualstudio.com/vs/).
 2. Then, install [vcpkg](https://docs.microsoft.com/en-us/cpp/vcpkg):
      * Open "Developer Command Prompt for VS 2017"
@@ -156,16 +165,14 @@ again.
 
 ## Running the executables
 
-Successfully compiling sodium-wrapper will create 3 types of binaries:
+Successfully compiling sodium-wrapper will create 2 types of binaries:
 
-1. A dynamic library *libwrapsodium.so* or *wrapsodium.dll*
-2. A stand-alone test executable *sodiumtester* or *sodiumtester.exe*
-3. A set of test units *test\_SOMETHING* or *test\_SOMETHING.exe*
+1. A stand-alone test executable *sodiumtester* or *sodiumtester.exe*
+2. A set of test units *test\_SOMETHING* or *test\_SOMETHING.exe*
 
 From a user perspective, the wrapper per se consists of the headers
-in the *include* directory, and the dynamic library. Later on, when
-going header-only (if possible), the wrapper will be only the *include*
-directory.
+in the *include* directory. This is all that is needed to compile
+your own programs.
 
 *sodiumtester* in an interactive demo that shows a couple of simple tests.
 
@@ -209,9 +216,7 @@ You can run the executables via Visual Studio's CMake menu.
 
 To run the test suite:
 1. build the whole project first (CMake / Build All),
-2. then copy manually *wrapsodium.dll* in the folder containing the
-   *test\_SOMETHING* exe files,
-3. finally run the whole test suite
+2. the run the whole test suite
    (CMake / Tests / Run sodiumwrapper CTests)
 
 Failed tests will show up in the Output window.
@@ -223,18 +228,14 @@ CMake / Debug from Build Folder / test\_SOMETHING.exe
 
 The executables are in the path specified by *buildRoot* in
 *CMakeSettings.json*. The main point to consider is that the
-executables need both *libsodium.dll* and *wrapsodium.dll*
-in the same folder. You need to copy the *wrapsodium.dll*
-(of the corresponding build and architecture) into
-the *tests\Debug* or *tests\Release* folder before running
-the binaries from there.
+executables need both *libsodium.dll* in the same folder.
 
 On my system:
 
 ```
 cd \Users\fhajji\CMakeBuilds\{some-hash}\build\x64-Debug\Debug
 .\sodiumtester.exe
-copy wrapsodium.dll ..\tests\Debug
+
 cd ..\tests\Debug
 .\test_key.exe
 .\test_nonce.exe

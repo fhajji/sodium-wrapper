@@ -105,7 +105,42 @@ class StreamVerifierPK
      * verify() will throw a std::runtime_error if the istr fails.
      **/
 
-    bool verify(std::istream& istr, const bytes& signature);
+    bool verify(std::istream& istr, const bytes& signature)
+    {
+        bytes plaintext(blocksize_, '\0');
+
+        while (
+          istr.read(reinterpret_cast<char*>(plaintext.data()), blocksize_)) {
+            // read a whole block of blocksize_ chars (bytes)
+            crypto_sign_update(&state_, plaintext.data(), plaintext.size());
+        }
+
+        // check to see if we've read a final partial chunk
+        std::size_t s = static_cast<std::size_t>(istr.gcount());
+        if (s != 0) {
+            if (s != plaintext.size())
+                plaintext.resize(s);
+
+            crypto_sign_update(&state_, plaintext.data(), plaintext.size());
+        }
+
+        // XXX: since crypto_sign_final_verify() doesn't accept a const
+        // signature, we need to copy signature beforehand
+        bytes signature_copy{ signature };
+
+        // finalize and compare signatures
+        if (crypto_sign_final_verify(
+              &state_, signature_copy.data(), pubkey_.data()) != 0) {
+            // message forged
+            crypto_sign_init(&state_);
+            return false;
+        }
+
+        // reset the state for next invocation of sign()
+        crypto_sign_init(&state_);
+
+        return true;
+    }
 
   private:
     bytes pubkey_;

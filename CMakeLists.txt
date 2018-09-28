@@ -57,7 +57,7 @@ endif()
 # --------------- Crank up warnings to the max --------------------------------
 if (MSVC)
     # add_compile_options (/Wall)
-	add_compile_options (/W2) # /Wall is too much for now.
+    add_compile_options (/W2) # /Wall is too much for now.
 else()
     add_compile_options (-Wall -Wextra -Wpedantic)
 endif()
@@ -81,21 +81,11 @@ if (CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
     endif()
 endif()
 
-# --------------- Build library libwrapsodium.so -------------------------
-
-# Find source files of libwrapsodium.so:
-file (GLOB SOURCES src/*.cpp)
+# --------------- General settings --------------------------------------
 
 # Include header files
 include_directories ( ${CMAKE_CURRENT_SOURCE_DIR}/include
-		      ${LOCAL_INCLUDE_DIR} )
-
-# Create shared library
-add_library (wrapsodium SHARED ${SOURCES})
-target_link_libraries(wrapsodium sodium)
-
-# Install library (XXX: not tested)
-# install (TARGETS wrapsodium DESTINATION lib/wrapsodium)
+                      ${LOCAL_INCLUDE_DIR} )
 
 # --------------- Build sodiumtester ------------------------------------
 
@@ -104,7 +94,7 @@ file (GLOB SOURCES_TESTER srctest/*.cpp)
 # find_library ( SODIUM_LIB sodium ${MY_LIB_DIR} )
 
 add_executable (sodiumtester ${SOURCES_TESTER})
-target_link_libraries ( sodiumtester wrapsodium sodium )
+target_link_libraries ( sodiumtester sodium )
 
 # --------------- Build test suite --------------------------------------
 
@@ -124,7 +114,6 @@ foreach (testSrc ${TEST_SRCS})
 
         # link to Boost libraries AND your targets and dependencies
         target_link_libraries (${testName} ${Boost_LIBRARIES}
-			       wrapsodium
 			       sodium)
 
         # I like to move testing binaries into a tests/ subdirectory
