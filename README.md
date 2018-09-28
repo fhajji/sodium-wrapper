@@ -174,7 +174,7 @@ From a user perspective, the wrapper per se consists of the headers
 in the *include* directory. This is all that is needed to compile
 your own programs.
 
-*sodiumtester* in an interactive demo that shows a couple of simple tests.
+*sodiumtester* is an interactive demo that shows a couple of simple tests.
 
 The regression test suite *test\_SOMETHING* exercises different aspects of the
 wrapper / API.
@@ -201,7 +201,7 @@ on the command line of the individual test:
 ```
 
 To run the unit tests in parallel, call `ctest -jN` with N
-being the number of CPU cores. You can also `-jN`
+being the number of CPU cores. You can also pass `-jN`
 to `ctest` via `make test` using `ARGS` like so: 
 
 ```
@@ -228,7 +228,7 @@ CMake / Debug from Build Folder / test\_SOMETHING.exe
 
 The executables are in the path specified by *buildRoot* in
 *CMakeSettings.json*. The main point to consider is that the
-executables need both *libsodium.dll* in the same folder.
+executables need *libsodium.dll* in the same folder.
 
 On my system:
 

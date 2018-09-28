@@ -341,10 +341,12 @@ BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2hex_return_string_protected)
     BOOST_TEST_MESSAGE(typeid(hexb1).name());
 
     // since this is a sodium::string_protected,
-    // let's make it read-only, just for kicks:
+    // let's make it read-only, just for kicks.
+    // NOTE: segfaults with gcc8, Debug, on FreeBSD
+    //       (small string opmitization?)
 
     // C++17
-    // hexb1.get_allocator().readonly(hexb1.data());
+    hexb1.get_allocator().readonly(hexb1.data());
 
     // C++11: std::basic_string<...>.data() is <const T *>, we need <T *>:
     // hexb1.get_allocator().readonly(const_cast<char*>(hexb1.data()));
@@ -368,10 +370,12 @@ BOOST_AUTO_TEST_CASE(
     BOOST_TEST_MESSAGE(typeid(hexb1).name());
 
     // since this is a sodium::string_protected,
-    // let's make it read-only, just for kicks:
+    // let's make it read-only, just for kicks.
+    // NOTE: segfaults with gcc8, Debug, on FreeBSD
+    //       (small string optimization?)
 
-    // C++17?
-    // hexb1.get_allocator().readonly(hexb1.data());
+    // C++17
+    hexb1.get_allocator().readonly(hexb1.data());
 
     // C++11: std::basic_string<...>.data() is <const T *>, we need <T *>:
     // hexb1.get_allocator().readonly(const_cast<char*>(hexb1.data()));
@@ -570,10 +574,12 @@ BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2base64_return_string_protected)
     BOOST_TEST_MESSAGE(typeid(base64b1).name());
 
     // since this is a sodium::string_protected,
-    // let's make it read-only, just for kicks:
+    // let's make it read-only, just for kicks.
+    // NOTE: segfaults with gcc8, Debug, on FreeBSD
+    //       (small string optimization?)
 
-    // C++17?
-    // base64b1.get_allocator().readonly(base64b1.data());
+    // C++17
+    base64b1.get_allocator().readonly(base64b1.data());
 
     // C++11: std::basic_string<...>.data() is <const T *>, we need <T *>:
     // base64b1.get_allocator().readonly(const_cast<char*>(base64b1.data()));
@@ -597,10 +603,12 @@ BOOST_AUTO_TEST_CASE(
     BOOST_TEST_MESSAGE(typeid(base64b1).name());
 
     // since this is a sodium::string_protected,
-    // let's make it read-only, just for kicks:
+    // let's make it read-only, just for kicks.
+    // NOTE: segfaults with gcc8, Debug, on FreeBSD
+    // (small string opmitization?)
 
-    // C++17?
-    // base64b1.get_allocator().readonly(base64b1.data());
+    // C++17
+    base64b1.get_allocator().readonly(base64b1.data());
 
     // C++11: std::basic_string<...>.data() is <const T *>, we need <T *>:
     // base64b1.get_allocator().readonly(const_cast<char*>(base64b1.data()));
