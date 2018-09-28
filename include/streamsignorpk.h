@@ -97,7 +97,35 @@ class StreamSignorPK
      * sign() will throw a std::runtime_error if the istr fails.
      **/
 
-    bytes sign(std::istream& istr);
+    bytes sign(std::istream& istr)
+    {
+        bytes plaintext(blocksize_, '\0');
+
+        while (
+          istr.read(reinterpret_cast<char*>(plaintext.data()), blocksize_)) {
+            // read a whole block of blocksize_ chars (bytes)
+            crypto_sign_update(&state_, plaintext.data(), plaintext.size());
+        }
+
+        // check to see if we've read a final partial chunk
+        std::size_t s = static_cast<std::size_t>(istr.gcount());
+        if (s != 0) {
+            if (s != plaintext.size())
+                plaintext.resize(s);
+
+            crypto_sign_update(&state_, plaintext.data(), plaintext.size());
+        }
+
+        // finalize the signature
+        bytes signature(SIGNATURE_SIZE);
+        crypto_sign_final_create(
+          &state_, signature.data(), NULL, privkey_.data());
+
+        // reset the state for next invocation of sign()
+        crypto_sign_init(&state_);
+
+        return signature; // using move semantics
+    }
 
   private:
     privkey_type privkey_;
