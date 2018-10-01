@@ -342,8 +342,15 @@ BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2hex_return_string_protected)
 
     // since this is a sodium::string_protected,
     // let's make it read-only, just for kicks.
+
     // NOTE: segfaults with gcc8, Debug, on FreeBSD
-    //       (small string opmitization?)
+    // Reason: SSO, small string optimization. Small strings
+    // are stored in the std::basic_string object (here
+    // in hexb1 on the stack) instead of the heap. Setting
+    // the heap readonly with mprotect() isn't such a good idea.
+    // Proof: initialize in1 to "012345678901234567890123456789"
+    // and it WILL be allocated on the heap, and setting readony
+    // won't crash this test.
 
     // C++17
     hexb1.get_allocator().readonly(hexb1.data());
@@ -371,8 +378,15 @@ BOOST_AUTO_TEST_CASE(
 
     // since this is a sodium::string_protected,
     // let's make it read-only, just for kicks.
+
     // NOTE: segfaults with gcc8, Debug, on FreeBSD
-    //       (small string optimization?)
+    // Reason: SSO, small string optimization. Small strings
+    // are stored in the std::basic_string object (here
+    // in hexb1 on the stack) instead of the heap. Setting
+    // the heap readonly with mprotect() isn't such a good idea.
+    // Proof: initialize in1 to "012345678901234567890123456789"
+    // and it WILL be allocated on the heap, and setting readony
+    // won't crash this test.
 
     // C++17
     hexb1.get_allocator().readonly(hexb1.data());
@@ -575,8 +589,15 @@ BOOST_AUTO_TEST_CASE(sodium_test_helpers_bin2base64_return_string_protected)
 
     // since this is a sodium::string_protected,
     // let's make it read-only, just for kicks.
+
     // NOTE: segfaults with gcc8, Debug, on FreeBSD
-    //       (small string optimization?)
+    // Reason: SSO, small string optimization. Small strings
+    // are stored in the std::basic_string object (here
+    // in hexb1 on the stack) instead of the heap. Setting
+    // the heap readonly with mprotect() isn't such a good idea.
+    // Proof: initialize in1 to "012345678901234567890123456789"
+    // and it WILL be allocated on the heap, and setting readony
+    // won't crash this test.
 
     // C++17
     base64b1.get_allocator().readonly(base64b1.data());
@@ -604,8 +625,15 @@ BOOST_AUTO_TEST_CASE(
 
     // since this is a sodium::string_protected,
     // let's make it read-only, just for kicks.
+
     // NOTE: segfaults with gcc8, Debug, on FreeBSD
-    // (small string opmitization?)
+    // Reason: SSO, small string optimization. Small strings
+    // are stored in the std::basic_string object (here
+    // in hexb1 on the stack) instead of the heap. Setting
+    // the heap readonly with mprotect() isn't such a good idea.
+    // Proof: initialize in1 to "012345678901234567890123456789"
+    // and it WILL be allocated on the heap, and setting readony
+    // won't crash this test.
 
     // C++17
     base64b1.get_allocator().readonly(base64b1.data());

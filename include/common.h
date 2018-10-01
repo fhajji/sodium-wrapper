@@ -36,6 +36,25 @@ using chars = std::vector<char>;
 using bytes_protected = std::vector<byte, sodium::allocator<byte>>;
 
 // a std::string in protected memory
+
+// CAVEAT EMPTOR:
+//   sodium::string_protected isn't always in protected memory!
+//   Due to SSO, small string optimization, small strings
+//   (size less than an implementation defined limit, e.g. 16 bytes)
+//   are often stored in the std::basic_string object itself. If that
+//   object is a local variable, the string data() will
+//   be on the stack, not on the heap. Our sodium::allocator<char>
+//   won't even be invoked.
+//
+// sodium::string_protected as currently defined is just a
+// temporary solution for long, non-optimized strings.
+// Don't use yet!
+//
+// TODO: we need a std::basic_string modification that
+// explicitly avoids SSO and COW, and that places all data
+// on the heap via the specified allocator. Idea: use a policy:
+//    http://www.drdobbs.com/generic-a-policy-based-basicstring-imple/184403784
+
 using string_protected =
   std::basic_string<char, std::char_traits<char>, sodium::allocator<char>>;
 } // namespace sodium
