@@ -39,10 +39,13 @@ set ( CMAKE_CXX_STANDARD 17 )
 set ( CMAKE_CXX_STANDARD_REQUIRED ON )
 set ( CMAKE_CXX_EXTENSIONS OFF )
 
+set(BOOST_LIB_DIR "C:/boost/" CACHE STRING "It's a path to boost lib")
+set(SODIUM_LIB_DIR "C:/Sodium/" CACHE STRING "It's a path to sodium lib")
+
 # --------------- Find dependencies --------------------------------------
 set (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR})
-find_package(sodium 1.0.16 REQUIRED)
-find_package(Boost REQUIRED COMPONENTS unit_test_framework)
+find_package(sodium 1.0.16 REQUIRED PATH ${SODIUM_LIB_DIR} NO_DEFAULT_PATH)
+find_package(Boost REQUIRED COMPONENTS unit_test_framework PATH ${BOOST_LIB_DIR} NO_DEFAULT_PATH)
 
 if (sodium_FOUND)
     set (LOCAL_INCLUDE_DIR ${LOCAL_INCLUDE_DIR} ${sodium_INCLUDE_DIR})
